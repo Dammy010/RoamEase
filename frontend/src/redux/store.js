@@ -6,6 +6,7 @@ import adminReducer from './slices/adminSlice';
 import paymentReducer from './slices/paymentSlice';
 import bidReducer from './slices/bidSlice';
 import logisticsReducer from './slices/logisticsSlice';
+import notificationReducer from './slices/notificationSlice';
 
 export default configureStore({
   reducer: {
@@ -16,5 +17,6 @@ export default configureStore({
     payment: paymentReducer,
     bid: bidReducer,
     logistics: logisticsReducer,
+    notifications: notificationReducer,
   },
 });

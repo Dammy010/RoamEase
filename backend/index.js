@@ -113,6 +113,8 @@ app.use("/api/bids", require("./routes/bidRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/debug", require("./routes/debugRoutes"));
 
 // Error handling

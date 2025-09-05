@@ -161,6 +161,39 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+// --- Fetch All Disputes ---
+export const fetchAllDisputes = createAsyncThunk(
+  'admin/fetchAllDisputes',
+  async (_, thunkAPI) => {
+    try {
+      const res = await api.get('/admin/disputes');
+      return res.data.items;
+    } catch (err) {
+      toast.error('Failed to fetch disputes');
+      return thunkAPI.rejectWithValue(err.response?.data);
+    }
+  }
+);
+
+// --- Resolve Dispute ---
+export const resolveDispute = createAsyncThunk(
+  'admin/resolveDispute',
+  async ({ disputeId, status, adminNotes, resolution }, thunkAPI) => {
+    try {
+      const res = await api.patch(`/admin/disputes/${disputeId}/resolve`, {
+        status,
+        adminNotes,
+        resolution
+      });
+      toast.success(`Dispute ${status === 'resolved' ? 'resolved' : 'updated'} successfully`);
+      return res.data.dispute;
+    } catch (err) {
+      toast.error('Failed to update dispute');
+      return thunkAPI.rejectWithValue(err.response?.data);
+    }
+  }
+);
+
 const initialState = {
   users: [],
   disputes: [],
@@ -297,6 +330,33 @@ const adminSlice = createSlice({
         if (deletedUser && deletedUser.role === 'user' && state.normalUsersCount > 0) {
           state.normalUsersCount -= 1;
         }
+      })
+
+      // --- Dispute Actions ---
+      .addCase(fetchAllDisputes.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllDisputes.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.disputes = payload;
+      })
+      .addCase(fetchAllDisputes.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(resolveDispute.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(resolveDispute.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        const index = state.disputes.findIndex(dispute => dispute._id === payload._id);
+        if (index !== -1) {
+          state.disputes[index] = payload;
+        }
+      })
+      .addCase(resolveDispute.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
       });
   },
 });

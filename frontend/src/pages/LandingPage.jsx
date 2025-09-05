@@ -32,13 +32,19 @@ const LandingPage = () => {
     </p>
     <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
       <button
+        onClick={() => navigate("/browse-shipments")}
+        className="bg-white text-blue-700 font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition duration-300"
+      >
+        Browse Open Shipments
+      </button>
+      <button
         onClick={() => navigate("/signup")}
         className="bg-yellow-400 text-gray-900 font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-yellow-300 transition duration-300"
       >
         Post a Shipment
       </button>
       <button
-        onClick={() => navigate("/logistics-signup")}
+        onClick={() => navigate("/signup")}
         className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300"
       >
         Become a Provider
@@ -167,13 +173,19 @@ const LandingPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
+              onClick={() => navigate("/browse-shipments")}
+              className="bg-white text-blue-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300"
+            >
+              Browse Open Shipments
+            </button>
+            <button
               onClick={() => navigate("/signup")}
               className="bg-yellow-400 text-gray-900 font-semibold py-3 px-8 rounded-lg hover:bg-yellow-300 transition duration-300"
             >
               Start Shipping
             </button>
             <button
-              onClick={() => navigate("/logistics-signup")}
+              onClick={() => navigate("/signup")}
               className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300"
             >
               Become a Partner

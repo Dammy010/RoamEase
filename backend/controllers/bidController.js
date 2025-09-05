@@ -1,5 +1,6 @@
 const Bid = require('../models/Bid');
 const Shipment = require('../models/Shipment');
+const User = require('../models/User');
 const Conversation = require('../models/Conversation'); // New: Import Conversation model
 const { createConversation: chatCreateConversation } = require('../controllers/chatController'); // New: Import createConversation from chatController
 const { getIO } = require('../socket'); // New: Import getIO to access Socket.io instance
@@ -21,6 +22,22 @@ const createBid = async (req, res) => {
 
     if (req.user.role !== 'logistics' && req.user.role !== 'carrier') {
       return res.status(403).json({ message: 'Only logistics providers and carriers can create bids' });
+    }
+
+    // Check if logistics provider is verified
+    if (req.user.role === 'logistics') {
+      const logisticsUser = await User.findById(req.user._id);
+      if (!logisticsUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      if (logisticsUser.verificationStatus !== 'verified') {
+        return res.status(403).json({ 
+          message: 'Only verified logistics providers can create bids',
+          verificationStatus: logisticsUser.verificationStatus,
+          details: 'Your account is pending verification. Please wait for admin approval before posting bids.'
+        });
+      }
     }
 
     const shipment = await Shipment.findById(shipmentId);

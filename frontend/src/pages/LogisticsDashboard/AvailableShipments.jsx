@@ -81,7 +81,14 @@ const AvailableShipments = () => {
       setBidPrice('');
       setBidEta('');
       setBidMessage('');
-      // No need to re-fetch here, as the new-bid event will be handled by other components or just confirmed by toast
+      toast.success('Bid submitted successfully!');
+    } else if (createBid.rejected.match(result)) {
+      // Handle verification error specifically
+      if (result.payload && result.payload.includes('verification')) {
+        toast.error('Your account is pending verification. Please wait for admin approval before posting bids.');
+      } else {
+        toast.error(result.payload || 'Failed to submit bid. Please try again.');
+      }
     }
   };
 
@@ -400,23 +407,38 @@ const AvailableShipments = () => {
                               </>
                             )}
                           </button>
-                          <button 
-                            onClick={() => handlePlaceBidClick(shipment._id)}
-                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                            disabled={bidLoading}
-                          >
-                            {bidLoading && selectedShipmentId === shipment._id ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                Placing Bid...
-                              </>
-                            ) : (
-                              <>
-                                <DollarSign size={16} />
-                                Place Bid
-                              </>
-                            )}
-                          </button>
+                          {user?.verificationStatus === 'pending' ? (
+                            <div className="flex flex-col items-end">
+                              <button 
+                                disabled
+                                className="px-6 py-3 bg-gray-400 text-white rounded-xl cursor-not-allowed font-semibold shadow-lg flex items-center gap-2"
+                              >
+                                <AlertCircle size={16} />
+                                Verification Pending
+                              </button>
+                              <p className="text-xs text-gray-500 mt-1 text-right max-w-32">
+                                Wait for admin approval to place bids
+                              </p>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => handlePlaceBidClick(shipment._id)}
+                              className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                              disabled={bidLoading}
+                            >
+                              {bidLoading && selectedShipmentId === shipment._id ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  Placing Bid...
+                                </>
+                              ) : (
+                                <>
+                                  <DollarSign size={16} />
+                                  Place Bid
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -8,6 +8,7 @@ const {
   getShipmentById,
   updateShipmentStatus,
   getAvailableShipmentsForCarrier,
+  getPublicOpenShipments, // New: Import the public open shipments function
   markAsDeliveredAndRate,
   markAsDeliveredByLogistics,
   markAsReceivedByUser,
@@ -28,6 +29,9 @@ const shipmentUpload = upload.fields([
 router.post('/', protect, shipmentUpload, createShipment);
 router.get('/', protect, getShipments);
 router.get('/history', protect, getShipmentHistory); // 👈 new
+
+// Public route for browsing open shipments (no authentication required)
+router.get('/public/open-shipments', getPublicOpenShipments);
 
 // New: Route for carriers to fetch available shipments for bidding (MUST come before /:id)
 router.get('/available-for-bidding', protect, getAvailableShipmentsForCarrier);

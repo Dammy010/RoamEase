@@ -11,6 +11,7 @@ import Navbar from './components/shared/Navbar';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
+import BrowseShipmentsPage from './pages/BrowseShipmentsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AboutPage from './pages/AboutPage';
@@ -61,11 +62,13 @@ import ShipmentsList from './pages/AdminDashboard/ShipmentsList';
 import BidsList from './pages/AdminDashboard/BidsList';
 import AdminChatList from './pages/AdminDashboard/AdminChatList';
 import AdminChatWindow from './pages/AdminDashboard/AdminChatWindow';
+import AdminChatDashboard from './pages/AdminDashboard/AdminChatDashboard';
 import ReportsDisputes from './pages/AdminDashboard/ReportsDisputes';
 import PlatformAnalytics from './pages/AdminDashboard/PlatformAnalytics';
 import AdminProfile from './pages/AdminDashboard/Profile';
 import AllUsersListPage from './pages/AdminDashboard/AllUsersListPage';
 import NormalUsers from './pages/AdminDashboard/NormalUsers';
+import NotificationPage from './pages/NotificationPage';
 
 function App() {
   const { user } = useSelector((state) => state.auth);
@@ -149,11 +152,16 @@ function App() {
                   <Route path="/admin/verify-logistics" element={<PendingLogisticsList />} />
                   <Route path="/admin/shipments-list" element={<ShipmentsList />} />
                   <Route path="/admin/bids-list" element={<BidsList />} />
-                  <Route path="/admin/chat" element={<AdminChatList />} />
-                  <Route path="/admin/chat/:conversationId" element={<AdminChatWindow />} />
+                  <Route path="/admin/chat" element={<AdminChatDashboard />} />
+                  <Route path="/admin/chat/:conversationId" element={<AdminChatDashboard />} />
                   <Route path="/admin/reports-disputes" element={<ReportsDisputes />} />
                   <Route path="/admin/platform-analytics" element={<PlatformAnalytics />} />
                   <Route path="/admin/profile" element={<AdminProfile />} />
+                </Route>
+
+                {/* Common notification route for all authenticated users */}
+                <Route element={<ProtectedRoute allowedRoles={['user', 'logistics', 'admin']} />}>
+                  <Route path="/notifications" element={<NotificationPage />} />
                 </Route>
 
                 {/* Catch-all for authenticated users to redirect to their dashboard */}
@@ -168,6 +176,7 @@ function App() {
               <Routes>
                 {/* Public Routes - Always Accessible */}
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/browse-shipments" element={<BrowseShipmentsPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />

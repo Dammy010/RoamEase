@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { signupUser } from '../../redux/slices/authSlice';
 import PasswordInput from '../shared/PasswordInput';
 import EmailVerificationPrompt from '../EmailVerificationPrompt';
-import { Truck, Ship, Plane, Train, MapPin, Warehouse } from 'lucide-react'; // Updated: Imported more icons
+import { Truck, Ship, Plane, Train, MapPin, Warehouse, UserCircle, Shield, CheckCircle, Package } from 'lucide-react'; // Updated: Imported more icons
 import FormSection from './FormSection';
 import { isEqual } from 'lodash'; // Added isEqual for document comparison
 
@@ -395,466 +395,659 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 bg-white shadow-xl rounded-2xl my-10">
-      {/* Email Verification Prompt */}
-      {showVerificationPrompt && (
-        <div className="mb-8">
-          <EmailVerificationPrompt
-            email={verificationEmail}
-            onVerified={handleVerificationSuccess}
-            onClose={handleCloseVerification}
-          />
-        </div>
-      )}
-      
-      {/* Role Toggle */}
-      <div className="flex justify-center mb-8 space-x-4">
-        {Object.values(ROLES).map((role) => (
-          <button
-            key={role}
-            type="button"
-            onClick={() => switchRole(role)}
-            className={`px-8 py-3 rounded-full font-semibold text-lg shadow-md transition-all duration-300 ${
-              formData.role === role
-                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            }`}
-          >
-            {role === ROLES.USER ? 'Sign Up as User' : 'Sign Up as Logistics Provider'}
-          </button>
-        ))}
-      </div>
-
-      <h1 className="text-4xl font-extrabold text-gray-900 mb-10 text-center">
-        {formData.role === ROLES.LOGISTICS ? 'Become a Logistics Partner' : 'Create Your User Account'}
-      </h1>
-
-      {formData.role === ROLES.USER ? (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <FormSection title="Personal Information">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div >
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">Name <span className="text-red-500"> *</span></label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter your name"
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.name ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="name"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.name}</p>
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email <span className="text-red-500"> *</span></label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  autoComplete="off"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.email}</p>
-              </div>
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number <span className="text-red-500"> *</span></label>
-                <input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="text"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="Enter your phone number"
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.phoneNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="tel"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.phoneNumber}</p>
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection title="Account Security">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PasswordInput
-                label="Password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                error={errors.password} // Pass specific error
-                // autoComplete="new-password"
-              />
-              {/* <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.password}</p> */}
-              <PasswordInput
-                label="Confirm Password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                required
-                error={errors.confirmPassword} // Pass specific error
-                // autoComplete="new-password"
-              />
-              {/* <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.confirmPassword}</p> */}
-            </div>
-          </FormSection>
-
-          <button
-            type="submit"
-            className={`w-full py-3 px-4 rounded-lg text-white font-semibold text-lg transition-all duration-300 ${
-              loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg'
-            }`}
-          >
-            {loading ? 'Signing Up...' : 'Sign Up'}
-          </button>
-          <p className="text-red-500 text-sm mt-2 text-center min-h-[1.25rem]">{error}</p>
-          <p className="mt-6 text-center text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-indigo-600 font-semibold hover:underline">
-              Log in here
-            </Link>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Email Verification Prompt */}
+        {showVerificationPrompt && (
+          <div className="mb-8">
+            <EmailVerificationPrompt
+              email={verificationEmail}
+              onVerified={handleVerificationSuccess}
+              onClose={handleCloseVerification}
+            />
+          </div>
+        )}
+        
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-6 shadow-lg">
+            <Truck className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Join RoamEase
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Connect with the world's leading logistics network. Choose your role and start your journey.
           </p>
-        </form>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Company Info */}
-          <FormSection title="Company Information">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="companyName" className="block text-sm font-semibold text-gray-700 mb-2">Company Name <span className="text-red-500"> *</span></label>
-                <input
-                  id="companyName"
-                  name="companyName"
-                  type="text"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.companyName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="organization"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.companyName}</p>
-              </div>
-              <div>
-                <label htmlFor="yearsInOperation" className="block text-sm font-semibold text-gray-700 mb-2">Years in Operation <span className="text-red-500"> *</span></label>
-                <input
-                  id="yearsInOperation"
-                  name="yearsInOperation"
-                  type="number"
-                  value={formData.yearsInOperation}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.yearsInOperation ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="off"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.yearsInOperation}</p>
-              </div>
-              <div>
-                <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">Registration Number <span className="text-red-500"> *</span></label>
-                <input
-                  id="registrationNumber"
-                  name="registrationNumber"
-                  type="text"
-                  value={formData.registrationNumber}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.registrationNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="off"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.registrationNumber}</p>
-              </div>
-              <div>
-                <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">Country <span className="text-red-500"> *</span></label>
-                <select
-                  id="country"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.country ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="country-name"
-                >
-                  <option value="">Select country</option>
-                  <option value="US">United States</option>
-                  <option value="UK">United Kingdom</option>
-                  <option value="CA">Canada</option>
-                  <option value="DE">Germany</option>
-                  <option value="NG">Nigeria</option>
-                </select>
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.country}</p>
-              </div>
-              <div>
-                <label htmlFor="companySize" className="block text-sm font-semibold text-gray-700 mb-2">Company Size <span className="text-red-500"> *</span></label>
-                <select
-                  id="companySize"
-                  name="companySize"
-                  value={formData.companySize}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.companySize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="off"
-                >
-                  <option value="">Select size</option>
-                  <option value="small">1-50 employees</option>
-                  <option value="medium">51-200 employees</option>
-                  <option value="large">201-500 employees</option>
-                  <option value="enterprise">500+ employees</option>
-                </select>
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.companySize}</p>
-              </div>
-              <div>
-                <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
-                <input
-                  id="website"
-                  name="website"
-                  type="url"
-                  value={formData.website}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.website ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  placeholder="e.g. https://www.example.com"
-                  // autoComplete="url"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.website}</p>
-              </div>
-              <div>
-                <label htmlFor="fleetSize" className="block text-sm font-semibold text-gray-700 mb-2">Fleet Size</label>
-                <input
-                  id="fleetSize"
-                  name="fleetSize"
-                  type="number"
-                  value={formData.fleetSize}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.fleetSize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  min="0"
-                  // autoComplete="off"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.fleetSize}</p>
-              </div>
-            </div>
-          </FormSection>
+        </div>
 
-          {/* Contact Info */}
-          <FormSection title="Contact Person Information">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="contactName" className="block text-sm font-semibold text-gray-700 mb-2">Contact Name <span className="text-red-500"> *</span></label>
-                <input
-                  id="contactName"
-                  name="contactName"
-                  type="text"
-                  value={formData.contactName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.contactName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="cc-name"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.contactName}</p>
-              </div>
-              <div>
-                <label htmlFor="contactEmail" className="block text-sm font-semibold text-gray-700 mb-2">Contact Email <span className="text-red-500"> *</span></label>
-                <input
-                  id="contactEmail"
-                  name="contactEmail"
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.contactEmail ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  autoComplete="off"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.contactEmail}</p>
-              </div>
-              <div>
-                <label htmlFor="contactPosition" className="block text-sm font-semibold text-gray-700 mb-2">Contact Position <span className="text-red-500"> *</span></label>
-                <input
-                  id="contactPosition"
-                  name="contactPosition"
-                  type="text"
-                  value={formData.contactPosition}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.contactPosition ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="organization-title"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.contactPosition}</p>
-              </div>
-              <div>
-                <label htmlFor="contactPhone" className="block text-sm font-semibold text-gray-700 mb-2">Contact Phone <span className="text-red-500"> *</span></label>
-                <input
-                  id="contactPhone"
-                  name="contactPhone"
-                  type="tel"
-                  value={formData.contactPhone}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 ${errors.contactPhone ? 'border-red-500 focus:ring-red-400' : 'border-gray-300'}`}
-                  // autoComplete="tel"
-                />
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.contactPhone}</p>
-              </div>
-            </div>
-          </FormSection>
+        {/* Role Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-white rounded-2xl p-2 shadow-lg border border-gray-200">
+            {Object.values(ROLES).map((role) => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => switchRole(role)}
+                className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center gap-3 ${
+                  formData.role === role
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg transform scale-105'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                {role === ROLES.USER ? (
+                  <>
+                    <UserCircle className="w-5 h-5" />
+                    Sign Up as User
+                  </>
+                ) : (
+                  <>
+                    <Truck className="w-5 h-5" />
+                    Sign Up as Logistics Provider
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          {/* Passwords */}
-          <FormSection title="Account Security">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PasswordInput
-                label="Password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                error={errors.password} // Pass specific error
-                // autoComplete="new-password"
-              />
-              {/* <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.password}</p> */}
-              <PasswordInput
-                label="Confirm Password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                required
-                error={errors.confirmPassword} // Pass specific error
-                // autoComplete="new-password"
-              />
-              {/* <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.confirmPassword}</p> */}
-            </div>
-          </FormSection>
-
-          {/* Capabilities */}
-          <FormSection title="Logistics Capabilities & Regions">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Services */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Truck size={20} className="text-indigo-500" /> Transport Services <span className="text-red-500"> *</span>
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white border border-gray-300 rounded-lg shadow-sm">
-                  {['Trucking', 'Shipping', 'Air Freight', 'Rail', 'Last-Mile Delivery', 'Warehousing'].map(
-                    (service) => (
-                      <label key={service} className="flex items-center text-gray-700">
-                        <input
-                          type="checkbox"
-                          name={`services-${service}`}
-                          value={service}
-                          checked={formData.services.includes(service)}
-                          onChange={handleChange}
-                          className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                          // autoComplete="off"
-                        />
-                        <span className="flex items-center gap-1">
-                          {getServiceIcon(service)} {service}
-                        </span>
-                      </label>
-                    )
-                  )}
-                </div>
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.services}</p>
-              </div>
-
-              {/* Regions */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-2">Regions Served <span className="text-red-500"> *</span></h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white border border-gray-300 rounded-lg shadow-sm">
-                  {['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East', 'Africa'].map(
-                    (region) => (
-                      <label key={region} className="flex items-center text-gray-700">
-                        <input
-                          type="checkbox"
-                          name={`regions-${region}`}
-                          value={region}
-                          checked={formData.regions.includes(region)}
-                          onChange={handleChange}
-                          className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                          // autoComplete="off"
-                        />
-                        {region}
-                      </label>
-                    )
-                  )}
-                </div>
-                <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.regions}</p>
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Documents */}
-          <FormSection title="Required Documents">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { label: 'Business License', key: 'businessLicense' },
-                { label: 'Insurance Certificate', key: 'insuranceCertificate' },
-                { label: 'Government ID', key: 'governmentId' },
-              ].map((doc) => (
-                <div key={doc.key}>
-                  <label htmlFor={doc.key} className="block text-sm font-semibold text-gray-700 mb-2">{doc.label} <span className="text-red-500"> *</span></label>
-                  <input
-                    id={doc.key}
-                    type="file"
-                    onChange={(e) => handleFileUpload(e, doc.key)}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
-                    // autoComplete="off"
-                  />
-                  <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors[doc.key]}</p>
-                </div>
-              ))}
-            </div>
-          </FormSection>
-
-          {/* Agreements */}
-          <FormSection title="Final Agreements">
-            <div className="space-y-4">
-              <label className="flex items-start text-gray-700">
-                <input
-                  type="checkbox"
-                  name="agreements"
-                  checked={formData.agreements}
-                  onChange={handleChange}
-                  className="mt-1 mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  required
-                  // autoComplete="off"
-                />
-                <span>I certify that all information provided is accurate and complete. <span className="text-red-500"> *</span></span>
-              </label>
-              <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.agreements}</p>
-              <label className="flex items-start text-gray-700">
-                <input
-                  type="checkbox"
-                  name="terms"
-                  checked={formData.terms}
-                  onChange={handleChange}
-                  className="mt-1 mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  required
-                  // autoComplete="off"
-                />
-                <span>I agree to RoamEase's Terms & Conditions and Privacy Policy. <span className="text-red-500"> *</span></span>
-              </label>
-              <p className="text-red-500 text-xs mt-1 min-h-[1.25rem]">{errors.terms}</p>
-            </div>
-          </FormSection>
-
-          <div className="text-center mt-10">
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full max-w-sm py-3 px-8 rounded-lg text-white font-semibold text-xl transition-all duration-300 ${
-                loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-xl'
-              }`}
-            >
-              {loading ? 'Submitting Application...' : 'Submit Application'}
-            </button>
-            <p className="text-red-500 text-sm mt-2 min-h-[1.25rem]">{error}</p>
-            <p className="mt-6 text-center text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 font-semibold hover:underline">
-                Log in here
-              </Link>
+        {/* Main Form Container */}
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-8 py-6">
+            <p className="text-indigo-100 text-center text-lg">
+              {formData.role === ROLES.LOGISTICS 
+                ? 'Join our network of trusted logistics providers' 
+                : 'Start shipping and receiving with ease'
+              }
             </p>
           </div>
-        </form>
-      )}
+
+          <div className="p-8">
+            {formData.role === ROLES.USER ? (
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Information */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <UserCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Personal Information</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Enter your full name"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.name ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Enter your email"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        autoComplete="off"
+                      />
+                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                        Phone Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={handleChange}
+                        placeholder="Enter your phone number"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.phoneNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Security */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Account Security</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <PasswordInput
+                      label="Password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                      required
+                      error={errors.password}
+                    />
+                    <PasswordInput
+                      label="Confirm Password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm your password"
+                      required
+                      error={errors.confirmPassword}
+                    />
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-4 px-6 rounded-xl text-white font-semibold text-lg transition-all duration-300 transform ${
+                      loading 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:scale-105'
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Creating Account...
+                      </div>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </button>
+                  
+                  {error && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-red-600 text-sm text-center">{error}</p>
+                    </div>
+                  )}
+                  
+                  <p className="mt-6 text-center text-gray-600">
+                    Already have an account?{' '}
+                    <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline transition-colors">
+                      Sign in here
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Company Information */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                      <Truck className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Company Information</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                        Company Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="companyName"
+                        name="companyName"
+                        type="text"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        placeholder="Enter your company name"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.companyName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="yearsInOperation" className="block text-sm font-medium text-gray-700">
+                        Years in Operation <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="yearsInOperation"
+                        name="yearsInOperation"
+                        type="number"
+                        value={formData.yearsInOperation}
+                        onChange={handleChange}
+                        placeholder="e.g. 5"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.yearsInOperation ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.yearsInOperation && <p className="text-red-500 text-sm mt-1">{errors.yearsInOperation}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
+                        Registration Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="registrationNumber"
+                        name="registrationNumber"
+                        type="text"
+                        value={formData.registrationNumber}
+                        onChange={handleChange}
+                        placeholder="Enter registration number"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.registrationNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.registrationNumber && <p className="text-red-500 text-sm mt-1">{errors.registrationNumber}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                        Country <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        id="country"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 ${
+                          errors.country ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <option value="">Select country</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                        <option value="DE">Germany</option>
+                        <option value="NG">Nigeria</option>
+                      </select>
+                      {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="companySize" className="block text-sm font-medium text-gray-700">
+                        Company Size <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        id="companySize"
+                        name="companySize"
+                        value={formData.companySize}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 ${
+                          errors.companySize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <option value="">Select size</option>
+                        <option value="small">1-50 employees</option>
+                        <option value="medium">51-200 employees</option>
+                        <option value="large">201-500 employees</option>
+                        <option value="enterprise">500+ employees</option>
+                      </select>
+                      {errors.companySize && <p className="text-red-500 text-sm mt-1">{errors.companySize}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+                        Website
+                      </label>
+                      <input
+                        id="website"
+                        name="website"
+                        type="url"
+                        value={formData.website}
+                        onChange={handleChange}
+                        placeholder="https://www.example.com"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.website ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.website && <p className="text-red-500 text-sm mt-1">{errors.website}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="fleetSize" className="block text-sm font-medium text-gray-700">
+                        Fleet Size
+                      </label>
+                      <input
+                        id="fleetSize"
+                        name="fleetSize"
+                        type="number"
+                        value={formData.fleetSize}
+                        onChange={handleChange}
+                        placeholder="Number of vehicles"
+                        min="0"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.fleetSize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.fleetSize && <p className="text-red-500 text-sm mt-1">{errors.fleetSize}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Person Information */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                      <UserCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Contact Person Information</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
+                        Contact Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="contactName"
+                        name="contactName"
+                        type="text"
+                        value={formData.contactName}
+                        onChange={handleChange}
+                        placeholder="Enter contact person name"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.contactName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.contactName && <p className="text-red-500 text-sm mt-1">{errors.contactName}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
+                        Contact Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="contactEmail"
+                        name="contactEmail"
+                        type="email"
+                        value={formData.contactEmail}
+                        onChange={handleChange}
+                        placeholder="Enter contact email"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.contactEmail ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        autoComplete="off"
+                      />
+                      {errors.contactEmail && <p className="text-red-500 text-sm mt-1">{errors.contactEmail}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="contactPosition" className="block text-sm font-medium text-gray-700">
+                        Contact Position <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="contactPosition"
+                        name="contactPosition"
+                        type="text"
+                        value={formData.contactPosition}
+                        onChange={handleChange}
+                        placeholder="e.g. Operations Manager"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.contactPosition ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.contactPosition && <p className="text-red-500 text-sm mt-1">{errors.contactPosition}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700">
+                        Contact Phone <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="contactPhone"
+                        name="contactPhone"
+                        type="tel"
+                        value={formData.contactPhone}
+                        onChange={handleChange}
+                        placeholder="Enter contact phone number"
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                          errors.contactPhone ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      />
+                      {errors.contactPhone && <p className="text-red-500 text-sm mt-1">{errors.contactPhone}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Security */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Account Security</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <PasswordInput
+                      label="Password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                      required
+                      error={errors.password}
+                    />
+                    <PasswordInput
+                      label="Confirm Password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm your password"
+                      required
+                      error={errors.confirmPassword}
+                    />
+                  </div>
+                </div>
+
+                {/* Logistics Capabilities & Regions */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Logistics Capabilities & Regions</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Services */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                        <Truck className="w-5 h-5 text-indigo-500" />
+                        Transport Services <span className="text-red-500">*</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        {['Trucking', 'Shipping', 'Air Freight', 'Rail', 'Last-Mile Delivery', 'Warehousing'].map(
+                          (service) => (
+                            <label key={service} className="flex items-center text-gray-700 hover:bg-white p-2 rounded-lg transition-colors cursor-pointer">
+                              <input
+                                type="checkbox"
+                                name={`services-${service}`}
+                                value={service}
+                                checked={formData.services.includes(service)}
+                                onChange={handleChange}
+                                className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              />
+                              <span className="flex items-center gap-2">
+                                {getServiceIcon(service)} {service}
+                              </span>
+                            </label>
+                          )
+                        )}
+                      </div>
+                      {errors.services && <p className="text-red-500 text-sm mt-1">{errors.services}</p>}
+                    </div>
+
+                    {/* Regions */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-indigo-500" />
+                        Regions Served <span className="text-red-500">*</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        {['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East', 'Africa'].map(
+                          (region) => (
+                            <label key={region} className="flex items-center text-gray-700 hover:bg-white p-2 rounded-lg transition-colors cursor-pointer">
+                              <input
+                                type="checkbox"
+                                name={`regions-${region}`}
+                                value={region}
+                                checked={formData.regions.includes(region)}
+                                onChange={handleChange}
+                                className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              />
+                              {region}
+                            </label>
+                          )
+                        )}
+                      </div>
+                      {errors.regions && <p className="text-red-500 text-sm mt-1">{errors.regions}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Required Documents */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
+                      <Package className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Required Documents</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[
+                      { label: 'Business License', key: 'businessLicense' },
+                      { label: 'Insurance Certificate', key: 'insuranceCertificate' },
+                      { label: 'Government ID', key: 'governmentId' },
+                    ].map((doc) => (
+                      <div key={doc.key} className="space-y-2">
+                        <label htmlFor={doc.key} className="block text-sm font-medium text-gray-700">
+                          {doc.label} <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            id={doc.key}
+                            type="file"
+                            onChange={(e) => handleFileUpload(e, doc.key)}
+                            className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-indigo-50 file:to-purple-50 file:text-indigo-700 hover:file:from-indigo-100 hover:file:to-purple-100 cursor-pointer border border-gray-300 rounded-xl p-2"
+                          />
+                        </div>
+                        {errors[doc.key] && <p className="text-red-500 text-sm mt-1">{errors[doc.key]}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Final Agreements */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-gradient-to-r from-gray-500 to-gray-700 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Final Agreements</h3>
+                  </div>
+                  
+                  <div className="space-y-4 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                    <label className="flex items-start text-gray-700 hover:bg-white p-3 rounded-lg transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="agreements"
+                        checked={formData.agreements}
+                        onChange={handleChange}
+                        className="mt-1 mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        required
+                      />
+                      <span className="text-sm">
+                        I certify that all information provided is accurate and complete. <span className="text-red-500">*</span>
+                      </span>
+                    </label>
+                    {errors.agreements && <p className="text-red-500 text-sm mt-1">{errors.agreements}</p>}
+                    
+                    <label className="flex items-start text-gray-700 hover:bg-white p-3 rounded-lg transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="terms"
+                        checked={formData.terms}
+                        onChange={handleChange}
+                        className="mt-1 mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        required
+                      />
+                      <span className="text-sm">
+                        I agree to RoamEase's Terms & Conditions and Privacy Policy. <span className="text-red-500">*</span>
+                      </span>
+                    </label>
+                    {errors.terms && <p className="text-red-500 text-sm mt-1">{errors.terms}</p>}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-4 px-6 rounded-xl text-white font-semibold text-lg transition-all duration-300 transform ${
+                      loading 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:scale-105'
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Submitting Application...
+                      </div>
+                    ) : (
+                      'Submit Application'
+                    )}
+                  </button>
+                  
+                  {error && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-red-600 text-sm text-center">{error}</p>
+                    </div>
+                  )}
+                  
+                  <p className="mt-6 text-center text-gray-600">
+                    Already have an account?{' '}
+                    <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline transition-colors">
+                      Sign in here
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -93,6 +93,19 @@ export const fetchAvailableShipments = createAsyncThunk(
   }
 );
 
+// Public: Fetch open shipments (no authentication required)
+export const fetchPublicOpenShipments = createAsyncThunk(
+  'shipment/fetchPublicOpen',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/shipments/public/open-shipments');
+      return response.data.shipments;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 // New: Fetch full shipment details by ID (for viewing complete information)
 export const fetchShipmentDetailsById = createAsyncThunk(
   'shipment/fetchDetailsById',
@@ -357,6 +370,22 @@ const shipmentSlice = createSlice({
           : [];
       })
       .addCase(fetchAvailableShipments.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+
+      // --- Fetch Public Open Shipments ---
+      .addCase(fetchPublicOpenShipments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPublicOpenShipments.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.availableShipments = Array.isArray(payload)
+          ? payload
+          : [];
+      })
+      .addCase(fetchPublicOpenShipments.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, DollarSign, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, DollarSign, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { fetchDashboardData, fetchTotalUsers, fetchNormalUsersCount } from '../../redux/slices/adminSlice';
 import isEqual from 'lodash.isequal';
 import { ProfilePictureModal } from '../../components/forms/ProfileForm';
@@ -36,6 +36,8 @@ const AdminDashboardHome = () => {
   console.log('AdminDashboardHome - Normal Users Count (from adminSlice):', normalUsersCount);
 
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   const getProfilePictureUrl = useCallback((profilePicturePath) => {
     if (!profilePicturePath) {
@@ -50,14 +52,23 @@ const AdminDashboardHome = () => {
     await dispatch(fetchDashboardData());
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchAndUpdate();
+      setLastUpdated(new Date());
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    fetchAndUpdate(); // Initial fetch
-
-    const interval = setInterval(() => {
+    // Only fetch data once when component mounts
+    if (!didFetch.current) {
       fetchAndUpdate();
-    }, 60000);
-
-    return () => clearInterval(interval); // Cleanup on unmount or re-render
+      setLastUpdated(new Date());
+      didFetch.current = true;
+    }
   }, [dispatch]);
 
   const adminProfile = {
@@ -133,6 +144,14 @@ const AdminDashboardHome = () => {
                   >
                     <Users size={18} />
                     View All Users
+                  </button>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="px-4 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
                   </button>
                 </div>
               </div>
@@ -314,6 +333,31 @@ const AdminDashboardHome = () => {
             </div>
           </div>
         </section>
+
+        {/* Status Bar */}
+        <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-gray-600">Dashboard Status</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+              >
+                <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+                <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       {/* New: Render ProfilePictureModal */}
       {showProfilePicModal && (

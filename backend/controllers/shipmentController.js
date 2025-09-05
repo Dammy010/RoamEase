@@ -244,6 +244,96 @@ const getAvailableShipmentsForCarrier = async (req, res) => {
   }
 };
 
+// Public version for browsing open shipments without authentication
+const getPublicOpenShipments = async (req, res) => {
+  try {
+    const shipments = await Shipment.find({
+      status: 'open'
+    })
+      .populate('user', 'name email companyName country phone') // Populate comprehensive user details
+      .sort({ createdAt: -1 });
+
+    // Transform shipments to include full details and formatted data
+    const enhancedShipments = shipments.map(shipment => {
+      const shipmentObj = shipment.toObject();
+      
+      // Add formatted dates
+      shipmentObj.formattedPickupDate = shipment.preferredPickupDate 
+        ? new Date(shipment.preferredPickupDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'Not specified';
+      
+      shipmentObj.formattedDeliveryDate = shipment.preferredDeliveryDate
+        ? new Date(shipment.preferredDeliveryDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'Not specified';
+      
+      shipmentObj.formattedCreatedDate = new Date(shipment.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Add dimensions summary
+      if (shipment.length && shipment.width && shipment.height) {
+        shipmentObj.dimensions = `${shipment.length}L × ${shipment.width}W × ${shipment.height}H`;
+      }
+
+      // Add weight summary
+      if (shipment.weight) {
+        shipmentObj.weightSummary = `${shipment.weight} kg`;
+      }
+
+      // Add quantity summary
+      shipmentObj.quantitySummary = shipment.quantity > 1 ? `${shipment.quantity} items` : '1 item';
+
+      // Add pickup/delivery summary
+      shipmentObj.routeSummary = `${shipment.pickupCity || shipment.pickupCountry} → ${shipment.deliveryCity || shipment.deliveryCountry}`;
+
+      // Add urgency indicator (if pickup date is within 3 days)
+      if (shipment.preferredPickupDate) {
+        const pickupDate = new Date(shipment.preferredPickupDate);
+        const today = new Date();
+        const diffTime = pickupDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 3 && diffDays >= 0) {
+          shipmentObj.urgency = 'High';
+          shipmentObj.urgencyColor = 'red';
+        } else if (diffDays <= 7 && diffDays >= 0) {
+          shipmentObj.urgency = 'Medium';
+          shipmentObj.urgencyColor = 'orange';
+        } else {
+          shipmentObj.urgency = 'Normal';
+          shipmentObj.urgencyColor = 'green';
+        }
+      }
+
+      return shipmentObj;
+    });
+
+    return res.json({
+      success: true,
+      shipments: enhancedShipments,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching open shipments',
+      error: err.message,
+    });
+  }
+};
+
 // New: Mark shipment as delivered and add rating/feedback
 const markAsDeliveredAndRate = async (req, res) => {
   try {
@@ -610,6 +700,7 @@ module.exports = {
   getShipmentById,
   updateShipmentStatus,
   getAvailableShipmentsForCarrier,
+  getPublicOpenShipments, // New: Export the public open shipments function
   markAsDeliveredAndRate,
   markAsDeliveredByLogistics,
   markAsReceivedByUser,

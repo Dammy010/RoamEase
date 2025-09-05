@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Bell } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/slices/authSlice"; // adjust path if needed
+import NotificationBell from "../NotificationBell";
 
 const Sidebar = ({ role }) => {
   const location = useLocation();
@@ -25,6 +26,7 @@ const Sidebar = ({ role }) => {
     { to: "/user/delivered-shipments", label: "Delivered Shipments" }, // New: Link to delivered shipments page
     { to: "/user/shipment-history", label: "Shipment History" },
     { to: "/user/rate-shipment", label: "Rate Shipment" },
+    { to: "/notifications", label: "Notifications", icon: Bell },
     { to: "/user/profile", label: "Profile" },
 
   ];
@@ -37,6 +39,7 @@ const Sidebar = ({ role }) => {
     { to: "/logistics/active-shipments", label: "Active Shipments" },
     { to: "/logistics/my-bids", label: "My Bids" },
     { to: "/logistics/chat", label: "Chat with Users" },
+    { to: "/notifications", label: "Notifications", icon: Bell },
     { to: "/logistics/profile", label: "Profile" },
   ];
 
@@ -49,6 +52,7 @@ const Sidebar = ({ role }) => {
     { to: "/admin/chat", label: "Chat Management" },
     { to: "/admin/reports-disputes", label: "Reports & Disputes" },
     { to: "/admin/platform-analytics", label: "Platform Analytics" },
+    { to: "/notifications", label: "Notifications", icon: Bell },
     { to: "/admin/profile", label: "Profile" },
   ];
 
@@ -73,10 +77,11 @@ const Sidebar = ({ role }) => {
 
       {/* Desktop Sidebar - Fixed positioning for true stickiness */}
       <aside className="hidden md:flex flex-col w-48 h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 shadow-lg fixed top-0 left-0 z-30">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold tracking-wide">
             {role.charAt(0).toUpperCase() + role.slice(1)} Panel
           </h2>
+          <NotificationBell />
         </div>
         <nav className="flex-1 space-y-1">
           {links.map((link) => {
