@@ -61,10 +61,14 @@ api.interceptors.response.use(
           throw new Error("No refresh token found");
         }
 
+        console.log("DEBUG: API Interceptor - Attempting token refresh...");
+
         // Call refresh endpoint
         const res = await axios.post("http://localhost:5000/api/auth/refresh", {
           token: refreshToken, // matches backend contract
         });
+
+        console.log("DEBUG: API Interceptor - Token refresh successful");
 
         const newAccessToken = res.data.accessToken;
 
@@ -73,10 +77,14 @@ api.interceptors.response.use(
         api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
 
         // Reconnect socket with new token
-        const { reconnectSocket } = await import('./socket');
-        const newSocket = reconnectSocket();
-        if (newSocket) {
-          console.log("Socket reconnected with new token");
+        try {
+          const { reconnectSocket } = await import('./socket');
+          const newSocket = reconnectSocket();
+          if (newSocket) {
+            console.log("Socket reconnected with new token");
+          }
+        } catch (socketError) {
+          console.warn("Socket reconnection failed:", socketError.message);
         }
 
         processQueue(null, newAccessToken);
@@ -86,18 +94,26 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (err) {
         console.error("DEBUG: API Interceptor - Token refresh failed:", err.message);
+        console.error("DEBUG: API Interceptor - Error details:", err.response?.data);
         processQueue(err, null);
+        
+        // Clear all auth data
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         
         // Dispatch logout action instead of direct redirect
-        if (window.store && window.store.dispatch) {
-          const { logout } = await import('../redux/slices/authSlice');
-          window.store.dispatch(logout());
-        } else {
-          // Fallback to direct redirect if store is not available
-          console.log("DEBUG: API Interceptor - Store not available, redirecting to login");
+        try {
+          if (window.store && window.store.dispatch) {
+            const { logout } = await import('../redux/slices/authSlice');
+            window.store.dispatch(logout());
+          } else {
+            // Fallback to direct redirect if store is not available
+            console.log("DEBUG: API Interceptor - Store not available, redirecting to login");
+            window.location.href = "/login";
+          }
+        } catch (dispatchError) {
+          console.error("DEBUG: API Interceptor - Failed to dispatch logout:", dispatchError.message);
           window.location.href = "/login";
         }
         return Promise.reject(err);

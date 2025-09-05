@@ -17,6 +17,9 @@ import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import EmailVerifyNotice from './pages/EmailVerifyNotice';
 import EmailVerificationPage from './pages/EmailVerificationPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 import HelpCenterPage from './pages/HelpCenterPage';
@@ -177,6 +180,9 @@ function App() {
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/verify-notice" element={<EmailVerifyNotice />} />
                 <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* Catch-all for public users */}
                 <Route path="*" element={<Navigate to="/" replace />} />

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { signupUser } from '../../redux/slices/authSlice';
 import PasswordInput from '../shared/PasswordInput';
+import EmailVerificationPrompt from '../EmailVerificationPrompt';
 import { Truck, Ship, Plane, Train, MapPin, Warehouse } from 'lucide-react'; // Updated: Imported more icons
 import FormSection from './FormSection';
 import { isEqual } from 'lodash'; // Added isEqual for document comparison
@@ -66,6 +67,8 @@ const SignupForm = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading, error } = useSelector((state) => state.auth);
@@ -265,58 +268,112 @@ const SignupForm = () => {
     console.log('handleSubmit clearing errors (no new errors)');
     setErrors({});
 
-    if (formData.role === ROLES.LOGISTICS) {
-      const payload = new FormData();
+    try {
+      let resultAction;
+      
+      if (formData.role === ROLES.LOGISTICS) {
+        const payload = new FormData();
 
-      // Append primitive top-level fields
-      const primitiveFields = [
-        'companyName',
-        'country',
-        'yearsInOperation',
-        'registrationNumber',
-        'companySize',
-        'contactName',
-        'contactEmail',
-        'contactPosition',
-        'contactPhone',
-        'password',
-        'confirmPassword',
-        'fleetSize',
-        'website',
-        'agreements',
-        'terms',
-      ];
-      primitiveFields.forEach((key) => {
-        let value = formData[key];
-        if (key === 'yearsInOperation') value = Number(value);
-        if (typeof value === 'boolean') value = value ? 'true' : 'false';
-        payload.append(key, value);
-      });
+        // Append primitive top-level fields
+        const primitiveFields = [
+          'companyName',
+          'country',
+          'yearsInOperation',
+          'registrationNumber',
+          'companySize',
+          'contactName',
+          'contactEmail',
+          'contactPosition',
+          'contactPhone',
+          'password',
+          'confirmPassword',
+          'fleetSize',
+          'website',
+          'agreements',
+          'terms',
+        ];
+        primitiveFields.forEach((key) => {
+          let value = formData[key];
+          if (key === 'yearsInOperation') value = Number(value);
+          if (typeof value === 'boolean') value = value ? 'true' : 'false';
+          payload.append(key, value);
+        });
 
-      // Explicitly append email and role for logistics to FormData
-      console.log('DEBUG - Frontend formData.email before FormData append:', formData.email);
-      console.log('DEBUG - Frontend formData.contactEmail before FormData append:', formData.contactEmail);
-      payload.append('email', formData.contactEmail);
-      payload.append('role', formData.role);
+        // Explicitly append email and role for logistics to FormData
+        console.log('DEBUG - Frontend formData.email before FormData append:', formData.email);
+        console.log('DEBUG - Frontend formData.contactEmail before FormData append:', formData.contactEmail);
+        payload.append('email', formData.contactEmail);
+        payload.append('role', formData.role);
 
-      // Append arrays
-      ['services', 'regions'].forEach((key) => {
-        formData[key].forEach((item) => payload.append(key, item));
-      });
+        // Append arrays
+        ['services', 'regions'].forEach((key) => {
+          formData[key].forEach((item) => payload.append(key, item));
+        });
 
-      // Append documents
-      Object.keys(formData.documents).forEach((docKey) => {
-        payload.append(docKey, formData.documents[docKey]);
-      });
+        // Append documents
+        Object.keys(formData.documents).forEach((docKey) => {
+          payload.append(docKey, formData.documents[docKey]);
+        });
 
-      dispatch(signupUser(payload));
-    } else {
-      dispatch(signupUser(formData));
+        resultAction = await dispatch(signupUser(payload));
+      } else {
+        resultAction = await dispatch(signupUser(formData));
+      }
+
+      // Handle the result
+      if (signupUser.fulfilled.match(resultAction)) {
+        // Registration successful and user is logged in
+        const loggedInUser = resultAction.payload || {};
+        const role = loggedInUser.role || "user";
+        
+        // Role-based navigation
+        switch (role) {
+          case "user":
+            navigate("/user/dashboard");
+            break;
+          case "logistics":
+            navigate("/logistics/dashboard");
+            break;
+          case "admin":
+            navigate("/admin/dashboard");
+            break;
+          default:
+            console.warn("Unknown role, redirecting to user dashboard:", role);
+            navigate("/user/dashboard");
+        }
+      } else {
+        const payload = resultAction.payload || {};
+        
+        // Check if email verification is required
+        if (payload.needsVerification) {
+          const email = payload.email || (formData.role === ROLES.USER ? formData.email : formData.contactEmail);
+          setVerificationEmail(email);
+          setShowVerificationPrompt(true);
+          return;
+        }
+        
+        // Handle other errors
+        const msg = payload.message || resultAction.error?.message;
+        console.error('Signup failed:', msg);
+      }
+    } catch (err) {
+      console.error("Unexpected signup error:", err);
     }
-  }, [formData, dispatch, validateField]);
+  }, [formData, dispatch, validateField, navigate]);
+
+  const handleVerificationSuccess = () => {
+    setShowVerificationPrompt(false);
+    setVerificationEmail("");
+    // Optionally redirect to login page
+    navigate('/login');
+  };
+
+  const handleCloseVerification = () => {
+    setShowVerificationPrompt(false);
+    setVerificationEmail("");
+  };
 
   // Helper for rendering form sections with consistent styling
-
 
   const getServiceIcon = (service) => {
     switch (service) {
@@ -339,6 +396,17 @@ const SignupForm = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-8 bg-white shadow-xl rounded-2xl my-10">
+      {/* Email Verification Prompt */}
+      {showVerificationPrompt && (
+        <div className="mb-8">
+          <EmailVerificationPrompt
+            email={verificationEmail}
+            onVerified={handleVerificationSuccess}
+            onClose={handleCloseVerification}
+          />
+        </div>
+      )}
+      
       {/* Role Toggle */}
       <div className="flex justify-center mb-8 space-x-4">
         {Object.values(ROLES).map((role) => (

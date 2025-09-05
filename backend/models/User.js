@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     verified: { type: Boolean, default: false },
+    verificationToken: { type: String, default: "" },
+    verificationTokenExpires: { type: Date, default: null },
+    verificationCode: { type: String, default: "" },
+    verificationCodeExpires: { type: Date, default: null },
+    
+    // Password Reset Fields
+    resetPasswordToken: { type: String, default: "" },
+    resetPasswordExpires: { type: Date, default: null },
+    resetPasswordCode: { type: String, default: "" },
+    resetPasswordCodeExpires: { type: Date, default: null },
 
     // User Profile Fields
     phoneNumber: {

@@ -37,6 +37,19 @@ try {
 export const loginUser = createAsyncThunk("auth/login", async (data, thunkAPI) => {
   try {
     const res = await api.post("/auth/login", data);
+    
+    // Check if email verification is required
+    if (res.data.isVerified === false) {
+      const message = res.data.message || "Please verify your email address before logging in.";
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ 
+        message,
+        needsVerification: true,
+        email: res.data.email,
+        code: "EMAIL_VERIFICATION_REQUIRED"
+      });
+    }
+
     const { _id, name, email, role, phoneNumber, profilePicture, ...restUser } = res.data; // Capture other user fields
     
     // Construct userData with all relevant fields
@@ -57,6 +70,19 @@ export const loginUser = createAsyncThunk("auth/login", async (data, thunkAPI) =
     return userData;
   } catch (err) {
     const message = err.response?.data?.message || "Login failed";
+    const needsVerification = err.response?.data?.isVerified === false;
+    const email = err.response?.data?.email;
+    
+    if (needsVerification) {
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ 
+        message,
+        needsVerification: true,
+        email,
+        code: "EMAIL_VERIFICATION_REQUIRED"
+      });
+    }
+    
     toast.error(message);
     return thunkAPI.rejectWithValue({ message });
   }
@@ -67,6 +93,18 @@ export const signupUser = createAsyncThunk("auth/signup", async (data, thunkAPI)
   try {
     const headers = data instanceof FormData ? {} : { "Content-Type": "application/json" };
     const res = await api.post("/auth/register", data, { headers });
+
+    // Check if email verification is required
+    if (res.data.needsVerification || (res.data.message && res.data.message.includes("verify your account"))) {
+      const message = res.data.message;
+      toast.success(message);
+      return thunkAPI.rejectWithValue({ 
+        message,
+        needsVerification: true,
+        email: res.data.email,
+        code: "EMAIL_VERIFICATION_REQUIRED"
+      });
+    }
 
     const { _id, name, email, role, phoneNumber, profilePicture, ...restUser } = res.data; // Capture other user fields
     const userData = { _id, name, email, role, phoneNumber, profilePicture, ...restUser };
@@ -79,20 +117,57 @@ export const signupUser = createAsyncThunk("auth/signup", async (data, thunkAPI)
     return userData;
   } catch (err) {
     const message = err.response?.data?.message || "Signup failed";
+    const needsVerification = err.response?.data?.message?.includes("verify your account");
+    const email = err.response?.data?.email;
+    
+    if (needsVerification) {
+      toast.success(message); // Show as success since verification email was sent
+      return thunkAPI.rejectWithValue({ 
+        message,
+        needsVerification: true,
+        email,
+        code: "EMAIL_VERIFICATION_REQUIRED"
+      });
+    }
+    
     toast.error(message);
     return thunkAPI.rejectWithValue({ message });
   }
 });
 
 // Verify Email
-export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (token, thunkAPI) => {
+export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (code, thunkAPI) => {
   try {
-    const res = await api.post(`/auth/verify-email/${token}`);
-    toast.success("Email verified. You may now log in.");
+    const res = await api.post(`/auth/verify`, { code });
+    toast.success("Email verified successfully! You can now log in.");
     return res.data;
   } catch (err) {
     const message = err.response?.data?.message || "Verification failed";
     toast.error(message);
+    return thunkAPI.rejectWithValue({ message });
+  }
+});
+
+// Resend Verification Email
+export const resendVerificationEmail = createAsyncThunk("auth/resendVerificationEmail", async (email, thunkAPI) => {
+  try {
+    const res = await api.post("/auth/resend-verification", { email });
+    toast.success("Verification email sent! Please check your inbox.");
+    return res.data;
+  } catch (err) {
+    const message = err.response?.data?.message || "Failed to resend verification email";
+    toast.error(message);
+    return thunkAPI.rejectWithValue({ message });
+  }
+});
+
+// Check Verification Status
+export const checkVerificationStatus = createAsyncThunk("auth/checkVerificationStatus", async (email, thunkAPI) => {
+  try {
+    const res = await api.get(`/auth/verification-status?email=${encodeURIComponent(email)}`);
+    return res.data;
+  } catch (err) {
+    const message = err.response?.data?.message || "Failed to check verification status";
     return thunkAPI.rejectWithValue({ message });
   }
 });
@@ -231,6 +306,32 @@ const authSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Update failed";
+      })
+
+      // Resend Verification Email
+      .addCase(resendVerificationEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendVerificationEmail.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(resendVerificationEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to resend verification email";
+      })
+
+      // Check Verification Status
+      .addCase(checkVerificationStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkVerificationStatus.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(checkVerificationStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to check verification status";
       });
   },
 });

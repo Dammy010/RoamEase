@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const ResponseHelper = require("../utils/responseHelper");
 const Logger = require("../utils/logger");
 const ValidationHelper = require("../utils/validationHelper");
+const { generateVerificationToken, generateVerificationCode, generateResetToken, sendVerificationEmail, sendResendVerificationEmail, sendPasswordResetEmail, getEmailAnalytics } = require("../utils/emailService");
 
 // ===== HELPERS =====
 
@@ -90,6 +91,10 @@ const registerUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     // Base user data
     const userData = {
       name: name || "",
@@ -97,6 +102,9 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
       role,
       phoneNumber: phoneNumber || "",
+      isVerified: false,
+      verificationCode,
+      verificationCodeExpires,
     };
 
     // Add logistics-specific fields
@@ -126,6 +134,21 @@ const registerUser = async (req, res) => {
     // Save user
     const user = await User.create(userData);
 
+    // Send verification email
+    try {
+      console.log('📧 Attempting to send verification email to:', user.email);
+      const emailResult = await sendVerificationEmail(user.email, verificationCode, user.name);
+      if (emailResult.success) {
+        console.log('✅ Verification email sent successfully to:', user.email);
+      } else {
+        console.error('❌ Failed to send verification email:', emailResult.error);
+        // Don't fail registration if email fails, just log it
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending verification email:', emailError.message);
+      // Don't fail registration if email fails, just log it
+    }
+
     // Prepare response
     let responseData = {
       _id: user._id,
@@ -134,8 +157,12 @@ const registerUser = async (req, res) => {
       role: user.role,
       phoneNumber: user.phoneNumber,
       profilePicture: normalizePath(user.profilePicture),
-      accessToken: generateAccessToken(user._id),
-      refreshToken: generateRefreshToken(user._id),
+      isVerified: user.isVerified,
+      message: "Registration successful! Please check your email to verify your account.",
+      needsVerification: true, // Add this flag for frontend
+      // Don't send tokens until email is verified
+      // accessToken: generateAccessToken(user._id),
+      // refreshToken: generateRefreshToken(user._id),
     };
 
     if (user.role === "logistics") {
@@ -154,7 +181,6 @@ const registerUser = async (req, res) => {
         fleetSize: user.fleetSize,
         website: user.website,
         verificationStatus: user.verificationStatus,
-        isVerified: user.isVerified,
       };
     }
 
@@ -205,7 +231,9 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Don’t leak password
+    // Email verification check removed - users can now log in without verification
+
+    // Don't leak password
     user.password = undefined;
 
     let responseData = {
@@ -411,10 +439,450 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// ===== VERIFY EMAIL =====
+const verifyEmail = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ 
+        message: "Verification code is required",
+        code: "CODE_REQUIRED"
+      });
+    }
+
+    // Code format validation (should be 6 digits)
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ 
+        message: "Invalid verification code format. Please enter a 6-digit code.",
+        code: "INVALID_CODE_FORMAT"
+      });
+    }
+
+    // Find user with the verification code
+    const user = await User.findOne({
+      verificationCode: code,
+      verificationCodeExpires: { $gt: Date.now() } // Code not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid or expired verification code. Please request a new verification email.",
+        code: "INVALID_OR_EXPIRED_CODE"
+      });
+    }
+
+    // Check if already verified
+    if (user.isVerified) {
+      return res.status(400).json({
+        message: "Email is already verified",
+        code: "ALREADY_VERIFIED",
+        isVerified: true
+      });
+    }
+
+    // Update user as verified
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    // Log successful verification
+    console.log(`✅ Email verified successfully for user: ${user.email}`);
+
+    res.json({
+      message: "Email verified successfully! You can now log in to your account.",
+      isVerified: true,
+      email: user.email,
+      name: user.name
+    });
+  } catch (error) {
+    console.error("Verify email error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
+// ===== RESEND VERIFICATION EMAIL =====
+const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Enhanced validation
+    if (!email) {
+      return res.status(400).json({ 
+        message: "Email is required",
+        field: "email"
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        message: "Please provide a valid email address",
+        field: "email"
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ 
+        message: "No account found with this email address",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    // Check if already verified
+    if (user.isVerified) {
+      return res.status(400).json({ 
+        message: "Email is already verified",
+        isVerified: true,
+        code: "ALREADY_VERIFIED"
+      });
+    }
+
+    // Check if code is still valid (not expired)
+    const now = new Date();
+    if (user.verificationCode && user.verificationCodeExpires && user.verificationCodeExpires > now) {
+      const timeLeft = Math.ceil((user.verificationCodeExpires - now) / (1000 * 60)); // minutes
+      return res.status(429).json({ 
+        message: `Please wait ${timeLeft} minutes before requesting a new verification email`,
+        code: "TOO_MANY_REQUESTS",
+        retryAfter: timeLeft
+      });
+    }
+
+    // Generate new verification code
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Update user with new code
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpires = verificationCodeExpires;
+    await user.save();
+
+    // Send verification email
+    try {
+      const emailResult = await sendResendVerificationEmail(user.email, verificationCode, user.name);
+      if (!emailResult.success) {
+        console.error('Failed to send resend verification email:', emailResult.error);
+        return res.status(500).json({ 
+          message: "Failed to send verification email. Please try again later.",
+          code: "EMAIL_SEND_FAILED"
+        });
+      }
+    } catch (emailError) {
+      console.error('Error sending resend verification email:', emailError);
+      return res.status(500).json({ 
+        message: "Failed to send verification email. Please try again later.",
+        code: "EMAIL_SEND_FAILED"
+      });
+    }
+
+    res.json({
+      message: "Verification email sent successfully! Please check your email.",
+      email: user.email,
+      expiresIn: "24 hours"
+    });
+  } catch (error) {
+    console.error("Resend verification email error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
+// ===== CHECK VERIFICATION STATUS =====
+const checkVerificationStatus = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ 
+        message: "Email parameter is required",
+        field: "email"
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        message: "Please provide a valid email address",
+        field: "email"
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email }).select('email isVerified verificationCodeExpires');
+
+    if (!user) {
+      return res.status(404).json({ 
+        message: "No account found with this email address",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    const now = new Date();
+    const hasValidCode = user.verificationCodeExpires && user.verificationCodeExpires > now;
+    const timeLeft = hasValidCode ? Math.ceil((user.verificationCodeExpires - now) / (1000 * 60)) : 0;
+
+    res.json({
+      email: user.email,
+      isVerified: user.isVerified,
+      hasValidCode,
+      timeLeft: timeLeft > 0 ? `${timeLeft} minutes` : null,
+      canResend: !hasValidCode || timeLeft <= 0
+    });
+  } catch (error) {
+    console.error("Check verification status error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
+// ===== EMAIL ANALYTICS =====
+const getEmailAnalyticsData = async (req, res) => {
+  try {
+    // Only allow admin users to access analytics
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({
+        message: "Access denied. Admin privileges required.",
+        code: "ADMIN_REQUIRED"
+      });
+    }
+
+    const analytics = getEmailAnalytics();
+    res.json(analytics);
+  } catch (error) {
+    console.error("Get email analytics error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
+// ===== FORGOT PASSWORD =====
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Enhanced validation
+    if (!email) {
+      return res.status(400).json({ 
+        message: "Email is required",
+        field: "email"
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        message: "Please provide a valid email address",
+        field: "email"
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({
+        message: "If an account with that email exists, we've sent a password reset link.",
+        email: email
+      });
+    }
+
+    // Generate reset code
+    const resetCode = generateVerificationCode();
+    const resetCodeExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Update user with reset code
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordCodeExpires = resetCodeExpires;
+    await user.save();
+
+    // Send password reset email
+    try {
+      const emailResult = await sendPasswordResetEmail(user.email, resetCode, user.name);
+      if (!emailResult.success) {
+        console.error('Failed to send password reset email:', emailResult.error);
+        return res.status(500).json({ 
+          message: "Failed to send password reset email. Please try again later.",
+          code: "EMAIL_SEND_FAILED"
+        });
+      }
+    } catch (emailError) {
+      console.error('Error sending password reset email:', emailError);
+      return res.status(500).json({ 
+        message: "Failed to send password reset email. Please try again later.",
+        code: "EMAIL_SEND_FAILED"
+      });
+    }
+
+    res.json({
+      message: "If an account with that email exists, we've sent a password reset link.",
+      email: user.email,
+      expiresIn: "1 hour"
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
+// ===== VALIDATE RESET CODE =====
+const validateResetCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ 
+        message: "Reset code is required",
+        code: "CODE_REQUIRED"
+      });
+    }
+
+    // Code format validation (should be 6 digits)
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ 
+        message: "Invalid reset code format. Please enter a 6-digit code.",
+        code: "INVALID_CODE_FORMAT"
+      });
+    }
+
+    // Find user with the reset code
+    const user = await User.findOne({
+      resetPasswordCode: code,
+      resetPasswordCodeExpires: { $gt: Date.now() } // Code not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid or expired reset code. Please request a new password reset.",
+        code: "INVALID_OR_EXPIRED_CODE"
+      });
+    }
+
+    res.json({
+      message: "Reset code is valid",
+      success: true,
+      email: user.email
+    });
+  } catch (error) {
+    console.error("Validate reset code error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
+// ===== RESET PASSWORD =====
+const resetPassword = async (req, res) => {
+  try {
+    const { code, password, confirmPassword } = req.body;
+
+    // Validation
+    if (!code) {
+      return res.status(400).json({ 
+        message: "Reset code is required",
+        code: "CODE_REQUIRED"
+      });
+    }
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({ 
+        message: "Password and confirm password are required",
+        fields: ["password", "confirmPassword"]
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ 
+        message: "Passwords do not match",
+        field: "confirmPassword"
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        message: "Password must be at least 6 characters",
+        field: "password"
+      });
+    }
+
+    // Code format validation (should be 6 digits)
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ 
+        message: "Invalid reset code format. Please enter a 6-digit code.",
+        code: "INVALID_CODE_FORMAT"
+      });
+    }
+
+    // Find user with the reset code
+    const user = await User.findOne({
+      resetPasswordCode: code,
+      resetPasswordCodeExpires: { $gt: Date.now() } // Code not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid or expired reset code. Please request a new password reset.",
+        code: "INVALID_OR_EXPIRED_CODE"
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update user password and clear reset code
+    user.password = hashedPassword;
+    user.resetPasswordCode = undefined;
+    user.resetPasswordCodeExpires = undefined;
+    await user.save();
+
+    // Log successful password reset
+    console.log(`✅ Password reset successfully for user: ${user.email}`);
+
+    res.json({
+      message: "Password reset successfully! You can now log in with your new password.",
+      success: true
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ 
+      message: "Something went wrong. Please try again.",
+      code: "INTERNAL_ERROR"
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   refreshAccessToken,
   getProfile,
   updateProfile,
+  verifyEmail,
+  resendVerificationEmail,
+  checkVerificationStatus,
+  getEmailAnalyticsData,
+  forgotPassword,
+  validateResetCode,
+  resetPassword,
 };
