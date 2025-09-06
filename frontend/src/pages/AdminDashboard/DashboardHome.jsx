@@ -5,6 +5,7 @@ import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Pac
 import { fetchDashboardData, fetchTotalUsers, fetchNormalUsersCount } from '../../redux/slices/adminSlice';
 import isEqual from 'lodash.isequal';
 import { ProfilePictureModal } from '../../components/forms/ProfileForm';
+import { getProfilePictureUrl } from '../../utils/imageUtils';
 
 const AdminDashboardHome = () => {
   const navigate = useNavigate();
@@ -39,14 +40,6 @@ const AdminDashboardHome = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  const getProfilePictureUrl = useCallback((profilePicturePath) => {
-    if (!profilePicturePath) {
-      return ""; // Modified: Return empty string for no image instead of a dummy external URL
-    }
-    const backendBaseUrl = process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:5000';
-    let fullUrl = `${backendBaseUrl}/${profilePicturePath.replace(/\\/g, '/')}`;
-    return fullUrl;
-  }, []);
 
   const fetchAndUpdate = async () => {
     await dispatch(fetchDashboardData());
@@ -76,6 +69,11 @@ const AdminDashboardHome = () => {
     role: user?.role || 'Administrator',
     avatar: getProfilePictureUrl(user?.profilePicture), // Modified: Use the constructed URL
   };
+
+  // Debug logging
+  console.log('Admin Dashboard - User data:', user);
+  console.log('Admin Dashboard - Profile picture path:', user?.profilePicture);
+  console.log('Admin Dashboard - Constructed avatar URL:', adminProfile.avatar);
 
   const modules = [
     { name: 'Verified Logistics', description: 'Approved logistics companies.', icon: <Truck size={24} />, color: 'from-green-500 to-green-600', path: '/admin/logistics-list', count: analytics?.logistics?.verified || 0 },

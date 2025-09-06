@@ -8,6 +8,7 @@ import { ProfilePictureModal } from "../../components/forms/ProfileForm"; // New
 import { getLogisticsDisplayName, getVerificationStatusText } from "../../utils/logisticsUtils";
 import { fetchProfile } from "../../redux/slices/authSlice";
 import { fetchLogisticsDashboardData, fetchLogisticsHistory } from "../../redux/slices/logisticsSlice";
+import { getProfilePictureUrl } from "../../utils/imageUtils";
 
 
 const LogisticsDashboardHome = () => {
@@ -24,19 +25,6 @@ const LogisticsDashboardHome = () => {
 
 
 
-  // Helper function to get profile picture URL
-  const getProfilePictureUrl = (profilePicture) => {
-    if (!profilePicture) return null;
-    if (profilePicture.startsWith('http')) return profilePicture;
-    
-    // If the path already includes 'uploads/' prefix, remove it to avoid duplication
-    if (profilePicture.startsWith('uploads/')) {
-      return `http://localhost:5000/${profilePicture}`;
-    }
-    
-    // If it's just a filename, assume it's in the profiles directory
-    return `http://localhost:5000/uploads/profiles/${profilePicture}`;
-  };
 
   // Fetch dashboard data when component mounts
   useEffect(() => {
@@ -72,6 +60,11 @@ const LogisticsDashboardHome = () => {
     role: getVerificationStatusText(user) || "Partner",
     avatar: getProfilePictureUrl(user?.profilePicture),
   };
+
+  // Debug logging
+  console.log('Logistics Dashboard - User data:', user);
+  console.log('Logistics Dashboard - Profile picture path:', user?.profilePicture);
+  console.log('Logistics Dashboard - Constructed avatar URL:', logisticsUser.avatar);
 
   // Enhanced Debug: Log user data to console
   try {

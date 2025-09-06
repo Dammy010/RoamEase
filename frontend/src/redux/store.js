@@ -7,6 +7,8 @@ import paymentReducer from './slices/paymentSlice';
 import bidReducer from './slices/bidSlice';
 import logisticsReducer from './slices/logisticsSlice';
 import notificationReducer from './slices/notificationSlice';
+import profileReducer from './slices/profileSlice';
+import settingsReducer from './slices/settingsSlice';
 
 export default configureStore({
   reducer: {
@@ -18,5 +20,7 @@ export default configureStore({
     bid: bidReducer,
     logistics: logisticsReducer,
     notifications: notificationReducer,
+    profile: profileReducer,
+    settings: settingsReducer,
   },
 });

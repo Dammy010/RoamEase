@@ -5,8 +5,8 @@ const userSchema = new mongoose.Schema(
     // Common Fields
     name: {
       type: String,
-      required: function () {
-        return this.role === "user";
+      required: function() {
+        return this.role !== 'logistics';
       },
       trim: true,
       default: "",
@@ -42,8 +42,8 @@ const userSchema = new mongoose.Schema(
     // User Profile Fields
     phoneNumber: {
       type: String,
-      required: function () {
-        return this.role === "user";
+      required: function() {
+        return this.role !== 'logistics';
       },
       default: "",
     },
@@ -69,9 +69,8 @@ const userSchema = new mongoose.Schema(
     },
     country: {
       type: String,
-      required: function () {
-        return this.role === "logistics";
-      },
+      required: true,
+      default: "",
     },
     yearsInOperation: {
       type: Number,
@@ -160,6 +159,42 @@ const userSchema = new mongoose.Schema(
       },
       default: false,
     },
+
+    // Additional Profile Fields
+    phone: { type: String, default: "" },
+    country: { type: String, default: "" },
+    address: { type: String, default: "" },
+    bio: { type: String, default: "" },
+    website: { type: String, default: "" },
+    yearsInOperation: { type: String, default: "" },
+    companySize: { type: String, default: "" },
+    registrationNumber: { type: String, default: "" },
+
+    // User Preferences
+    preferences: {
+      theme: { type: String, default: "light" },
+      currency: { type: String, default: "USD" },
+      language: { type: String, default: "en" },
+      timezone: { type: String, default: "UTC" }
+    },
+
+    // Notification Preferences
+    notificationPreferences: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      marketing: { type: Boolean, default: false },
+      security: { type: Boolean, default: true },
+      updates: { type: Boolean, default: true }
+    },
+
+    // Privacy Settings
+    privacySettings: {
+      profileVisibility: { type: String, default: "public" },
+      showEmail: { type: Boolean, default: true },
+      showPhone: { type: Boolean, default: false },
+      showLocation: { type: Boolean, default: true }
+    }
   },
   { timestamps: true }
 );

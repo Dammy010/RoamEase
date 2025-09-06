@@ -27,8 +27,8 @@ const Sidebar = ({ role }) => {
     { to: "/user/shipment-history", label: "Shipment History" },
     { to: "/user/rate-shipment", label: "Rate Shipment" },
     { to: "/notifications", label: "Notifications", icon: Bell },
-    { to: "/user/profile", label: "Profile" },
-
+    { to: "/profile", label: "Profile" },
+    { to: "/settings", label: "Settings" },
   ];
 
   const logisticsLinks = [
@@ -40,7 +40,8 @@ const Sidebar = ({ role }) => {
     { to: "/logistics/my-bids", label: "My Bids" },
     { to: "/logistics/chat", label: "Chat with Users" },
     { to: "/notifications", label: "Notifications", icon: Bell },
-    { to: "/logistics/profile", label: "Profile" },
+    { to: "/profile", label: "Profile" },
+    { to: "/settings", label: "Settings" },
   ];
 
   const adminLinks = [
@@ -53,7 +54,8 @@ const Sidebar = ({ role }) => {
     { to: "/admin/reports-disputes", label: "Reports & Disputes" },
     { to: "/admin/platform-analytics", label: "Platform Analytics" },
     { to: "/notifications", label: "Notifications", icon: Bell },
-    { to: "/admin/profile", label: "Profile" },
+    { to: "/profile", label: "Profile" },
+    { to: "/settings", label: "Settings" },
   ];
 
   const links =

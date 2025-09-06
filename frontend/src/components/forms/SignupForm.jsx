@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { signupUser } from '../../redux/slices/authSlice';
 import PasswordInput from '../shared/PasswordInput';
 import EmailVerificationPrompt from '../EmailVerificationPrompt';
+import CountrySelect from '../shared/CountrySelect';
 import { Truck, Ship, Plane, Train, MapPin, Warehouse, UserCircle, Shield, CheckCircle, Package } from 'lucide-react'; // Updated: Imported more icons
 import FormSection from './FormSection';
 import { isEqual } from 'lodash'; // Added isEqual for document comparison
@@ -14,7 +15,7 @@ const ROLES = {
 };
 
 const REQUIRED_FIELDS = {
-  [ROLES.USER]: ['name', 'email', 'password', 'confirmPassword', 'phoneNumber'],
+  [ROLES.USER]: ['name', 'email', 'password', 'confirmPassword', 'phoneNumber', 'country'],
   [ROLES.LOGISTICS]: [
     'companyName',
     'yearsInOperation',
@@ -46,10 +47,10 @@ const SignupForm = () => {
     password: '',
     confirmPassword: '',
     phoneNumber: '',
-    role: ROLES.USER,
-    // Logistics fields
-    companyName: '',
     country: '',
+    role: ROLES.USER,
+    // Logistics fields (no name/phoneNumber - using companyName/contactPhone instead)
+    companyName: '',
     yearsInOperation: '',
     registrationNumber: '',
     companySize: '',
@@ -529,6 +530,20 @@ const SignupForm = () => {
                       />
                       {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
                     </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                        Country <span className="text-red-500">*</span>
+                      </label>
+                      <CountrySelect
+                        value={formData.country}
+                        onChange={(value) => handleChange({ target: { name: 'country', value } })}
+                        placeholder="Select your country"
+                        error={!!errors.country}
+                        className="w-full"
+                      />
+                      {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                    </div>
                   </div>
                 </div>
 
@@ -670,22 +685,13 @@ const SignupForm = () => {
                       <label htmlFor="country" className="block text-sm font-medium text-gray-700">
                         Country <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        id="country"
-                        name="country"
+                      <CountrySelect
                         value={formData.country}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 ${
-                          errors.country ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <option value="">Select country</option>
-                        <option value="US">United States</option>
-                        <option value="UK">United Kingdom</option>
-                        <option value="CA">Canada</option>
-                        <option value="DE">Germany</option>
-                        <option value="NG">Nigeria</option>
-                      </select>
+                        onChange={(value) => handleChange({ target: { name: 'country', value } })}
+                        placeholder="Select country"
+                        error={!!errors.country}
+                        className="w-full"
+                      />
                       {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
                     </div>
                     

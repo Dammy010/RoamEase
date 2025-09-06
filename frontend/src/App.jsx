@@ -5,6 +5,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import React, { useEffect } from 'react';
 import { initSocket, getSocket, initializeSocketAfterLogin } from './services/socket';
 
+// Context Providers
+import { ThemeProvider } from './contexts/ThemeContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
+
 // New: Import Sidebar
 import Sidebar from './components/shared/Sidebar';
 import Navbar from './components/shared/Navbar';
@@ -27,6 +31,8 @@ import HelpCenterPage from './pages/HelpCenterPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import FAQPage from './pages/FAQPage';
+import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 
 // User Dashboard Pages
@@ -105,9 +111,10 @@ function App() {
   }, [user]);
 
   return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
-      <div className="flex h-screen">
+    <ThemeProvider>
+      <CurrencyProvider>
+        <ToastContainer position="top-right" autoClose={3000} />
+        <div className="flex h-screen">
         {user ? (
           <>
             <Sidebar role={user.role} />
@@ -159,9 +166,11 @@ function App() {
                   <Route path="/admin/profile" element={<AdminProfile />} />
                 </Route>
 
-                {/* Common notification route for all authenticated users */}
+                {/* Common routes for all authenticated users */}
                 <Route element={<ProtectedRoute allowedRoles={['user', 'logistics', 'admin']} />}>
                   <Route path="/notifications" element={<NotificationPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 
                 {/* Catch-all for authenticated users to redirect to their dashboard */}
@@ -199,8 +208,9 @@ function App() {
             </div>
           </div>
         )}
-      </div>
-    </>
+        </div>
+      </CurrencyProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,0 +1,46 @@
+// Utility functions for handling image URLs
+
+/**
+ * Get the full URL for a profile picture
+ * @param {string} profilePicture - The profile picture filename or path
+ * @returns {string|null} - The full URL or null if no picture
+ */
+export const getProfilePictureUrl = (profilePicture) => {
+  if (!profilePicture) return null;
+  
+  // If it's already a full URL, return as is
+  if (profilePicture.startsWith('http')) return profilePicture;
+  
+  // Get the backend base URL
+  const backendBaseUrl = process.env.NODE_ENV === 'production' 
+    ? window.location.origin 
+    : 'http://localhost:5000';
+  
+  // If the path already includes 'uploads/' prefix, use it directly
+  if (profilePicture.startsWith('uploads/')) {
+    return `${backendBaseUrl}/${profilePicture.replace(/\\/g, '/')}`;
+  }
+  
+  // If it's just a filename, assume it's in the profiles directory
+  return `${backendBaseUrl}/uploads/profiles/${profilePicture}`;
+};
+
+/**
+ * Get the full URL for any static asset
+ * @param {string} assetPath - The asset path
+ * @returns {string|null} - The full URL or null if no path
+ */
+export const getStaticAssetUrl = (assetPath) => {
+  if (!assetPath) return null;
+  
+  // If it's already a full URL, return as is
+  if (assetPath.startsWith('http')) return assetPath;
+  
+  // Get the backend base URL
+  const backendBaseUrl = process.env.NODE_ENV === 'production' 
+    ? window.location.origin 
+    : 'http://localhost:5000';
+  
+  // Normalize path separators and construct full URL
+  return `${backendBaseUrl}/${assetPath.replace(/\\/g, '/')}`;
+};

@@ -64,8 +64,19 @@ const registerUser = async (req, res) => {
         .json({ message: "All required fields must be provided" });
     }
 
-    if (role === "user" && !name) {
-      return res.status(400).json({ message: "Name is required for users" });
+    // Only require name, phoneNumber, and country for non-logistics users
+    if (role !== 'logistics') {
+      if (!name) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      if (!phoneNumber) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      if (!country) {
+        return res.status(400).json({ message: "Country is required" });
+      }
     }
 
     if (role === "logistics" && !registrationNumber) {
@@ -97,15 +108,20 @@ const registerUser = async (req, res) => {
 
     // Base user data
     const userData = {
-      name: name || "",
       email,
       password: hashedPassword,
       role,
-      phoneNumber: phoneNumber || "",
       isVerified: false,
       verificationCode,
       verificationCodeExpires,
     };
+
+    // Add name, phoneNumber, and country for non-logistics users
+    if (role !== 'logistics') {
+      userData.name = name || "";
+      userData.phoneNumber = phoneNumber || "";
+      userData.country = country || "";
+    }
 
     // Add logistics-specific fields
     if (role === "logistics") {
@@ -152,10 +168,8 @@ const registerUser = async (req, res) => {
     // Prepare response
     let responseData = {
       _id: user._id,
-      name: user.name,
       email: user.email,
       role: user.role,
-      phoneNumber: user.phoneNumber,
       profilePicture: normalizePath(user.profilePicture),
       isVerified: user.isVerified,
       message: "Registration successful! Please check your email to verify your account.",
@@ -164,6 +178,13 @@ const registerUser = async (req, res) => {
       // accessToken: generateAccessToken(user._id),
       // refreshToken: generateRefreshToken(user._id),
     };
+
+    // Add name, phoneNumber, and country for non-logistics users
+    if (user.role !== 'logistics') {
+      responseData.name = user.name;
+      responseData.phoneNumber = user.phoneNumber;
+      responseData.country = user.country;
+    }
 
     if (user.role === "logistics") {
       responseData = {
@@ -872,6 +893,78 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Upload profile picture
+const uploadProfilePicture = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No profile picture file provided'
+      });
+    }
+
+    // Update user with new profile picture
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: req.file.filename },
+      { new: true }
+    ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpires');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile picture uploaded successfully',
+      profilePicture: user.profilePicture
+    });
+  } catch (error) {
+    console.error('Upload profile picture error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during profile picture upload'
+    });
+  }
+};
+
+// Delete profile picture
+const deleteProfilePicture = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Update user to remove profile picture
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $unset: { profilePicture: 1 } },
+      { new: true }
+    ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpires');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile picture deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete profile picture error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during profile picture deletion'
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -885,4 +978,6 @@ module.exports = {
   forgotPassword,
   validateResetCode,
   resetPassword,
+  uploadProfilePicture,
+  deleteProfilePicture,
 };

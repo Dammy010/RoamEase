@@ -7,6 +7,7 @@ import { initializeSocketAfterLogin } from "../../services/socket";
 import { fetchUserShipments, fetchShipmentHistory } from "../../redux/slices/shipmentSlice";
 import { fetchProfile } from "../../redux/slices/authSlice";
 import { ProfilePictureModal } from "../../components/forms/ProfileForm";
+import { getProfilePictureUrl } from "../../utils/imageUtils";
 
 const UserDashboardHome = () => {
   const navigate = useNavigate();
@@ -20,16 +21,6 @@ const UserDashboardHome = () => {
 
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
 
-  const getProfilePictureUrl = useCallback((profilePicturePath) => {
-    if (!profilePicturePath) {
-      return ""; // Modified: Return empty string for no image instead of a dummy external URL
-    }
-    const backendBaseUrl = process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:5000';
-    let fullUrl = `${backendBaseUrl}/${profilePicturePath.replace(/\\/g, '/')}`;
-    console.log('DEBUG (Frontend-Dashboard): Raw profilePicture path from user object:', profilePicturePath);
-    console.log('DEBUG (Frontend-Dashboard): Constructed full profile picture URL:', fullUrl);
-    return fullUrl;
-  }, []);
 
   useEffect(() => {
     if (user) {
@@ -66,8 +57,13 @@ const UserDashboardHome = () => {
     email: user?.email || "N/A",
     phoneNumber: user?.phoneNumber || "N/A",
     role: user?.role || "user",
-    avatar: getProfilePictureUrl(user?.profilePicture), // Modified: Use the constructed URL
+    avatar: getProfilePictureUrl(user?.profilePicture),
   };
+
+  // Debug logging
+  console.log('User Dashboard - User data:', user);
+  console.log('User Dashboard - Profile picture path:', user?.profilePicture);
+  console.log('User Dashboard - Constructed avatar URL:', userProfile.avatar);
 
   const modules = [
     // All modules removed as requested

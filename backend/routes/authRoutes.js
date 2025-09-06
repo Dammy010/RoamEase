@@ -13,6 +13,8 @@ const {
   forgotPassword,
   validateResetCode,
   resetPassword,
+  uploadProfilePicture,
+  deleteProfilePicture,
 } = require("../controllers/authController");
 const { protect } = require("../middlewares/authMiddleware"); // Destructure protect
 const upload = require("../middlewares/uploadMiddleware");
@@ -40,6 +42,10 @@ router.post("/reset-password", resetPassword);
 router.get("/profile", protect, getProfile);
 // Use the new consolidated profileUpdateUpload middleware
 router.put("/profile", protect, profileUpdateUpload, updateProfile);
-router.get("/email-analytics", protect, getEmailAnalyticsData); 
+router.get("/email-analytics", protect, getEmailAnalyticsData);
+
+// Profile Picture Routes
+router.post("/upload-profile-picture", protect, upload.single('profilePicture'), uploadProfilePicture);
+router.delete("/profile-picture", protect, deleteProfilePicture); 
 
 module.exports = router;
