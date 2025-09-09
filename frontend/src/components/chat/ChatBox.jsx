@@ -82,8 +82,8 @@ const ChatBox = () => {
 
   if (!selectedConversationId)
     return (
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="text-center p-8 rounded-2xl bg-white/80 backdrop-blur-sm shadow-xl border border-white/20">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center p-8 rounded-2xl bg-white dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-white/20">
           <div className="text-6xl mb-4">💬</div>
           <p className="text-lg font-semibold text-gray-700">Select a chat to start messaging</p>
           <p className="text-sm text-gray-500 mt-2">Choose from your conversations to begin chatting</p>
@@ -92,9 +92,9 @@ const ChatBox = () => {
     );
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="flex-1 flex flex-col h-full">
       {/* Chat Header with Participant Info */}
-      <div className="p-4 border-b bg-white/90 backdrop-blur-sm shadow-sm border-gray-200/50">
+      <div className="p-4 border-b bg-white dark:bg-gray-800/90 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-700/50">
         <div className="flex items-center gap-3">
           {/* Participant Avatar */}
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
@@ -146,14 +146,14 @@ const ChatBox = () => {
       >
         {loadingMessages ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-center p-6 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg border border-white/20">
+            <div className="text-center p-6 rounded-2xl bg-white dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border border-white/20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
               <p className="text-gray-600 font-medium">Loading messages...</p>
             </div>
           </div>
         ) : msgs.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-center p-6 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg border border-white/20">
+            <div className="text-center p-6 rounded-2xl bg-white dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border border-white/20">
               <div className="text-4xl mb-2">💭</div>
               <p className="text-gray-600 font-medium">No messages yet</p>
               <p className="text-sm text-gray-500">Start the conversation!</p>
@@ -165,7 +165,7 @@ const ChatBox = () => {
       </div>
 
       {/* Input */}
-      <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200/50 shadow-lg">
+      <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50 shadow-lg">
         <NewMessageInput conversationId={selectedConversationId} />
       </div>
     </div>

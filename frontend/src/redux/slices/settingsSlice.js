@@ -57,7 +57,7 @@ export const uploadProfilePicture = createAsyncThunk(
       const formData = new FormData();
       formData.append('profilePicture', file);
       
-      const response = await api.post('/auth/upload-profile-picture', formData, {
+      const response = await api.post('/settings/upload-profile-picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -73,7 +73,31 @@ export const removeProfilePicture = createAsyncThunk(
   'settings/removeProfilePicture',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.delete('/auth/profile-picture');
+      const response = await api.delete('/settings/profile-picture');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  'settings/changePassword',
+  async (passwordData, { rejectWithValue }) => {
+    try {
+      const response = await api.put('/settings/change-password', passwordData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const updateProfile = createAsyncThunk(
+  'settings/updateProfile',
+  async (profileData, { rejectWithValue }) => {
+    try {
+      const response = await api.put('/settings/profile', profileData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -85,7 +109,6 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState: {
     settings: {
-      theme: 'light',
       currency: 'USD',
       language: 'en',
       timezone: 'UTC'
@@ -112,12 +135,7 @@ const settingsSlice = createSlice({
     clearSettingsError: (state) => {
       state.error = null;
     },
-    setTheme: (state, action) => {
-      state.settings.theme = action.payload;
-      // Apply theme to document
-      document.documentElement.setAttribute('data-theme', action.payload);
-      localStorage.setItem('theme', action.payload);
-    },
+    // Theme is now handled by ThemeProvider - removed setTheme reducer
     setCurrency: (state, action) => {
       state.settings.currency = action.payload;
       localStorage.setItem('currency', action.payload);
@@ -125,23 +143,39 @@ const settingsSlice = createSlice({
     updateNotificationPreference: (state, action) => {
       const { key, value } = action.payload;
       state.notifications[key] = value;
+      // Persist to localStorage
+      localStorage.setItem('notificationSettings', JSON.stringify(state.notifications));
     },
     updatePrivacyPreference: (state, action) => {
       const { key, value } = action.payload;
       state.privacy[key] = value;
+      // Persist to localStorage
+      localStorage.setItem('privacySettings', JSON.stringify(state.privacy));
     },
     initializeSettings: (state) => {
-      // Initialize from localStorage
-      const savedTheme = localStorage.getItem('theme');
+      // Initialize from localStorage (theme is now handled by ThemeProvider)
       const savedCurrency = localStorage.getItem('currency');
-      
-      if (savedTheme) {
-        state.settings.theme = savedTheme;
-        document.documentElement.setAttribute('data-theme', savedTheme);
-      }
+      const savedNotifications = localStorage.getItem('notificationSettings');
+      const savedPrivacy = localStorage.getItem('privacySettings');
       
       if (savedCurrency) {
         state.settings.currency = savedCurrency;
+      }
+      
+      if (savedNotifications) {
+        try {
+          state.notifications = { ...state.notifications, ...JSON.parse(savedNotifications) };
+        } catch (error) {
+          console.error('Error parsing notification settings:', error);
+        }
+      }
+      
+      if (savedPrivacy) {
+        try {
+          state.privacy = { ...state.privacy, ...JSON.parse(savedPrivacy) };
+        } catch (error) {
+          console.error('Error parsing privacy settings:', error);
+        }
       }
     }
   },
@@ -239,16 +273,43 @@ const settingsSlice = createSlice({
       .addCase(removeProfilePicture.rejected, (state, action) => {
         state.updateLoading = false;
         state.error = action.payload;
+      })
+      
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.updateLoading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.updateLoading = false;
+        state.error = null;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.updateLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.updateLoading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state) => {
+        state.updateLoading = false;
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.updateLoading = false;
+        state.error = action.payload;
       });
   }
 });
 
-export const { 
-  clearSettingsError, 
-  setTheme, 
-  setCurrency, 
-  updateNotificationPreference, 
+export const {
+  clearSettingsError,
+  setCurrency,
+  updateNotificationPreference,
   updatePrivacyPreference,
-  initializeSettings 
+  initializeSettings
 } = settingsSlice.actions;
 export default settingsSlice.reducer;

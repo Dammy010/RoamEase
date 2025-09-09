@@ -39,7 +39,7 @@ const ShipmentHistory = () => {
       case 'delivered':
         return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -65,7 +65,7 @@ const ShipmentHistory = () => {
     }) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
@@ -74,11 +74,11 @@ const ShipmentHistory = () => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate("/user/dashboard")}
-                  className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300"
+                  className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white dark:bg-gray-800/30 transition-all duration-300"
                 >
                   <ArrowRight className="rotate-180" size={20} />
                 </button>
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                   <Package className="text-white text-3xl" />
                 </div>
                 <div>
@@ -87,14 +87,14 @@ const ShipmentHistory = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
                   <span className="text-white font-semibold text-lg">
                     {history?.length || 0} shipments
                   </span>
                 </div>
                 <button
                   onClick={() => dispatch(fetchShipmentHistory())}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                 >
                   <RefreshCw size={16} />
                   Refresh
@@ -105,7 +105,7 @@ const ShipmentHistory = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -144,7 +144,7 @@ const ShipmentHistory = () => {
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
@@ -157,7 +157,7 @@ const ShipmentHistory = () => {
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-red-500 text-2xl">⚠️</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Error Loading History</h3>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Error Loading History</h3>
               <p className="text-gray-600 mb-6">{error}</p>
               <button
                 onClick={() => dispatch(fetchShipmentHistory())}
@@ -171,7 +171,7 @@ const ShipmentHistory = () => {
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl">📦</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">No Shipment History Found</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">No Shipment History Found</h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 {searchTerm || statusFilter !== "all" 
                   ? "No shipments match your current filters. Try adjusting your search criteria."
@@ -205,7 +205,7 @@ const ShipmentHistory = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                           {shipment.shipmentTitle}
                         </h3>
                         <div className="flex items-center gap-2 mb-3">

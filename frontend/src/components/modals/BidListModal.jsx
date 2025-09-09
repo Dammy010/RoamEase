@@ -67,11 +67,11 @@ const BidListModal = ({ isOpen, onClose, shipmentId }) => {
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
           <FaTimes size={20} />
         </button>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Bids for Shipment ID: {shipmentId}</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">Bids for Shipment ID: {shipmentId}</h2>
         
         {loading && <p className="text-center text-gray-600">Loading bids...</p>}
         {error && <p className="text-center text-red-500">Error: {error}</p>}

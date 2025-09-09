@@ -12,7 +12,7 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    // Check localStorage first, then system preference
+    // Initialize theme from localStorage or system preference
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
       return savedTheme;
@@ -26,27 +26,74 @@ export const ThemeProvider = ({ children }) => {
     return 'light';
   });
 
+  const [mounted, setMounted] = useState(false);
+
+  // Apply theme to document
   useEffect(() => {
-    // Apply theme to document
-    document.documentElement.setAttribute('data-theme', theme);
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    
+    // Store in localStorage
     localStorage.setItem('theme', theme);
     
-    // Update meta theme-color for mobile browsers
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#1f2937' : '#ffffff');
-    }
+    // Mark as mounted to prevent hydration mismatch
+    setMounted(true);
+  }, [theme]);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = (e) => {
+      if (theme === 'system') {
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prevTheme => {
+      switch (prevTheme) {
+        case 'light':
+          return 'dark';
+        case 'dark':
+          return 'system';
+        case 'system':
+          return 'light';
+        default:
+          return 'light';
+      }
+    });
   };
+
+  const setThemeDirectly = (newTheme) => {
+    setTheme(newTheme);
+  };
+
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   const value = {
     theme,
-    setTheme,
     toggleTheme,
-    isDark: theme === 'dark'
+    setTheme: setThemeDirectly,
+    isDark: theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    isLight: theme === 'light' || (theme === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches),
+    isSystem: theme === 'system'
   };
 
   return (

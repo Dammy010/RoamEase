@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../../contexts/ThemeContext';
 import { fetchLogisticsHistory } from '../../redux/slices/logisticsSlice';
 import { FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaDollarSign, FaClock, FaCheckCircle, FaTimesCircle, FaEye, FaUser, FaBox } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 const LogisticsHistory = () => {
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const { history, historyLoading, historyError } = useSelector((state) => state.logistics);
   const [expandedShipments, setExpandedShipments] = useState(new Set());
   const [filterStatus, setFilterStatus] = useState('all');
@@ -47,7 +49,7 @@ const LogisticsHistory = () => {
       case 'received':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -73,13 +75,13 @@ const LogisticsHistory = () => {
 
   if (historyLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 text-lg">Loading your delivery history...</p>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">Loading your delivery history...</p>
               </div>
             </div>
           </div>
@@ -90,13 +92,13 @@ const LogisticsHistory = () => {
 
   if (historyError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             <div className="text-center py-12">
               <FaTimesCircle className="text-red-500 text-6xl mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading History</h2>
-              <p className="text-gray-600 mb-6">{historyError}</p>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error Loading History</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">{historyError}</p>
               <button
                 onClick={() => dispatch(fetchLogisticsHistory())}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -111,13 +113,13 @@ const LogisticsHistory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+              <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-3">
                 <FaTruck className="text-blue-600" />
                 Delivery History
               </h1>
@@ -136,7 +138,7 @@ const LogisticsHistory = () => {
         </div>
 
         {/* Filters and Controls */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Status Filter */}
             <div className="flex-1">
@@ -183,10 +185,10 @@ const LogisticsHistory = () => {
 
         {/* History List */}
         {filteredAndSortedHistory.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-12">
             <div className="text-center">
               <FaTruck className="text-gray-400 text-8xl mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">No Delivery History Yet</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">No Delivery History Yet</h3>
               <p className="text-gray-600 mb-6">
                 You haven't completed any deliveries yet. Start by browsing available shipments!
               </p>
@@ -206,7 +208,7 @@ const LogisticsHistory = () => {
               return (
                 <div
                   key={shipment._id}
-                  className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300"
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-300"
                 >
                   {/* Shipment Header */}
                   <div className="p-6">
@@ -218,7 +220,7 @@ const LogisticsHistory = () => {
                             📦
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
                               {shipment.shipmentTitle}
                             </h3>
                             <p className="text-gray-600 font-medium mb-2">
@@ -270,11 +272,11 @@ const LogisticsHistory = () => {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="border-t border-gray-200 bg-gray-50 p-6">
+                    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 p-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Shipment Details */}
                         <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                          <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                             <FaBox size={16} />
                             Shipment Information
                           </h4>
@@ -301,7 +303,7 @@ const LogisticsHistory = () => {
                         {/* Bid Details */}
                         {shipment.bid && (
                           <div>
-                            <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                               <FaDollarSign size={16} />
                               Your Bid Details
                             </h4>
@@ -326,7 +328,7 @@ const LogisticsHistory = () => {
 
                         {/* Contact Information */}
                         <div className="lg:col-span-2">
-                          <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                          <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                             <FaUser size={16} />
                             Shipper Contact
                           </h4>

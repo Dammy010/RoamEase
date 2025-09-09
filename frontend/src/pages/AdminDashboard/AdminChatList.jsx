@@ -94,7 +94,7 @@ const AdminChatList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading conversations...</p>
@@ -105,10 +105,10 @@ const AdminChatList = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Conversations</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error Loading Conversations</h2>
           <p className="text-gray-600">{error.message}</p>
         </div>
       </div>
@@ -116,9 +116,9 @@ const AdminChatList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+      <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 shadow-sm">
         <div className="px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -139,7 +139,7 @@ const AdminChatList = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="px-6 py-4 bg-white/50 backdrop-blur-sm border-b border-gray-200/50">
+      <div className="px-6 py-4 bg-white dark:bg-gray-800/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -149,7 +149,7 @@ const AdminChatList = () => {
               placeholder="Search conversations by participant name, email, or company..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
             />
           </div>
 
@@ -157,7 +157,7 @@ const AdminChatList = () => {
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+            className="px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
           >
             <option value="all">All Roles</option>
             <option value="user">Users Only</option>
@@ -168,7 +168,7 @@ const AdminChatList = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+            className="px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
           >
             <option value="updatedAt">Last Updated</option>
             <option value="createdAt">Date Created</option>
@@ -184,7 +184,7 @@ const AdminChatList = () => {
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <MessageSquare className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Conversations Found</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Conversations Found</h3>
             <p className="text-gray-500">There are no conversations to display at the moment.</p>
           </div>
         ) : filteredConversations.length === 0 ? (
@@ -192,7 +192,7 @@ const AdminChatList = () => {
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Matching Conversations</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Matching Conversations</h3>
             <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
           </div>
         ) : (
@@ -200,7 +200,7 @@ const AdminChatList = () => {
             {filteredConversations.map((conversation) => (
             <div 
               key={conversation._id} 
-                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-200/50 overflow-hidden"
+                className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-200 dark:border-gray-700/50 overflow-hidden"
               onClick={() => navigate(`/admin/chat/${conversation._id}`)}
             >
                 {/* Card Header */}
@@ -211,7 +211,7 @@ const AdminChatList = () => {
                         <MessageSquare className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-800">Conversation</h3>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">Conversation</h3>
                         <p className="text-sm text-gray-500">ID: {conversation._id.slice(-8)}</p>
                       </div>
                     </div>
@@ -236,7 +236,7 @@ const AdminChatList = () => {
                               <IconComponent className={`w-4 h-4 ${info.color}`} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-800 truncate">
+                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                                 {info.name}
                               </p>
                               <p className="text-xs text-gray-500">{info.type}</p>

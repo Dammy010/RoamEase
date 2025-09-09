@@ -7,25 +7,66 @@ class NotificationService {
    */
   static async createNotification(notificationData) {
     try {
+      // Validate required fields
+      if (!notificationData.recipient || !notificationData.type || !notificationData.title) {
+        throw new Error('Missing required notification fields: recipient, type, title');
+      }
+
+      console.log('🔍 Creating notification with data:', {
+        recipient: notificationData.recipient,
+        type: notificationData.type,
+        title: notificationData.title,
+        message: notificationData.message
+      });
+
       const notification = new Notification(notificationData);
       await notification.save();
+      
+      console.log(`✅ Notification created successfully:`, {
+        id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        recipient: notification.recipient,
+        createdAt: notification.createdAt
+      });
       
       // Emit real-time notification via Socket.io
       const io = require('../socket/index').getIO();
       if (io) {
-        io.to(`user-${notification.recipient}`).emit('new-notification', {
-          id: notification._id,
+        const roomName = `user-${notification.recipient}`;
+        const notificationPayload = {
+          _id: notification._id,
+          id: notification._id, // For compatibility
           type: notification.type,
           title: notification.title,
           message: notification.message,
           priority: notification.priority,
-          createdAt: notification.createdAt
-        });
+          status: notification.status,
+          createdAt: notification.createdAt,
+          relatedEntity: notification.relatedEntity,
+          metadata: notification.metadata,
+          actions: notification.actions
+        };
+        
+        console.log(`📡 Emitting notification to room: ${roomName}`);
+        console.log(`📋 Notification payload:`, notificationPayload);
+        
+        // Emit to specific user room
+        io.to(roomName).emit('new-notification', notificationPayload);
+        
+        // Also emit to admin rooms if it's a system notification
+        if (notification.type.includes('system') || notification.type.includes('admin')) {
+          io.to('admin-room').emit('new-notification', notificationPayload);
+        }
+        
+        console.log(`✅ Notification emitted successfully to room: ${roomName}`);
+      } else {
+        console.log('⚠️ Socket.io not available for notification emission');
       }
       
       return notification;
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error('❌ Error creating notification:', error);
       throw error;
     }
   }
@@ -64,10 +105,14 @@ class NotificationService {
    */
   static async getUserNotifications(userId, page = 1, limit = 20, status = 'all') {
     try {
+      console.log(`🔍 Fetching notifications for user ${userId}, page ${page}, status: ${status}`);
+      
       const query = { recipient: userId };
       if (status !== 'all') {
         query.status = status;
       }
+
+      console.log('🔍 Query:', query);
 
       const notifications = await Notification.find(query)
         .sort({ createdAt: -1 })
@@ -77,6 +122,8 @@ class NotificationService {
         .lean();
 
       const total = await Notification.countDocuments(query);
+      
+      console.log(`📋 Found ${notifications.length} notifications out of ${total} total for user ${userId}`);
       
       return {
         notifications,

@@ -8,10 +8,12 @@ import { fetchUserShipments, fetchShipmentHistory } from "../../redux/slices/shi
 import { fetchProfile } from "../../redux/slices/authSlice";
 import { ProfilePictureModal } from "../../components/forms/ProfileForm";
 import { getProfilePictureUrl } from "../../utils/imageUtils";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const UserDashboardHome = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
 
   const { user } = useSelector((state) => state.auth);
   const { shipments, history, loading, error } = useSelector(
@@ -46,8 +48,8 @@ const UserDashboardHome = () => {
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-600">Loading dashboard...</p>
+      <div className="flex justify-center items-center min-h-screen bg-white dark:bg-gray-900">
+        <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
       </div>
     );
   }
@@ -92,16 +94,22 @@ const UserDashboardHome = () => {
 
   if (loading) {
     return (
-      <div className="text-center py-8">Loading shipments...</div>
+      <div className="text-center py-8 bg-white dark:bg-gray-900 min-h-screen">
+        <div className="text-gray-600 dark:text-gray-400">Loading shipments...</div>
+      </div>
     );
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-600">Error: {error}</div>;
+    return (
+      <div className="text-center py-8 bg-white dark:bg-gray-900 min-h-screen">
+        <div className="text-red-600 dark:text-red-400">Error: {error}</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl mb-8">
@@ -195,7 +203,7 @@ const UserDashboardHome = () => {
         <section className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Total Shipments Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -203,17 +211,17 @@ const UserDashboardHome = () => {
                     <Package size={24} />
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-gray-800">{shipments.length + history.length}</p>
-                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="text-3xl font-bold text-gray-800 dark:text-white">{shipments.length + history.length}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Total Shipments</h3>
-                <p className="text-sm text-gray-600">All your posted shipments</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Total Shipments</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">All your posted shipments</p>
               </div>
             </div>
 
             {/* Active Shipments Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -221,17 +229,17 @@ const UserDashboardHome = () => {
                     <Truck size={24} />
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-gray-800">{shipments.length}</p>
-                    <p className="text-sm text-gray-500">Active</p>
+                    <p className="text-3xl font-bold text-gray-800 dark:text-white">{shipments.length}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Active Shipments</h3>
-                <p className="text-sm text-gray-600">Currently in progress</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Active Shipments</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Currently in progress</p>
               </div>
             </div>
 
             {/* History Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -239,12 +247,12 @@ const UserDashboardHome = () => {
                     <Clock size={24} />
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-gray-800">{history.length}</p>
-                    <p className="text-sm text-gray-500">Completed</p>
+                    <p className="text-3xl font-bold text-gray-800 dark:text-white">{history.length}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Shipment History</h3>
-                <p className="text-sm text-gray-600">Delivered shipments</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Shipment History</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Delivered shipments</p>
               </div>
             </div>
           </div>

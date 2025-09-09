@@ -78,7 +78,7 @@ const Sidebar = ({ role }) => {
       </div>
 
       {/* Desktop Sidebar - Fixed positioning for true stickiness */}
-      <aside className="hidden md:flex flex-col w-48 h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 shadow-lg fixed top-0 left-0 z-30">
+      <aside className="hidden md:flex flex-col w-48 h-screen bg-gradient-to-b from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white p-4 shadow-lg fixed top-0 left-0 z-30">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold tracking-wide">
             {role.charAt(0).toUpperCase() + role.slice(1)} Panel
@@ -114,7 +114,7 @@ const Sidebar = ({ role }) => {
 
       {/* Mobile Slide-in Sidebar */}
       <aside
-        className={`fixed md:hidden top-0 left-0 h-screen w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 shadow-lg transform transition-transform duration-300 z-40 pt-16
+        className={`fixed md:hidden top-0 left-0 h-screen w-64 bg-gradient-to-b from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white p-6 shadow-lg transform transition-transform duration-300 z-40 pt-16
         ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <nav className="space-y-2">
@@ -151,15 +151,15 @@ const Sidebar = ({ role }) => {
       {/* Confirm Modal */}
       {showConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-6 w-80 text-center">
-            <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 w-80 text-center">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Are you sure?</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Do you really want to log out of your account?
             </p>
             <div className="flex justify-around">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition"
+                className="px-4 py-2 rounded-lg bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-900 dark:text-white transition"
               >
                 Cancel
               </button>

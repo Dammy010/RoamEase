@@ -14,7 +14,7 @@ const SectionHeader = ({ title, icon: Icon, description }) => (
       <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
         <Icon className="text-white" size={20} />
       </div>
-      <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">{title}</h2>
     </div>
     {description && (
       <p className="text-gray-600 text-lg">{description}</p>
@@ -128,7 +128,7 @@ const RadioGroup = ({ label, name, options, value, onChange, required, icon: Ico
           className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
             value === option
               ? 'border-indigo-500 bg-indigo-50'
-              : 'border-gray-200 hover:border-gray-300'
+              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
           }`}
         >
           <input
@@ -145,7 +145,7 @@ const RadioGroup = ({ label, name, options, value, onChange, required, icon: Ico
               : 'border-gray-300'
           }`}>
             {value === option && (
-              <div className="w-2 h-2 rounded-full bg-white"></div>
+              <div className="w-2 h-2 rounded-full bg-white dark:bg-gray-800"></div>
             )}
           </div>
           <span className="font-medium text-gray-700">{option}</span>
@@ -240,7 +240,7 @@ const FileUpload = ({ label, accept, multiple, onChange, files, type = "photos" 
 );
 
 const Checkbox = ({ label, name, checked, onChange, required }) => (
-  <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-indigo-300 transition-colors duration-200 cursor-pointer">
+  <label className="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 transition-colors duration-200 cursor-pointer">
     <input
       type="checkbox"
       name={name}
@@ -689,7 +689,7 @@ const ShipmentForm = () => {
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <Shield className="text-indigo-600" size={20} />
               Terms & Conditions
             </h3>
@@ -716,14 +716,14 @@ const ShipmentForm = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 py-8 px-4">
+    <div className="min-h-screen py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
             <Package className="text-white text-3xl" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Post a Shipment</h1>
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-4">Post a Shipment</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Connect with verified logistics providers worldwide and get competitive quotes for your shipment
           </p>
@@ -749,12 +749,12 @@ const ShipmentForm = () => {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           {/* Step Header */}
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                 {React.createElement(steps[step].icon, { className: "text-white text-2xl" })}
               </div>
               <div>
@@ -770,7 +770,7 @@ const ShipmentForm = () => {
           </div>
 
           {/* Navigation */}
-          <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+          <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
               {step > 0 ? (
                 <button

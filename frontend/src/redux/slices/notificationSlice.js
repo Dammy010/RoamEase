@@ -8,9 +8,12 @@ export const getNotifications = createAsyncThunk(
   'notifications/getNotifications',
   async ({ page = 1, limit = 20, status = 'all' }, thunkAPI) => {
     try {
+      console.log('🔔 Fetching notifications:', { page, limit, status });
       const res = await api.get(`/notifications?page=${page}&limit=${limit}&status=${status}`);
+      console.log('🔔 Notifications response:', res.data);
       return res.data;
     } catch (err) {
+      console.error('❌ Error fetching notifications:', err);
       return thunkAPI.rejectWithValue(err.response?.data);
     }
   }
@@ -21,9 +24,12 @@ export const getUnreadCount = createAsyncThunk(
   'notifications/getUnreadCount',
   async (_, thunkAPI) => {
     try {
+      console.log('🔔 Fetching unread count...');
       const res = await api.get('/notifications/unread-count');
+      console.log('🔔 Unread count response:', res.data);
       return res.data;
     } catch (err) {
+      console.error('❌ Error fetching unread count:', err);
       return thunkAPI.rejectWithValue(err.response?.data);
     }
   }
@@ -184,12 +190,28 @@ const notificationSlice = createSlice({
     // Add real-time notification
     addNotification: (state, action) => {
       const notification = action.payload;
-      state.notifications.unshift(notification);
-      state.unreadCount += 1;
       
-      // Keep only the latest 100 notifications in memory
-      if (state.notifications.length > 100) {
-        state.notifications = state.notifications.slice(0, 100);
+      // Check if notification already exists to prevent duplicates
+      const existingIndex = state.notifications.findIndex(n => n._id === notification._id);
+      if (existingIndex === -1) {
+        // Set default status if not provided
+        const notificationWithDefaults = {
+          ...notification,
+          status: notification.status || 'unread',
+          createdAt: notification.createdAt || new Date().toISOString()
+        };
+        
+        state.notifications.unshift(notificationWithDefaults);
+        state.unreadCount += 1;
+        
+        // Keep only the latest 100 notifications in memory
+        if (state.notifications.length > 100) {
+          state.notifications = state.notifications.slice(0, 100);
+        }
+        
+        console.log('✅ Notification added to state:', notificationWithDefaults.title);
+      } else {
+        console.log('⚠️ Notification already exists, skipping duplicate');
       }
     },
     

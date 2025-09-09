@@ -227,6 +227,9 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
     },
+    clearError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -255,6 +258,7 @@ const authSlice = createSlice({
       .addCase(signupUser.fulfilled, (state, { payload }) => {
         console.log("DEBUG: signupUser.fulfilled - Payload received:", payload);
         state.loading = false;
+        state.error = null;
         state.user = payload;
         state.role = payload.role;
         state.isAuthenticated = true;
@@ -337,5 +341,5 @@ const authSlice = createSlice({
 });
 
 // ---------------- Exports ----------------
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

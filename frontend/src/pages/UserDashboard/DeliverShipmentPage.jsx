@@ -44,7 +44,7 @@ const DeliverShipmentPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg text-gray-700 animate-pulse">Loading shipment details...</p>
       </div>
     );
@@ -52,7 +52,7 @@ const DeliverShipmentPage = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg text-red-600">Error: {error}</p>
       </div>
     );
@@ -60,15 +60,15 @@ const DeliverShipmentPage = () => {
 
   if (!currentShipment) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg text-gray-700">Shipment not found.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100 font-sans">
-      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 p-8">
+    <div className="min-h-screen p-6 font-sans">
+      <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 p-8">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-6 text-center">Deliver Shipment & Rate</h1>
         
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -79,7 +79,7 @@ const DeliverShipmentPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="rating" className="block text-lg font-semibold text-gray-800 mb-3">Rate your experience:</label>
+            <label htmlFor="rating" className="block text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Rate your experience:</label>
             <div className="flex items-center space-x-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
@@ -96,14 +96,14 @@ const DeliverShipmentPage = () => {
           </div>
 
           <div>
-            <label htmlFor="feedback" className="block text-lg font-semibold text-gray-800 mb-3">Feedback (Optional):</label>
+            <label htmlFor="feedback" className="block text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Feedback (Optional):</label>
             <textarea
               id="feedback"
               name="feedback"
               rows="5"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition duration-150 ease-in-out text-gray-800 dark:text-gray-200"
               placeholder="Share your thoughts about the delivery..."
             ></textarea>
           </div>

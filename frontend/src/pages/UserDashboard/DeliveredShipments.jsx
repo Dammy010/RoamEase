@@ -112,7 +112,7 @@ const DeliveredShipments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Package className="text-white text-2xl" />
@@ -125,14 +125,14 @@ const DeliveredShipments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                   <Package className="text-white text-2xl" />
                 </div>
                 <div>
@@ -171,7 +171,7 @@ const DeliveredShipments = () => {
                     placeholder="Search by title, pickup, or delivery city..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
                 
@@ -180,7 +180,7 @@ const DeliveredShipments = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="px-3 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -194,12 +194,12 @@ const DeliveredShipments = () => {
 
         {/* Shipments List */}
         {filteredAndSortedShipments.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Package className="text-indigo-500 text-4xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 {searchTerm ? 'No Matching Deliveries' : 'No Deliveries to Confirm'}
               </h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -223,13 +223,13 @@ const DeliveredShipments = () => {
             {filteredAndSortedShipments.map((shipment) => (
               <div
                 key={shipment._id}
-                className="group bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
               >
                 {/* Header */}
                 <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                         <Truck className="text-white text-2xl" />
                       </div>
                       <div>
@@ -240,7 +240,7 @@ const DeliveredShipments = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800/20 rounded-xl">
                       <CheckCircle className="text-white" size={20} />
                       <span className="text-white font-medium">Delivered</span>
                     </div>
@@ -257,7 +257,7 @@ const DeliveredShipments = () => {
                             <Calendar className="text-blue-500" size={16} />
                             <span className="text-sm font-medium text-gray-600">Delivered Date</span>
                           </div>
-                          <div className="text-lg font-semibold text-gray-800">
+                          <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                             {shipment.deliveredAt ? new Date(shipment.deliveredAt).toLocaleDateString() : 'N/A'}
                           </div>
                         </div>
@@ -267,7 +267,7 @@ const DeliveredShipments = () => {
                             <Clock className="text-purple-500" size={16} />
                             <span className="text-sm font-medium text-gray-600">Time</span>
                           </div>
-                          <div className="text-lg font-semibold text-gray-800">
+                          <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                             {shipment.deliveredAt ? new Date(shipment.deliveredAt).toLocaleTimeString() : 'N/A'}
                           </div>
                         </div>
@@ -278,10 +278,10 @@ const DeliveredShipments = () => {
                         <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
                           <div className="flex items-center gap-2 mb-3">
                             <Building2 className="text-indigo-500" size={16} />
-                            <span className="font-medium text-gray-800">Logistics Company</span>
+                            <span className="font-medium text-gray-800 dark:text-gray-200">Logistics Company</span>
                           </div>
                           <div className="space-y-2">
-                            <div className="font-semibold text-gray-800">
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">
                               {shipment.deliveredByLogistics.companyName || shipment.deliveredByLogistics.name || 'N/A'}
                             </div>
                             {shipment.deliveredByLogistics.email && (
@@ -318,7 +318,7 @@ const DeliveredShipments = () => {
                     {/* Right Side - Actions */}
                     <div className="space-y-4">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-800 mb-2">Ready to Confirm</div>
+                        <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">Ready to Confirm</div>
                         <div className="text-gray-600">Your shipment is waiting for confirmation</div>
                       </div>
 

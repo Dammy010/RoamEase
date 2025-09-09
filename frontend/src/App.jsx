@@ -1,13 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import React, { useEffect } from 'react';
 import { initSocket, getSocket, initializeSocketAfterLogin } from './services/socket';
+import { initializeSettings } from './redux/slices/settingsSlice';
+import { useTheme } from './contexts/ThemeContext';
 
-// Context Providers
-import { ThemeProvider } from './contexts/ThemeContext';
-import { CurrencyProvider } from './contexts/CurrencyContext';
+// Context Providers are now in main.jsx
 
 // New: Import Sidebar
 import Sidebar from './components/shared/Sidebar';
@@ -77,9 +77,16 @@ import NormalUsers from './pages/AdminDashboard/NormalUsers';
 import NotificationPage from './pages/NotificationPage';
 
 function App() {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { isDark } = useTheme();
 
   console.log('App.jsx - Current User State:', user);
+
+  useEffect(() => {
+    // Initialize settings (currency, etc.) - theme is now handled by ThemeProvider
+    dispatch(initializeSettings());
+  }, [dispatch]);
 
   useEffect(() => {
     if (user) {
@@ -111,14 +118,13 @@ function App() {
   }, [user]);
 
   return (
-    <ThemeProvider>
-      <CurrencyProvider>
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
         <ToastContainer position="top-right" autoClose={3000} />
         <div className="flex h-screen">
         {user ? (
           <>
             <Sidebar role={user.role} />
-            <div className="flex-1 ml-48">
+            <div className="flex-1 ml-48 bg-white dark:bg-gray-900">
               <Routes>
                 {/* User Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['user']} />}>
@@ -179,9 +185,9 @@ function App() {
             </div>
           </>
         ) : (
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 bg-white dark:bg-gray-900">
             <Navbar />
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
               <Routes>
                 {/* Public Routes - Always Accessible */}
                 <Route path="/" element={<LandingPage />} />
@@ -209,8 +215,7 @@ function App() {
           </div>
         )}
         </div>
-      </CurrencyProvider>
-    </ThemeProvider>
+    </div>
   );
 }
 

@@ -183,7 +183,7 @@ const AdminChatDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading chat management...</p>
@@ -194,10 +194,10 @@ const AdminChatDashboard = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Chat Data</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error Loading Chat Data</h2>
           <p className="text-gray-600">{error.message}</p>
         </div>
       </div>
@@ -205,11 +205,11 @@ const AdminChatDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
+    <div className="min-h-screen flex">
       {/* Sidebar - Conversations List */}
-      <div className={`${conversationId ? 'hidden lg:block' : 'block'} w-full lg:w-96 bg-white/80 backdrop-blur-sm border-r border-gray-200/50 flex-shrink-0`}>
+      <div className={`${conversationId ? 'hidden lg:block' : 'block'} w-full lg:w-96 bg-white dark:bg-gray-800/80 backdrop-blur-sm border-r border-gray-200 dark:border-gray-700/50 flex-shrink-0`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-200/50">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700/50">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
               <MessageCircle className="w-5 h-5 text-white" />
@@ -233,7 +233,7 @@ const AdminChatDashboard = () => {
                 placeholder="Search conversations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
             </div>
             
@@ -241,7 +241,7 @@ const AdminChatDashboard = () => {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="all">All Roles</option>
                 <option value="user">Users</option>
@@ -251,7 +251,7 @@ const AdminChatDashboard = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="updatedAt">Last Updated</option>
                 <option value="createdAt">Date Created</option>
@@ -268,7 +268,7 @@ const AdminChatDashboard = () => {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No Conversations</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">No Conversations</h3>
               <p className="text-gray-500 text-sm">No conversations match your criteria.</p>
             </div>
           ) : (
@@ -279,7 +279,7 @@ const AdminChatDashboard = () => {
                   className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border ${
                     conversationId === conversation._id
                       ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-md'
-                      : 'bg-white/50 hover:bg-white/80 border-gray-200/50 hover:shadow-sm'
+                      : 'bg-white dark:bg-gray-800/50 hover:bg-white dark:bg-gray-800/80 border-gray-200 dark:border-gray-700/50 hover:shadow-sm'
                   }`}
                   onClick={() => navigate(`/admin/chat/${conversation._id}`)}
                 >
@@ -289,7 +289,7 @@ const AdminChatDashboard = () => {
                         <MessageSquare className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-800 text-sm">Conversation</h3>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">Conversation</h3>
                         <p className="text-xs text-gray-500">ID: {conversation._id.slice(-8)}</p>
                       </div>
                     </div>
@@ -306,7 +306,7 @@ const AdminChatDashboard = () => {
                             <IconComponent className={`w-3 h-3 ${info.color}`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 truncate">{info.name}</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{info.name}</p>
                             <p className="text-xs text-gray-500">{info.type}</p>
                           </div>
                         </div>
@@ -337,7 +337,7 @@ const AdminChatDashboard = () => {
       {conversationId && selectedConversation ? (
         <div className="flex-1 flex flex-col">
           {/* Chat Header */}
-          <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button
@@ -379,7 +379,7 @@ const AdminChatDashboard = () => {
                 return (
                   <div key={index} className={`flex items-center space-x-2 px-3 py-1 rounded-full ${info.bgColor}`}>
                     <IconComponent className={`w-4 h-4 ${info.color}`} />
-                    <span className="text-sm font-medium text-gray-800">{info.name}</span>
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{info.name}</span>
                     <span className="text-xs text-gray-500">({info.type})</span>
                   </div>
                 );
@@ -395,7 +395,7 @@ const AdminChatDashboard = () => {
                   placeholder="Search messages..."
                   value={messageSearch}
                   onChange={(e) => setMessageSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
             </div>
@@ -408,7 +408,7 @@ const AdminChatDashboard = () => {
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <MessageSquare className="w-12 h-12 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">No Messages Yet</h3>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Messages Yet</h3>
                 <p className="text-gray-500">This conversation doesn't have any messages yet.</p>
               </div>
             ) : filteredMessages.length === 0 ? (
@@ -416,7 +416,7 @@ const AdminChatDashboard = () => {
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search className="w-12 h-12 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">No Matching Messages</h3>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Matching Messages</h3>
                 <p className="text-gray-500">Try adjusting your search criteria.</p>
               </div>
             ) : (
@@ -426,7 +426,7 @@ const AdminChatDashboard = () => {
                   const IconComponent = participantInfo.icon;
                   
                   return (
-                    <div key={message._id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6">
+                    <div key={message._id} className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6">
                       <div className="flex items-start space-x-4">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${participantInfo.bgColor} flex-shrink-0`}>
                           <IconComponent className={`w-6 h-6 ${participantInfo.color}`} />
@@ -435,7 +435,7 @@ const AdminChatDashboard = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-2">
-                              <h4 className="font-semibold text-gray-800">{participantInfo.name}</h4>
+                              <h4 className="font-semibold text-gray-800 dark:text-gray-200">{participantInfo.name}</h4>
                               <span className={`text-xs px-2 py-1 rounded-full ${participantInfo.bgColor} ${participantInfo.color}`}>
                                 {participantInfo.type}
                               </span>
@@ -477,10 +477,10 @@ const AdminChatDashboard = () => {
 
           {/* Actions Panel */}
           {showActions && (
-            <div className="bg-white/90 backdrop-blur-sm border-t border-gray-200/50 shadow-lg">
+            <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50 shadow-lg">
               <div className="px-6 py-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-800">Conversation Actions</h3>
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200">Conversation Actions</h3>
                   <button
                     onClick={() => setShowActions(false)}
                     className="p-1 text-gray-400 hover:text-gray-600"
@@ -489,15 +489,15 @@ const AdminChatDashboard = () => {
                   </button>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
                     <Download className="w-4 h-4" />
                     <span>Export Messages</span>
                   </button>
-                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
                     <Archive className="w-4 h-4" />
                     <span>Archive Conversation</span>
                   </button>
-                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
                     <Flag className="w-4 h-4" />
                     <span>Flag for Review</span>
                   </button>
@@ -512,7 +512,7 @@ const AdminChatDashboard = () => {
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <MessageCircle className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Select a Conversation</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Select a Conversation</h3>
             <p className="text-gray-500">Choose a conversation from the sidebar to view messages.</p>
           </div>
         </div>

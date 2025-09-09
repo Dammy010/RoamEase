@@ -84,7 +84,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="text-center mb-16">
@@ -102,7 +102,7 @@ const ContactPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Contact Information */}
           <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <HeadphonesIcon className="w-4 h-4 text-white" />
@@ -174,7 +174,7 @@ const ContactPage = () => {
           </div>
 
           {/* Contact Form */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Send className="w-4 h-4 text-white" />
@@ -210,7 +210,7 @@ const ContactPage = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Enter your full name"
-                    className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                    className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                       errors.name ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                     }`}
                   />
@@ -228,7 +228,7 @@ const ContactPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email"
-                    className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                    className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                       errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                     }`}
                   />
@@ -247,7 +247,7 @@ const ContactPage = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   placeholder="What's this about?"
-                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                     errors.subject ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                   }`}
                 />
@@ -265,7 +265,7 @@ const ContactPage = () => {
                   value={formData.message}
                   onChange={handleChange}
                   placeholder="Tell us how we can help you..."
-                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 resize-none ${
+                  className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 resize-none ${
                     errors.message ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                   }`}
                 />

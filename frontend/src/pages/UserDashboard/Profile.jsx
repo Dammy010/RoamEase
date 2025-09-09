@@ -17,7 +17,7 @@ const Profile = () => {
 
   if (loading && !user) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-6 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading profile...</p>
@@ -28,7 +28,7 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-6 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 text-lg">No profile data found</p>
@@ -39,16 +39,16 @@ const Profile = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <User className="w-8 h-8 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">{user.name || 'User Profile'}</h1>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">{user.name || 'User Profile'}</h1>
               <p className="text-gray-600">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Shield className="w-4 h-4 text-green-500" />
@@ -83,10 +83,10 @@ const Profile = () => {
         </div>
 
         {/* Profile Form */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-          <div className="flex items-center gap-3 p-6 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
             <Edit3 className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-800">Edit Profile</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Edit Profile</h2>
           </div>
           <div className="p-6">
             <ProfileForm user={user} />
@@ -94,16 +94,16 @@ const Profile = () => {
         </div>
 
         {/* Account Security */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mt-6">
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-800">Account Security</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Account Security</h2>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800">Password</h3>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Password</h3>
                 <p className="text-sm text-gray-600">Last changed: {user.passwordChangedAt ? new Date(user.passwordChangedAt).toLocaleDateString() : 'Never'}</p>
               </div>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -113,7 +113,7 @@ const Profile = () => {
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800">Two-Factor Authentication</h3>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Two-Factor Authentication</h3>
                 <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
               </div>
               <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
@@ -123,7 +123,7 @@ const Profile = () => {
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800">Login Sessions</h3>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Login Sessions</h3>
                 <p className="text-sm text-gray-600">Manage your active login sessions</p>
               </div>
               <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
@@ -134,10 +134,10 @@ const Profile = () => {
         </div>
 
         {/* Account Actions */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mt-6">
           <div className="flex items-center gap-3 mb-6">
             <Settings className="w-6 h-6 text-red-600" />
-            <h2 className="text-xl font-bold text-gray-800">Account Actions</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Account Actions</h2>
           </div>
           
           <div className="space-y-4">

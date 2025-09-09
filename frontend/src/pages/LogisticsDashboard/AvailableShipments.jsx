@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../../contexts/ThemeContext';
 import { fetchAvailableShipments, addShipmentRealtime, updateShipmentRealtime } from '../../redux/slices/shipmentSlice';
 import { createBid } from '../../redux/slices/bidSlice';
 import { toast } from 'react-toastify';
@@ -14,6 +15,7 @@ import {
 
 const AvailableShipments = () => {
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const { availableShipments, loading, error } = useSelector((state) => state.shipment);
   const { loading: bidLoading } = useSelector((state) => state.bid);
   const { user } = useSelector((state) => state.auth); // New: Get user info for context in real-time updates
@@ -140,13 +142,13 @@ const AvailableShipments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Loading Available Shipments</h3>
-              <p className="text-gray-600">Finding the best opportunities for you...</p>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Loading Available Shipments</h3>
+              <p className="text-gray-600 dark:text-gray-400">Finding the best opportunities for you...</p>
             </div>
           </div>
         </div>
@@ -156,15 +158,15 @@ const AvailableShipments = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
               <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertCircle className="text-red-500 text-3xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">Error Loading Shipments</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">Error Loading Shipments</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">{error}</p>
               <button
                 onClick={() => dispatch(fetchAvailableShipments())}
                 className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -180,14 +182,14 @@ const AvailableShipments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                   <Package className="text-white text-3xl" />
                 </div>
                 <div>
@@ -196,14 +198,14 @@ const AvailableShipments = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
                   <span className="text-white font-semibold text-lg">
                     {availableShipments.length} opportunities
                   </span>
                 </div>
                 <button
                   onClick={() => dispatch(fetchAvailableShipments())}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                 >
                   <RefreshCw size={16} />
                   Refresh
@@ -214,7 +216,7 @@ const AvailableShipments = () => {
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -287,7 +289,7 @@ const AvailableShipments = () => {
               return (
                 <div
                   key={shipment._id}
-                  className="group relative bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                  className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
                 >
                   {/* Compact Header View */}
                   <div className="p-8">
@@ -304,7 +306,7 @@ const AvailableShipments = () => {
                             </div>
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                               {shipment.shipmentTitle}
                             </h3>
                             <div className="flex items-center gap-2 mb-3">
@@ -324,7 +326,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">Type</div>
-                              <div className="text-sm font-semibold text-gray-800">{shipment.typeOfGoods}</div>
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.typeOfGoods}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
@@ -333,7 +335,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">Weight</div>
-                              <div className="text-sm font-semibold text-gray-800">{shipment.weightSummary || 'N/A'}</div>
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.weightSummary || 'N/A'}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
@@ -342,7 +344,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">Quantity</div>
-                              <div className="text-sm font-semibold text-gray-800">{shipment.quantitySummary}</div>
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.quantitySummary}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
@@ -351,7 +353,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">Mode</div>
-                              <div className="text-sm font-semibold text-gray-800">{shipment.modeOfTransport}</div>
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.modeOfTransport}</div>
                             </div>
                           </div>
                         </div>
@@ -450,7 +452,7 @@ const AvailableShipments = () => {
                           <div className="flex items-center gap-2">
                             <User className="text-gray-400" size={16} />
                             <span className="text-gray-600 font-medium">Shipper:</span>
-                            <span className="font-semibold text-gray-800">
+                            <span className="font-semibold text-gray-800 dark:text-gray-200">
                               {getLogisticsDisplayName(shipment.user)}
                             </span>
                           </div>
@@ -481,35 +483,35 @@ const AvailableShipments = () => {
                     <div className="p-6">
                       {/* Key Information Summary */}
                       <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                        <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                           🎯 Key Information for Logistics
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          <div className="bg-white p-4 rounded-lg border border-blue-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Route</div>
-                            <div className="font-semibold text-gray-800">{shipment.routeSummary}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.routeSummary}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-lg border border-blue-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Pickup Date</div>
-                            <div className="font-semibold text-gray-800">{shipment.formattedPickupDate}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-lg border border-blue-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Delivery Date</div>
-                            <div className="font-semibold text-gray-800">{shipment.formattedDeliveryDate}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedDeliveryDate}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-lg border border-blue-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Transport Mode</div>
-                            <div className="font-semibold text-gray-800">{shipment.modeOfTransport}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.modeOfTransport}</div>
                           </div>
                         </div>
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-white p-4 rounded-lg border border-blue-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Goods Type</div>
-                            <div className="font-semibold text-gray-800">{shipment.typeOfGoods}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.typeOfGoods}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-lg border border-blue-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Insurance Required</div>
-                            <div className="font-semibold text-gray-800">{shipment.insuranceRequired}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.insuranceRequired}</div>
                           </div>
                         </div>
                       </div>
@@ -518,48 +520,48 @@ const AvailableShipments = () => {
                         {/* Left Column - Goods & Transport */}
                         <div className="space-y-6">
                           {/* Goods Information */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                               📦 Goods Information
                             </h4>
                             <div className="space-y-2 text-sm">
                               <p><span className="font-medium text-gray-600">Type:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.typeOfGoods}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.typeOfGoods}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Description:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.descriptionOfGoods}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.descriptionOfGoods}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Quantity:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.quantitySummary}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.quantitySummary}</span>
                               </p>
                               {shipment.weight && (
                                 <p><span className="font-medium text-gray-600">Weight:</span> 
-                                  <span className="ml-2 text-gray-800">{shipment.weightSummary}</span>
+                                  <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.weightSummary}</span>
                                 </p>
                               )}
                               {shipment.dimensions && (
                                 <p><span className="font-medium text-gray-600">Dimensions:</span> 
-                                  <span className="ml-2 text-gray-800">{shipment.dimensions}</span>
+                                  <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.dimensions}</span>
                                 </p>
                               )}
                             </div>
                           </div>
 
                           {/* Transport Details */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                               🚚 Transport Details
                             </h4>
                             <div className="space-y-2 text-sm">
                               <p><span className="font-medium text-gray-600">Mode:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.modeOfTransport}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.modeOfTransport}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Insurance:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.insuranceRequired}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.insuranceRequired}</span>
                               </p>
                               {shipment.handlingInstructions && (
                                 <p><span className="font-medium text-gray-600">Handling:</span> 
-                                  <span className="ml-2 text-gray-800">{shipment.handlingInstructions}</span>
+                                  <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.handlingInstructions}</span>
                                 </p>
                               )}
                             </div>
@@ -569,55 +571,55 @@ const AvailableShipments = () => {
                         {/* Right Column - Location Details */}
                         <div className="space-y-6">
                           {/* Pickup Details */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                               📍 Pickup Details
                             </h4>
                             <div className="space-y-2 text-sm">
                               <p><span className="font-medium text-gray-600">Address:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.pickupAddress}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupAddress}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">City:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.pickupCity}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupCity}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Country:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.pickupCountry}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupCountry}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Date:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.formattedPickupDate}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Contact:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.pickupContactPerson}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupContactPerson}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Phone:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.pickupPhoneNumber}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupPhoneNumber}</span>
                               </p>
                             </div>
                           </div>
 
                           {/* Delivery Details */}
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                               🎯 Delivery Details
                             </h4>
                             <div className="space-y-2 text-sm">
                               <p><span className="font-medium text-gray-600">Address:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.deliveryAddress}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.deliveryAddress}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">City:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.deliveryCity}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.deliveryCity}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Country:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.deliveryCountry}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.deliveryCountry}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Date:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.formattedDeliveryDate}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.formattedDeliveryDate}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Contact:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.deliveryContactPerson}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.deliveryContactPerson}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Phone:</span> 
-                                <span className="ml-2 text-gray-800">{shipment.deliveryPhoneNumber}</span>
+                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.deliveryPhoneNumber}</span>
                               </p>
                             </div>
                           </div>
@@ -626,8 +628,8 @@ const AvailableShipments = () => {
 
                       {/* Photos Section */}
                       {shipment.photos && shipment.photos.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                             📸 Photos ({shipment.photos.length})
                           </h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -650,13 +652,13 @@ const AvailableShipments = () => {
 
                       {/* Documents Section */}
                       {shipment.documents && shipment.documents.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                             📄 Documents ({shipment.documents.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {shipment.documents.map((document, index) => (
-                              <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                              <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 transition-colors">
                                 <div className="flex-shrink-0 mr-4">
                                   <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                                     <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -685,7 +687,7 @@ const AvailableShipments = () => {
                       )}
 
                       {/* Quick Actions */}
-                      <div className="mt-8 pt-6 border-t border-gray-200">
+                      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                           <div className="text-sm text-gray-600">
                             <span className="font-mono text-xs text-gray-400">Shipment ID: {shipment._id.slice(-8)}</span>
@@ -719,14 +721,14 @@ const AvailableShipments = () => {
           })}
         </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl">
                   {searchTerm || filterBy !== 'all' ? '🔍' : '📦'}
                 </span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 {searchTerm || filterBy !== 'all' ? 'No Matching Shipments' : 'No Shipments Available'}
               </h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -755,12 +757,12 @@ const AvailableShipments = () => {
         {/* Enhanced Bid Modal */}
         {showBidModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-8 rounded-t-3xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                       <DollarSign className="text-white text-2xl" />
                     </div>
                     <div>
@@ -770,7 +772,7 @@ const AvailableShipments = () => {
                   </div>
                   <button
                     onClick={() => setShowBidModal(false)}
-                    className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300"
+                    className="w-10 h-10 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white dark:bg-gray-800/30 transition-all duration-300"
                   >
                     ×
                   </button>
@@ -786,7 +788,7 @@ const AvailableShipments = () => {
                   
                   return (
                     <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
-                      <h4 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                      <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
                         <Package className="text-indigo-600" size={20} />
                         Shipment Summary
                       </h4>
@@ -798,7 +800,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500 font-medium">Title</div>
-                              <div className="font-semibold text-gray-800">{shipment.shipmentTitle}</div>
+                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.shipmentTitle}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -807,7 +809,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500 font-medium">Route</div>
-                              <div className="font-semibold text-gray-800">{shipment.routeSummary}</div>
+                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.routeSummary}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -816,7 +818,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500 font-medium">Type</div>
-                              <div className="font-semibold text-gray-800">{shipment.typeOfGoods}</div>
+                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.typeOfGoods}</div>
                             </div>
                           </div>
                         </div>
@@ -827,7 +829,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500 font-medium">Pickup</div>
-                              <div className="font-semibold text-gray-800">{shipment.formattedPickupDate}</div>
+                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -836,7 +838,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500 font-medium">Delivery</div>
-                              <div className="font-semibold text-gray-800">{shipment.formattedDeliveryDate}</div>
+                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedDeliveryDate}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -845,7 +847,7 @@ const AvailableShipments = () => {
                             </div>
                             <div>
                               <div className="text-sm text-gray-500 font-medium">Shipper</div>
-                              <div className="font-semibold text-gray-800">{shipment.user.companyName || shipment.user.name}</div>
+                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.user.companyName || shipment.user.name}</div>
                             </div>
                           </div>
                         </div>
@@ -995,7 +997,7 @@ const AvailableShipments = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                  <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <button
                       type="button"
                       onClick={() => setShowBidModal(false)}

@@ -93,7 +93,7 @@ const CountrySelect = ({
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg max-h-80 overflow-hidden">
           {/* Search Input */}
-          <div className="p-3 border-b border-gray-200 dark:border-gray-600">
+          <div className="p-3 border-b border-gray-200 dark:border-gray-700 dark:border-gray-600">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input

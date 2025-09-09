@@ -110,7 +110,7 @@ const VerifiedLogisticsList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Truck className="text-white text-2xl" />
@@ -124,7 +124,7 @@ const VerifiedLogisticsList = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="text-red-500 text-2xl" />
@@ -143,15 +143,15 @@ const VerifiedLogisticsList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
                     <Truck className="text-white text-3xl" />
                   </div>
                   <div>
@@ -176,7 +176,7 @@ const VerifiedLogisticsList = () => {
                     placeholder="Search companies..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
                 
@@ -185,7 +185,7 @@ const VerifiedLogisticsList = () => {
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white dark:bg-gray-800"
                   >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
@@ -202,7 +202,7 @@ const VerifiedLogisticsList = () => {
                       setSortBy(field);
                       setSortOrder(order);
                     }}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white dark:bg-gray-800"
                   >
                     <option value="companyName-asc">Company A-Z</option>
                     <option value="companyName-desc">Company Z-A</option>
@@ -271,7 +271,7 @@ const VerifiedLogisticsList = () => {
         </div>
 
         {/* Companies Table */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="bg-gradient-to-r from-gray-500 to-gray-600 p-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Truck size={20} />
@@ -285,7 +285,7 @@ const VerifiedLogisticsList = () => {
                 <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-200 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Truck className="text-green-400 text-4xl" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                   {searchTerm || filterStatus !== 'all' ? 'No Matching Companies' : 'No Verified Companies'}
                 </h3>
                 <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -308,7 +308,7 @@ const VerifiedLogisticsList = () => {
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50 border-b border-gray-200 dark:border-gray-700">
                   <tr>
                     <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600">Company</th>
                     <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600">Contact</th>
@@ -409,7 +409,7 @@ const VerifiedLogisticsList = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-600">
                   Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredCompanies.length)} of {filteredCompanies.length} companies

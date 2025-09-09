@@ -58,7 +58,7 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200">
       <div className="flex items-center gap-3 mb-6">
         <DollarSign className="w-8 h-8 text-green-600" />
         <h3 className="text-xl font-bold text-gray-800">Place Your Bid</h3>

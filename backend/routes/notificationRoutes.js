@@ -9,7 +9,10 @@ const {
   archiveNotification,
   createTestNotification,
   getNotificationStats,
-  bulkAction
+  bulkAction,
+  debugRecentNotifications,
+  testChatNotification,
+  testNotificationSystem
 } = require('../controllers/notificationController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -42,5 +45,14 @@ router.post('/bulk-action', bulkAction);
 
 // Create test notification (for testing purposes)
 router.post('/test', createTestNotification);
+
+// Debug endpoint to check recent notifications
+router.get('/debug/recent', debugRecentNotifications);
+
+// Test endpoint to create a chat notification
+router.post('/test/chat', testChatNotification);
+
+// Test endpoint to test the notification system
+router.post('/test/system', testNotificationSystem);
 
 module.exports = router;

@@ -84,6 +84,19 @@ const initSocket = (server) => {
           console.log(`User ${authenticatedUserId} is now online (DB not connected, status cached)`);
         }
 
+        // Join user to their specific room for notifications
+        socket.join(`user-${authenticatedUserId}`);
+        console.log(`✅ User ${authenticatedUserId} joined room: user-${authenticatedUserId}`);
+        
+        // Join admin room if user is admin
+        if (socket.userRole === 'admin') {
+          socket.join('admin-room');
+          console.log(`✅ Admin user ${authenticatedUserId} joined admin room`);
+        }
+        
+        // Debug: List all rooms this socket is in
+        console.log(`📋 Socket ${socket.id} is now in rooms:`, Array.from(socket.rooms));
+
         // Emit to all other users that this user is online
         socket.broadcast.emit("user-online", authenticatedUserId);
         

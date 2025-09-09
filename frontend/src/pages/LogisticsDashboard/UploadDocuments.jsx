@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTheme } from '../../contexts/ThemeContext';
 import { toast } from 'react-toastify';
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 
 const UploadDocuments = () => {
   const { user } = useSelector((state) => state.auth);
+  const { isDark } = useTheme();
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState({
     businessLicense: null,
@@ -116,19 +118,19 @@ const UploadDocuments = () => {
       case 'uploading':
         return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'pending':
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return 'text-gray-600 bg-gray-50 border-gray-200 dark:border-gray-700';
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return 'text-gray-600 bg-gray-50 border-gray-200 dark:border-gray-700';
     }
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen bg-white dark:bg-gray-900">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-6">
             <Upload className="w-8 h-8 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-800">📋 Document Verification</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">📋 Document Verification</h2>
           </div>
           
           <p className="text-gray-600 mb-8">
@@ -139,7 +141,7 @@ const UploadDocuments = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Required Documents */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Required Documents</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Required Documents</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   { key: 'businessLicense', label: 'Business License', required: true },
@@ -175,7 +177,7 @@ const UploadDocuments = () => {
 
             {/* Optional Documents */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Optional Documents</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Optional Documents</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   { key: 'taxCertificate', label: 'Tax Certificate' },

@@ -156,7 +156,7 @@ const RateShipment = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Star className="text-white text-2xl" />
@@ -169,14 +169,14 @@ const RateShipment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                   <Star className="text-white text-2xl" />
                 </div>
                 <div>
@@ -211,7 +211,7 @@ const RateShipment = () => {
                     placeholder="Search by title, pickup, or delivery city..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
                 
@@ -220,7 +220,7 @@ const RateShipment = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="px-3 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -235,7 +235,7 @@ const RateShipment = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Shipment List */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Package size={20} />
@@ -249,7 +249,7 @@ const RateShipment = () => {
                     <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Star className="text-indigo-500 text-4xl" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                       {searchTerm ? 'No Matching Shipments' : 'No Shipments to Rate'}
                     </h3>
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -275,7 +275,7 @@ const RateShipment = () => {
                         className={`group border rounded-2xl p-6 cursor-pointer transition-all duration-300 ${
                           selectedShipment?._id === shipment._id
                             ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:shadow-lg'
                         }`}
                         onClick={() => handleShipmentSelect(shipment)}
                       >
@@ -286,7 +286,7 @@ const RateShipment = () => {
                                 shipment.status === 'completed' ? 'bg-green-100 text-green-800' :
                                 shipment.status === 'delivered' ? 'bg-blue-100 text-blue-800' :
                                 shipment.status === 'received' ? 'bg-purple-100 text-purple-800' :
-                                'bg-gray-100 text-gray-800'
+                                'bg-gray-100 text-gray-800 dark:text-gray-200'
                               }`}>
                                 {shipment.status}
                               </div>
@@ -349,7 +349,7 @@ const RateShipment = () => {
           {/* Right Column - Rating Form */}
           <div className="lg:col-span-1">
             {showRatingForm && selectedShipment ? (
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden sticky top-8">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden sticky top-8">
                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Star size={20} />
@@ -391,7 +391,7 @@ const RateShipment = () => {
                         rows={4}
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                        className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                         placeholder="Share your experience with this shipment delivery..."
                         required
                       />
@@ -413,19 +413,19 @@ const RateShipment = () => {
                       setShowRatingForm(false);
                       setSelectedShipment(null);
                     }}
-                    className="w-full mt-4 px-6 py-3 text-gray-600 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all duration-300"
+                    className="w-full mt-4 px-6 py-3 text-gray-600 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-all duration-300"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="text-center py-16">
                   <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <MessageSquare className="text-indigo-500 text-4xl" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Select a Shipment</h3>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Select a Shipment</h3>
                   <p className="text-gray-600">
                     Choose a completed shipment from the list to rate and provide feedback.
                   </p>
@@ -436,7 +436,7 @@ const RateShipment = () => {
         </div>
 
         {/* Rating Guidelines */}
-        <div className="mt-8 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Award size={20} />

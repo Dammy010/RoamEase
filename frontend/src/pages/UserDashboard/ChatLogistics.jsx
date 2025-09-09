@@ -18,7 +18,7 @@ const ChatLogistics = () => {
   }, [conversationId, dispatch]);
 
   return (
-    <div className="flex h-full min-h-screen bg-gray-50">
+    <div className="flex h-full min-h-screen">
       {/* Sidebar with Back Button + Chat List */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
         <button

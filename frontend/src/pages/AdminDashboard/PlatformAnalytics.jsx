@@ -62,7 +62,7 @@ const PlatformAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading analytics...</p>
@@ -73,10 +73,10 @@ const PlatformAnalytics = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Analytics</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error Loading Analytics</h2>
           <p className="text-gray-600">{error.message}</p>
         </div>
       </div>
@@ -85,10 +85,10 @@ const PlatformAnalytics = () => {
 
   if (!analytics) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
           <div className="text-gray-500 text-6xl mb-4">📊</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">No Analytics Data</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">No Analytics Data</h2>
           <p className="text-gray-600">Analytics data is not available at the moment.</p>
         </div>
       </div>
@@ -179,9 +179,9 @@ const PlatformAnalytics = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+      <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 shadow-sm">
         <div className="px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -202,7 +202,7 @@ const PlatformAnalytics = () => {
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -230,7 +230,7 @@ const PlatformAnalytics = () => {
             return (
               <div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-xl transition-all duration-200"
+                className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6 hover:shadow-xl transition-all duration-200"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-12 h-12 ${metric.bgColor} rounded-xl flex items-center justify-center`}>
@@ -260,9 +260,9 @@ const PlatformAnalytics = () => {
           {detailedMetrics.map((category, categoryIndex) => (
             <div
               key={categoryIndex}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6"
+              className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6"
             >
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-gray-500 to-gray-600 rounded-lg flex items-center justify-center mr-3">
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
@@ -291,8 +291,8 @@ const PlatformAnalytics = () => {
         </div>
 
         {/* Shipment Status Breakdown */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+        <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
               <Package className="w-4 h-4 text-white" />
             </div>
@@ -340,7 +340,7 @@ const PlatformAnalytics = () => {
               const IconComponent = item.icon;
               return (
                 <div key={index} className="text-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
                     <IconComponent className="w-6 h-6 text-gray-600" />
                   </div>
                   <h4 className="font-bold text-2xl text-gray-900 mb-1">{item.count}</h4>
@@ -355,7 +355,7 @@ const PlatformAnalytics = () => {
           <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold text-gray-800 mb-1">Shipment Completion Rate</h4>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Shipment Completion Rate</h4>
                 <p className="text-sm text-gray-600">
                   {analytics.shipments?.total > 0 
                     ? `${Math.round(((analytics.shipments?.statusBreakdown?.received || 0) / analytics.shipments.total) * 100)}%`
@@ -374,8 +374,8 @@ const PlatformAnalytics = () => {
         </div>
 
         {/* Platform Health Indicators */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+        <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
             <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3">
               <Activity className="w-4 h-4 text-white" />
             </div>
@@ -387,7 +387,7 @@ const PlatformAnalytics = () => {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h4 className="font-semibold text-gray-800 mb-1">System Status</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">System Status</h4>
               <p className="text-sm text-green-600 font-medium">Operational</p>
             </div>
             
@@ -395,7 +395,7 @@ const PlatformAnalytics = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Zap className="w-8 h-8 text-blue-600" />
               </div>
-              <h4 className="font-semibold text-gray-800 mb-1">Performance</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Performance</h4>
               <p className="text-sm text-blue-600 font-medium">Excellent</p>
             </div>
             
@@ -403,15 +403,15 @@ const PlatformAnalytics = () => {
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Shield className="w-8 h-8 text-purple-600" />
               </div>
-              <h4 className="font-semibold text-gray-800 mb-1">Security</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Security</h4>
               <p className="text-sm text-purple-600 font-medium">Secure</p>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+        <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
             <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
               <Settings className="w-4 h-4 text-white" />
             </div>

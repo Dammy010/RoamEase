@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { CreditCard, Lock, Shield, CheckCircle } from 'lucide-react';
+import { CreditCard, Lock, Shield, CheckCircle, Loader2, X, ArrowRight } from 'lucide-react';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 const SubscriptionForm = () => {
+  const { formatCurrency } = useCurrency();
   const [formData, setFormData] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -135,7 +137,7 @@ const SubscriptionForm = () => {
                 
                 <h3 className="text-xl font-bold text-gray-800 mb-2">{plan.name}</h3>
                 <div className="mb-4">
-                  <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">{formatCurrency(plan.price)}</span>
                   <span className="text-gray-600">/{plan.period}</span>
                 </div>
                 
@@ -189,7 +191,7 @@ const SubscriptionForm = () => {
             <h3 className="font-semibold text-blue-800 mb-2">Order Summary</h3>
             <div className="flex justify-between items-center">
               <span className="text-blue-700">{selectedPlan.name} Plan</span>
-              <span className="font-bold text-blue-800">${selectedPlan.price}/{selectedPlan.period}</span>
+              <span className="font-bold text-blue-800">{formatCurrency(selectedPlan.price)}/{selectedPlan.period}</span>
             </div>
           </div>
 
@@ -289,7 +291,7 @@ const SubscriptionForm = () => {
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
               >
-                {loading ? 'Processing...' : `Pay $${selectedPlan.price}`}
+                {loading ? 'Processing...' : `Pay ${formatCurrency(selectedPlan.price)}`}
               </button>
             </div>
           </form>

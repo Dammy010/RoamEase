@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../../contexts/ThemeContext';
 import { fetchProfile } from '../../redux/slices/authSlice';
 import ProfileForm from '../../components/forms/ProfileForm';
 import { Truck, Shield, Settings, Edit3, Building, Globe, Award, Mail, Phone, Globe as WebsiteIcon, Calendar, Users, FileText } from "lucide-react";
@@ -18,7 +19,7 @@ const Profile = () => {
 
   if (loading && !user) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-6 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading profile...</p>
@@ -29,7 +30,7 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-6 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Truck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 text-lg">No profile data found</p>
@@ -40,16 +41,16 @@ const Profile = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Profile Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
               <Truck className="w-10 h-10 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
                 {getLogisticsDisplayName(user)}
               </h1>
               <p className="text-gray-600">{user.email}</p>
@@ -114,8 +115,8 @@ const Profile = () => {
 
         {/* Company Information */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <Building className="w-5 h-5 text-blue-600" />
               Company Details
             </h3>
@@ -123,17 +124,17 @@ const Profile = () => {
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Years in Operation:</span>
-                <span className="font-medium text-gray-800">{user.yearsInOperation || 'N/A'} years</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{user.yearsInOperation || 'N/A'} years</span>
               </div>
               <div className="flex items-center gap-3">
                 <Users className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Company Size:</span>
-                <span className="font-medium text-gray-800">{user.companySize || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{user.companySize || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Registration Number:</span>
-                <span className="font-medium text-gray-800">{user.registrationNumber || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{user.registrationNumber || 'N/A'}</span>
               </div>
               {user.website && (
                 <div className="flex items-center gap-3">
@@ -147,8 +148,8 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <Truck className="w-5 h-5 text-green-600" />
               Contact Information
             </h3>
@@ -156,23 +157,23 @@ const Profile = () => {
               <div className="flex items-center gap-3">
                 <Users className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Contact Person:</span>
-                <span className="font-medium text-gray-800">{user.contactName || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactName || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Contact Email:</span>
-                <span className="font-medium text-gray-800">{user.contactEmail || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactEmail || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Contact Phone:</span>
-                <span className="font-medium text-gray-800">{user.contactPhone || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactPhone || 'N/A'}</span>
               </div>
               {user.contactPosition && (
                 <div className="flex items-center gap-3">
                   <Building className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-600">Position:</span>
-                  <span className="font-medium text-gray-800">{user.contactPosition}</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactPosition}</span>
                 </div>
               )}
             </div>
@@ -181,8 +182,8 @@ const Profile = () => {
 
         {/* Services & Regions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <Building className="w-5 h-5 text-blue-600" />
               Services Offered
             </h3>
@@ -199,8 +200,8 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <Globe className="w-5 h-5 text-green-600" />
               Operating Regions
             </h3>
@@ -219,10 +220,10 @@ const Profile = () => {
         </div>
 
         {/* Profile Form */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
-          <div className="flex items-center gap-3 p-6 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
+          <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
             <Edit3 className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-800">Edit Company Profile</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Edit Company Profile</h2>
           </div>
           <div className="p-6">
             <ProfileForm user={user} />
@@ -230,10 +231,10 @@ const Profile = () => {
         </div>
 
         {/* Verification Status */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-800">Verification Status</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Verification Status</h2>
           </div>
           
           <div className="space-y-4">
@@ -246,7 +247,7 @@ const Profile = () => {
             }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-gray-800">Verification Status</h3>
+                  <h3 className="font-medium text-gray-800 dark:text-gray-200">Verification Status</h3>
                   <p className={`text-sm ${
                     user.verificationStatus === 'verified' 
                       ? 'text-green-600' 
@@ -274,8 +275,8 @@ const Profile = () => {
             </div>
 
             {user.verificationNotes && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-gray-800 mb-2">Verification Notes</h4>
+              <div className="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Verification Notes</h4>
                 <p className="text-sm text-gray-600">{user.verificationNotes}</p>
               </div>
             )}
@@ -283,16 +284,16 @@ const Profile = () => {
         </div>
 
         {/* Account Security */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-800">Account Security</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Account Security</h2>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800">Password</h3>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Password</h3>
                 <p className="text-sm text-gray-600">Last changed: {user.passwordChangedAt ? new Date(user.passwordChangedAt).toLocaleDateString() : 'Never'}</p>
               </div>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -302,7 +303,7 @@ const Profile = () => {
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800">Two-Factor Authentication</h3>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Two-Factor Authentication</h3>
                 <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
               </div>
               <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
@@ -313,10 +314,10 @@ const Profile = () => {
         </div>
 
         {/* Account Actions */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-6">
             <Settings className="w-6 h-6 text-red-600" />
-            <h2 className="text-xl font-bold text-gray-800">Account Actions</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Account Actions</h2>
           </div>
           
           <div className="space-y-4">

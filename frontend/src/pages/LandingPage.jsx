@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 import Footer from "../components/shared/Footer";
 import {
   FaBox,
@@ -15,9 +16,10 @@ import {
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
 
       {/* Hero Section */}
       <section className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-gradient-to-br from-blue-800 via-indigo-700 to-blue-600 text-white px-6 lg:px-16 gap-10">
@@ -33,7 +35,7 @@ const LandingPage = () => {
     <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
       <button
         onClick={() => navigate("/browse-shipments")}
-        className="bg-white text-blue-700 font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition duration-300"
+        className="bg-white dark:bg-gray-800 text-blue-700 font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition duration-300"
       >
         Browse Open Shipments
       </button>
@@ -45,7 +47,7 @@ const LandingPage = () => {
       </button>
       <button
         onClick={() => navigate("/signup")}
-        className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300"
+        className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white dark:bg-gray-800 hover:text-blue-700 transition duration-300"
       >
         Become a Provider
       </button>
@@ -63,11 +65,11 @@ const LandingPage = () => {
 </section>
 
       {/* Why Choose RoamEase */}
-      <section className="py-16 text-center bg-gray-50">
-        <h2 className="text-3xl font-bold mb-4 text-gray-900">
+      <section className="py-16 text-center bg-gray-50 dark:bg-gray-800">
+        <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
           Why Choose RoamEase?
         </h2>
-        <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
+        <p className="text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
           Our platform offers comprehensive features designed to make logistics
           management efficient, secure, and hassle-free.
         </p>
@@ -106,12 +108,12 @@ const LandingPage = () => {
           ].map((feature, index) => (
             <div
               key={index}
-              className="bg-white shadow-md rounded-lg p-6 text-left flex items-start gap-4 hover:shadow-xl hover:scale-105 transition duration-300"
+              className="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow-md rounded-lg p-6 text-left flex items-start gap-4 hover:shadow-xl hover:scale-105 transition duration-300"
             >
-              <div className="text-blue-600 text-2xl">{feature.icon}</div>
+              <div className="text-blue-600 dark:text-blue-400 text-2xl">{feature.icon}</div>
               <div>
-                <h3 className="font-semibold text-lg">{feature.title}</h3>
-                <p className="text-gray-600">{feature.desc}</p>
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{feature.title}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{feature.desc}</p>
               </div>
             </div>
           ))}
@@ -119,9 +121,9 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 text-center bg-white">
-        <h2 className="text-3xl font-bold mb-4 text-gray-900">How It Works</h2>
-        <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
+      <section className="py-16 text-center bg-white dark:bg-gray-800 dark:bg-gray-900">
+        <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">How It Works</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
           Get started with RoamEase in four simple steps
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto px-6">
@@ -154,8 +156,8 @@ const LandingPage = () => {
               <div className="bg-yellow-400 text-gray-900 rounded-full p-4 text-3xl mb-4 shadow-lg">
                 {step.icon}
               </div>
-              <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-              <p className="text-gray-600">{step.desc}</p>
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">{step.title}</h3>
+              <p className="text-gray-600 dark:text-gray-300">{step.desc}</p>
             </div>
           ))}
         </div>
@@ -174,7 +176,7 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
               onClick={() => navigate("/browse-shipments")}
-              className="bg-white text-blue-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300"
+              className="bg-white dark:bg-gray-800 text-blue-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300"
             >
               Browse Open Shipments
             </button>
@@ -186,7 +188,7 @@ const LandingPage = () => {
             </button>
             <button
               onClick={() => navigate("/signup")}
-              className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300"
+              className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white dark:bg-gray-800 hover:text-blue-700 transition duration-300"
             >
               Become a Partner
             </button>

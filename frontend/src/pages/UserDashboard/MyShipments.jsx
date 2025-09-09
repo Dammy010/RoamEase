@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../contexts/ThemeContext";
 import { fetchUserShipments, addShipmentRealtime, updateShipmentRealtime, deleteShipment, markShipmentAsReceivedByUser } from "../../redux/slices/shipmentSlice";
 import { getSocket } from '../../services/socket';
 import { toast } from 'react-toastify';
@@ -8,19 +9,23 @@ import {
   Package, MapPin, Calendar, Clock, Eye, Trash2, CheckCircle, 
   RefreshCw, AlertCircle, Truck, Globe, User, 
   Phone, Mail, FileText, Image, Star, TrendingUp, 
-  Plus, Filter, Search, SortAsc, MoreVertical
+  Plus, Filter, Search, SortAsc, MoreVertical, ArrowLeft
 } from 'lucide-react';
 // import BidListModal from '../../components/modals/BidListModal'; // Removed: No longer using modal
 
 const MyShipments = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const { shipments = [], loading, error } = useSelector((state) => state.shipment);
   const { user } = useSelector((state) => state.auth);
 
   // Popup state
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
+  
+  // Expanded shipments state
+  const [expandedShipments, setExpandedShipments] = useState(new Set());
 
   const handleDeleteShipment = async (shipmentId) => {
     if (window.confirm('Are you sure you want to delete this shipment? This action cannot be undone.')) {
@@ -46,6 +51,52 @@ const MyShipments = () => {
       toast.error(errorMessage);
     }
     setSelectedShipmentId(null);
+  };
+
+  const toggleExpanded = (shipmentId) => {
+    setExpandedShipments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(shipmentId)) {
+        newSet.delete(shipmentId);
+      } else {
+        newSet.add(shipmentId);
+      }
+      return newSet;
+    });
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="text-orange-600" size={16} />;
+      case 'in_progress':
+        return <Truck className="text-blue-600" size={16} />;
+      case 'delivered':
+        return <CheckCircle className="text-green-600" size={16} />;
+      case 'cancelled':
+        return <AlertCircle className="text-red-600" size={16} />;
+      case 'completed':
+        return <CheckCircle className="text-green-600" size={16} />;
+      default:
+        return <Clock className="text-gray-600" size={16} />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-orange-100 text-orange-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:text-gray-200';
+    }
   };
 
   const cancelMarkAsReceived = () => {
@@ -105,10 +156,10 @@ const MyShipments = () => {
   // }; // Removed
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <div className="bg-white text-gray-800 rounded-xl shadow-lg p-6 border border-gray-200">
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
 
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">My Shipments</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200 dark:text-white">My Shipments</h2>
 
         {/* Loading */}
         {loading && (
@@ -121,12 +172,12 @@ const MyShipments = () => {
         )}
 
         {shipments.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Package className="text-indigo-500 text-4xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 No Shipments Yet
               </h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -145,7 +196,7 @@ const MyShipments = () => {
             {shipments.map((shipment, index) => (
               <div
                 key={shipment._id}
-                className="group relative bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
               >
                 {/* Compact Header View */}
                 <div className="p-8">
@@ -163,7 +214,7 @@ const MyShipments = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-2xl font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300">
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 transition-colors duration-300">
                               {shipment.shipmentTitle}
                             </h3>
                             <button
@@ -201,7 +252,7 @@ const MyShipments = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Pickup Date</div>
-                            <div className="text-sm font-semibold text-gray-800">
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                               {shipment.preferredPickupDate
                                 ? new Date(shipment.preferredPickupDate).toLocaleDateString()
                                 : 'TBD'}
@@ -214,7 +265,7 @@ const MyShipments = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Delivery Date</div>
-                            <div className="text-sm font-semibold text-gray-800">
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                               {shipment.preferredDeliveryDate
                                 ? new Date(shipment.preferredDeliveryDate).toLocaleDateString()
                                 : 'TBD'}
@@ -227,7 +278,7 @@ const MyShipments = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Type</div>
-                            <div className="text-sm font-semibold text-gray-800">{shipment.typeOfGoods || 'N/A'}</div>
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.typeOfGoods || 'N/A'}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
@@ -300,12 +351,12 @@ const MyShipments = () => {
         {/* Custom Confirmation Popup */}
         {showConfirmPopup && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
               {/* Header */}
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white dark:bg-gray-800/20 rounded-full flex items-center justify-center">
                       <CheckCircle className="text-white text-xl" />
                     </div>
                     <h3 className="text-xl font-bold text-white">Confirm Receipt</h3>
@@ -325,7 +376,7 @@ const MyShipments = () => {
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-3xl">📦</span>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                  <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
                     Got it! Mark this shipment as received?
                   </h4>
                   <p className="text-gray-600 text-sm">

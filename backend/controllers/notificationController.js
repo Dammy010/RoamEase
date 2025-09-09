@@ -1,5 +1,6 @@
 const NotificationService = require('../services/notificationService');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 /**
  * GET /api/notifications
@@ -302,6 +303,153 @@ const bulkAction = async (req, res) => {
   }
 };
 
+/**
+ * Debug endpoint to check recent notifications
+ */
+const debugRecentNotifications = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const recentNotifications = await Notification.find({ recipient: userId })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('recipient', 'name email role')
+      .lean();
+    
+    res.json({
+      success: true,
+      userId,
+      notifications: recentNotifications
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Test endpoint to create a chat notification
+ */
+const testChatNotification = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { recipientId, message } = req.body;
+    
+    if (!recipientId || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'recipientId and message are required'
+      });
+    }
+
+    // Create a test chat notification
+    const notificationData = {
+      recipient: recipientId,
+      type: 'new_message',
+      title: `Test message from ${req.user.name}`,
+      message: message,
+      priority: 'medium',
+      relatedEntity: {
+        type: 'conversation',
+        id: 'test-conversation'
+      },
+      metadata: {
+        conversationId: 'test-conversation',
+        senderId: userId,
+        senderName: req.user.name,
+        messageId: 'test-message',
+        hasAttachments: false
+      }
+    };
+
+    const notification = await NotificationService.createNotification(notificationData);
+    
+    res.json({
+      success: true,
+      notification
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Test endpoint to create a comprehensive notification test
+ */
+const testNotificationSystem = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { type = 'test_notification' } = req.body;
+
+    console.log(`🧪 Creating test notification for user ${userId}`);
+
+    // Create a test notification for the current user
+    const notificationData = {
+      recipient: userId,
+      type: type,
+      title: `🧪 Test Notification - ${type}`,
+      message: `This is a test notification to verify the system is working properly. Created at ${new Date().toLocaleString()}`,
+      priority: 'medium',
+      relatedEntity: {
+        type: 'test',
+        id: 'test-system'
+      },
+      metadata: {
+        testId: Date.now(),
+        testType: type,
+        timestamp: new Date().toISOString()
+      },
+      actions: [
+        {
+          label: 'Test Action',
+          action: 'test',
+          url: '/notifications',
+          method: 'GET'
+        }
+      ]
+    };
+
+    const notification = await NotificationService.createNotification(notificationData);
+    
+    // Also test fetching notifications for this user
+    const userNotifications = await NotificationService.getUserNotifications(userId, 1, 10, 'all');
+    
+    res.json({
+      success: true,
+      message: 'Test notification created successfully',
+      notification: {
+        id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        priority: notification.priority,
+        createdAt: notification.createdAt
+      },
+      userNotifications: {
+        count: userNotifications.notifications.length,
+        total: userNotifications.pagination.total,
+        notifications: userNotifications.notifications.map(n => ({
+          id: n._id,
+          type: n.type,
+          title: n.title,
+          status: n.status,
+          createdAt: n.createdAt
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('❌ Test notification error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getNotifications,
   getUnreadCount,
@@ -311,5 +459,8 @@ module.exports = {
   archiveNotification,
   createTestNotification,
   getNotificationStats,
-  bulkAction
+  bulkAction,
+  debugRecentNotifications,
+  testChatNotification,
+  testNotificationSystem
 };

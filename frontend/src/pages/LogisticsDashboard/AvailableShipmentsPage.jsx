@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom'; // New: Import useNavigate
+import { useTheme } from '../../contexts/ThemeContext';
 import { fetchAvailableShipments } from '../../redux/slices/shipmentSlice';
 import { createBid } from '../../redux/slices/bidSlice';
 import { toast } from 'react-toastify';
@@ -9,6 +10,7 @@ import BidModal from '../../components/modals/BidModal';
 const AvailableShipmentsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate(); // New: Initialize useNavigate
+  const { isDark } = useTheme();
   const { availableShipments, loading, error } = useSelector(state => state.shipment);
   const { user } = useSelector(state => state.auth);
   const [showBidModal, setShowBidModal] = useState(false);

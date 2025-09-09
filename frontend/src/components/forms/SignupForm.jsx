@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // Added useCallback, useRef
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { signupUser } from '../../redux/slices/authSlice';
+import { useTheme } from '../../contexts/ThemeContext';
+import { signupUser, clearError } from '../../redux/slices/authSlice';
+import { toast } from 'react-hot-toast';
 import PasswordInput from '../shared/PasswordInput';
 import EmailVerificationPrompt from '../EmailVerificationPrompt';
 import CountrySelect from '../shared/CountrySelect';
@@ -15,7 +17,7 @@ const ROLES = {
 };
 
 const REQUIRED_FIELDS = {
-  [ROLES.USER]: ['name', 'email', 'password', 'confirmPassword', 'phoneNumber', 'country'],
+  [ROLES.USER]: ['name', 'email', 'password', 'confirmPassword', 'phoneNumber'],
   [ROLES.LOGISTICS]: [
     'companyName',
     'yearsInOperation',
@@ -40,6 +42,7 @@ const REQUIRED_FIELDS = {
 
 const SignupForm = () => {
   console.count('SignupForm Render');
+  const { isDark } = useTheme();
   const [formData, setFormData] = useState({
     // User fields
     name: '',
@@ -91,11 +94,14 @@ const SignupForm = () => {
   // validateField should be stable. It depends on formData.role and formData.password
   // We extract formData.password here for stability in validateField.
   const validateField = useCallback((name, value, currentFormData, passwordValue) => {
-  console.log(`Validating field: ${name}, value: ${value}`);
+  console.log(`Validating field: ${name}, value: "${value}", type: ${typeof value}, role: ${currentFormData.role}`);
   const role = currentFormData.role;
 
   // Required check
-  if (!value && REQUIRED_FIELDS[role].includes(name)) return 'This field is required';
+  if (!value && REQUIRED_FIELDS[role].includes(name)) {
+    console.log(`Field ${name} is required but empty`);
+    return 'This field is required';
+  }
 
   // Role-specific email validation
   if (name === 'email' && role === ROLES.USER) {
@@ -242,29 +248,54 @@ const SignupForm = () => {
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     console.log('handleSubmit called');
+    console.log('Form data:', formData);
+    console.log('Current role:', formData.role);
+    
+    // Clear any previous errors
+    dispatch(clearError());
+    
     const newErrors = {};
     const requiredFields = REQUIRED_FIELDS[formData.role];
+    console.log('Required fields for role:', requiredFields);
 
     requiredFields.forEach((field) => {
       const passwordValueForValidation = formData.password;
+      console.log(`Checking field: ${field}, value: "${formData[field]}"`);
 
       if (['services', 'regions'].includes(field)) {
-        if (formData[field].length === 0) newErrors[field] = `Select at least one ${field}`;
+        if (formData[field].length === 0) {
+          console.log(`Field ${field} failed: must select at least one`);
+          newErrors[field] = `Select at least one ${field}`;
+        }
       } else if (['agreements', 'terms'].includes(field)) {
-        if (!formData[field]) newErrors[field] = 'You must accept this';
+        if (!formData[field]) {
+          console.log(`Field ${field} failed: must accept`);
+          newErrors[field] = 'You must accept this';
+        }
       } else if (['businessLicense', 'insuranceCertificate', 'governmentId'].includes(field)) {
-        if (!formData.documents[field]) newErrors[field] = 'Document is required';
+        if (!formData.documents[field]) {
+          console.log(`Field ${field} failed: document required`);
+          newErrors[field] = 'Document is required';
+        }
       } else {
         const msg = validateField(field, formData[field], formData, field === 'confirmPassword' ? passwordValueForValidation : null); // Pass formData and passwordValue
-        if (msg) newErrors[field] = msg;
+        if (msg) {
+          console.log(`Field ${field} failed validation: ${msg}`);
+          newErrors[field] = msg;
+        } else {
+          console.log(`Field ${field} passed validation`);
+        }
       }
     });
 
     if (Object.keys(newErrors).length) {
       console.log('handleSubmit setting new errors:', newErrors);
+      console.log('Form validation failed, preventing submission');
       setErrors(newErrors);
       return;
     }
+    
+    console.log('Form validation passed, proceeding with submission');
 
     console.log('handleSubmit clearing errors (no new errors)');
     setErrors({});
@@ -354,11 +385,14 @@ const SignupForm = () => {
         }
         
         // Handle other errors
-        const msg = payload.message || resultAction.error?.message;
+        const msg = payload.message || resultAction.error?.message || 'Signup failed. Please try again.';
         console.error('Signup failed:', msg);
+        toast.error(msg);
       }
     } catch (err) {
       console.error("Unexpected signup error:", err);
+      const errorMessage = err.message || 'An unexpected error occurred. Please try again.';
+      toast.error(errorMessage);
     }
   }, [formData, dispatch, validateField, navigate]);
 
@@ -396,7 +430,7 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
       <div className="max-w-6xl mx-auto">
         {/* Email Verification Prompt */}
         {showVerificationPrompt && (
@@ -424,7 +458,7 @@ const SignupForm = () => {
 
         {/* Role Toggle */}
         <div className="flex justify-center mb-12">
-          <div className="bg-white rounded-2xl p-2 shadow-lg border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-lg border border-gray-200 dark:border-gray-700">
             {Object.values(ROLES).map((role) => (
               <button
                 key={role}
@@ -453,7 +487,7 @@ const SignupForm = () => {
         </div>
 
         {/* Main Form Container */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
           <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-8 py-6">
             <p className="text-indigo-100 text-center text-lg">
               {formData.role === ROLES.LOGISTICS 
@@ -472,7 +506,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                       <UserCircle className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Personal Information</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Personal Information</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -487,7 +521,7 @@ const SignupForm = () => {
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="Enter your full name"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.name ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -505,7 +539,7 @@ const SignupForm = () => {
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="Enter your email"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                         autoComplete="off"
@@ -524,25 +558,11 @@ const SignupForm = () => {
                         value={formData.phoneNumber}
                         onChange={handleChange}
                         placeholder="Enter your phone number"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.phoneNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-                        Country <span className="text-red-500">*</span>
-                      </label>
-                      <CountrySelect
-                        value={formData.country}
-                        onChange={(value) => handleChange({ target: { name: 'country', value } })}
-                        placeholder="Select your country"
-                        error={!!errors.country}
-                        className="w-full"
-                      />
-                      {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
                     </div>
                   </div>
                 </div>
@@ -553,7 +573,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                       <Shield className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Account Security</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Account Security</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -585,6 +605,11 @@ const SignupForm = () => {
                   <button
                     type="submit"
                     disabled={loading}
+                    onClick={(e) => {
+                      console.log('User form button clicked!', e);
+                      console.log('Loading state:', loading);
+                      console.log('Form data:', formData);
+                    }}
                     className={`w-full py-4 px-6 rounded-xl text-white font-semibold text-lg transition-all duration-300 transform ${
                       loading 
                         ? 'bg-gray-400 cursor-not-allowed' 
@@ -623,7 +648,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
                       <Truck className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Company Information</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Company Information</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -638,7 +663,7 @@ const SignupForm = () => {
                         value={formData.companyName}
                         onChange={handleChange}
                         placeholder="Enter your company name"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.companyName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -656,7 +681,7 @@ const SignupForm = () => {
                         value={formData.yearsInOperation}
                         onChange={handleChange}
                         placeholder="e.g. 5"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.yearsInOperation ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -674,7 +699,7 @@ const SignupForm = () => {
                         value={formData.registrationNumber}
                         onChange={handleChange}
                         placeholder="Enter registration number"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.registrationNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -704,7 +729,7 @@ const SignupForm = () => {
                         name="companySize"
                         value={formData.companySize}
                         onChange={handleChange}
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 ${
                           errors.companySize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
@@ -728,7 +753,7 @@ const SignupForm = () => {
                         value={formData.website}
                         onChange={handleChange}
                         placeholder="https://www.example.com"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.website ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -747,7 +772,7 @@ const SignupForm = () => {
                         onChange={handleChange}
                         placeholder="Number of vehicles"
                         min="0"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.fleetSize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -762,7 +787,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
                       <UserCircle className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Contact Person Information</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Contact Person Information</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -777,7 +802,7 @@ const SignupForm = () => {
                         value={formData.contactName}
                         onChange={handleChange}
                         placeholder="Enter contact person name"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -795,7 +820,7 @@ const SignupForm = () => {
                         value={formData.contactEmail}
                         onChange={handleChange}
                         placeholder="Enter contact email"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactEmail ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                         autoComplete="off"
@@ -814,7 +839,7 @@ const SignupForm = () => {
                         value={formData.contactPosition}
                         onChange={handleChange}
                         placeholder="e.g. Operations Manager"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactPosition ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -832,7 +857,7 @@ const SignupForm = () => {
                         value={formData.contactPhone}
                         onChange={handleChange}
                         placeholder="Enter contact phone number"
-                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 placeholder-gray-400 ${
+                        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactPhone ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
@@ -847,7 +872,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                       <Shield className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Account Security</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Account Security</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -880,7 +905,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
                       <MapPin className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Logistics Capabilities & Regions</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Logistics Capabilities & Regions</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -890,10 +915,10 @@ const SignupForm = () => {
                         <Truck className="w-5 h-5 text-indigo-500" />
                         Transport Services <span className="text-red-500">*</span>
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl">
                         {['Trucking', 'Shipping', 'Air Freight', 'Rail', 'Last-Mile Delivery', 'Warehousing'].map(
                           (service) => (
-                            <label key={service} className="flex items-center text-gray-700 hover:bg-white p-2 rounded-lg transition-colors cursor-pointer">
+                            <label key={service} className="flex items-center text-gray-700 hover:bg-white dark:bg-gray-800 p-2 rounded-lg transition-colors cursor-pointer">
                               <input
                                 type="checkbox"
                                 name={`services-${service}`}
@@ -918,10 +943,10 @@ const SignupForm = () => {
                         <MapPin className="w-5 h-5 text-indigo-500" />
                         Regions Served <span className="text-red-500">*</span>
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl">
                         {['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East', 'Africa'].map(
                           (region) => (
-                            <label key={region} className="flex items-center text-gray-700 hover:bg-white p-2 rounded-lg transition-colors cursor-pointer">
+                            <label key={region} className="flex items-center text-gray-700 hover:bg-white dark:bg-gray-800 p-2 rounded-lg transition-colors cursor-pointer">
                               <input
                                 type="checkbox"
                                 name={`regions-${region}`}
@@ -946,7 +971,7 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
                       <Package className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Required Documents</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Required Documents</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -979,11 +1004,11 @@ const SignupForm = () => {
                     <div className="w-8 h-8 bg-gradient-to-r from-gray-500 to-gray-700 rounded-lg flex items-center justify-center">
                       <CheckCircle className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800">Final Agreements</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Final Agreements</h3>
                   </div>
                   
-                  <div className="space-y-4 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                    <label className="flex items-start text-gray-700 hover:bg-white p-3 rounded-lg transition-colors cursor-pointer">
+                  <div className="space-y-4 p-6 bg-gray-50 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <label className="flex items-start text-gray-700 hover:bg-white dark:bg-gray-800 p-3 rounded-lg transition-colors cursor-pointer">
                       <input
                         type="checkbox"
                         name="agreements"
@@ -998,7 +1023,7 @@ const SignupForm = () => {
                     </label>
                     {errors.agreements && <p className="text-red-500 text-sm mt-1">{errors.agreements}</p>}
                     
-                    <label className="flex items-start text-gray-700 hover:bg-white p-3 rounded-lg transition-colors cursor-pointer">
+                    <label className="flex items-start text-gray-700 hover:bg-white dark:bg-gray-800 p-3 rounded-lg transition-colors cursor-pointer">
                       <input
                         type="checkbox"
                         name="terms"

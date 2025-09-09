@@ -13,7 +13,8 @@ import {
   selectNotification,
   selectAllNotifications,
   clearSelection,
-  clearError
+  clearError,
+  clearNotifications
 } from '../redux/slices/notificationSlice';
 import {
   Bell,
@@ -45,6 +46,20 @@ import {
   List
 } from 'lucide-react';
 
+// Create icon components for the notification types
+const PackageIcon = Package;
+const DollarSignIcon = DollarSign;
+const CheckCircleIcon = CheckCircle;
+const XIcon = X;
+const AlertTriangleIcon = AlertTriangle;
+const ShieldIcon = Shield;
+const UserIcon = User;
+const Building2Icon = Building2;
+const ActivityIcon = Activity;
+const SettingsIcon = Settings;
+const ZapIcon = Zap;
+const FileTextIcon = FileText;
+
 const NotificationPage = () => {
   const dispatch = useDispatch();
   const { 
@@ -63,7 +78,17 @@ const NotificationPage = () => {
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'priority', 'type'
 
+  // Debug logging
+  console.log('🔔 NotificationPage State:', {
+    notifications: notifications.length,
+    unreadCount,
+    loading,
+    error,
+    filters
+  });
+
   useEffect(() => {
+    console.log('🔔 NotificationPage: Fetching notifications...');
     dispatch(getNotifications({ page: 1, limit: 20, status: filters.status }));
     dispatch(getUnreadCount());
     dispatch(getNotificationStats());
@@ -86,6 +111,26 @@ const NotificationPage = () => {
   const handleDelete = async (notificationId) => {
     if (window.confirm('Are you sure you want to delete this notification?')) {
       dispatch(deleteNotification(notificationId));
+    }
+  };
+
+  const handleNotificationClick = (notification) => {
+    // Mark as read if unread
+    if (notification.status === 'unread') {
+      dispatch(markAsRead(notification._id));
+    }
+
+    // Handle chat notifications
+    if (notification.type === 'new_message' || notification.type === 'message_received' || 
+        notification.type === 'conversation_started' || notification.type === 'conversation_updated') {
+      const conversationId = notification.metadata?.conversationId;
+      if (conversationId) {
+        // Navigate to chat with specific conversation
+        window.location.href = `/chat?conversation=${conversationId}`;
+      } else {
+        // Navigate to general chat
+        window.location.href = '/chat';
+      }
     }
   };
 
@@ -120,6 +165,12 @@ const NotificationPage = () => {
       'verification_rejected': XIcon,
       'account_suspended': AlertTriangleIcon,
       'account_reactivated': CheckCircleIcon,
+      
+      // Chat notifications
+      'new_message': MessageSquare,
+      'message_received': MessageSquare,
+      'conversation_started': MessageSquare,
+      'conversation_updated': MessageSquare,
       
       // Logistics notifications
       'new_shipment_available': PackageIcon,
@@ -159,7 +210,11 @@ const NotificationPage = () => {
       'dispute_resolved': 'text-green-600 bg-green-100',
       'verification_approved': 'text-green-600 bg-green-100',
       'verification_rejected': 'text-red-600 bg-red-100',
-      'system_alert': 'text-red-600 bg-red-100'
+      'system_alert': 'text-red-600 bg-red-100',
+      'new_message': 'text-purple-600 bg-purple-100',
+      'message_received': 'text-purple-600 bg-purple-100',
+      'conversation_started': 'text-indigo-600 bg-indigo-100',
+      'conversation_updated': 'text-indigo-600 bg-indigo-100'
     };
     
     return typeColors[type] || 'text-blue-600 bg-blue-100';
@@ -199,19 +254,43 @@ const NotificationPage = () => {
 
   if (loading && notifications.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading notifications...</p>
+          <p className="text-gray-600 dark:text-gray-300 font-medium">Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if there's one
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-500 text-2xl">⚠️</span>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Error Loading Notifications</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <button
+            onClick={() => {
+              dispatch(clearError());
+              dispatch(getNotifications({ page: 1, limit: 20, status: filters.status }));
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-lg"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+      <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 shadow-sm">
         <div className="px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -251,7 +330,7 @@ const NotificationPage = () => {
 
       {/* Filters and Controls */}
       {showFilters && (
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-6">
+        <div className="bg-white dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -379,10 +458,23 @@ const NotificationPage = () => {
         {sortedNotifications.length === 0 ? (
           <div className="text-center py-12">
             <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications found</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No notifications found</h3>
+            <p className="text-gray-500 dark:text-gray-400">
               {searchQuery ? 'Try adjusting your search terms' : 'You\'re all caught up!'}
             </p>
+            {!searchQuery && (
+              <div className="mt-4">
+                <button
+                  onClick={() => {
+                    console.log('🔔 Refreshing notifications...');
+                    dispatch(getNotifications({ page: 1, limit: 20, status: filters.status }));
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Refresh Notifications
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
@@ -394,9 +486,10 @@ const NotificationPage = () => {
               return (
                 <div
                   key={notification._id}
-                  className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-xl transition-all duration-200 ${
+                  className={`bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50 p-6 hover:shadow-xl transition-all duration-200 cursor-pointer ${
                     isUnread ? 'ring-2 ring-blue-200' : ''
                   } ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start space-x-4">
                     {/* Checkbox */}
@@ -433,11 +526,11 @@ const NotificationPage = () => {
                               notification.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                               notification.priority === 'high' ? 'bg-orange-100 text-orange-800' :
                               notification.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
+                              'bg-gray-100 text-gray-800 dark:text-gray-200'
                             }`}>
                               {notification.priority}
                             </span>
-                            <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                            <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:text-gray-200 rounded-full text-xs font-medium">
                               {notification.type.replace(/_/g, ' ')}
                             </span>
                           </div>
@@ -499,7 +592,7 @@ const NotificationPage = () => {
           <div className="mt-8 flex items-center justify-center space-x-2">
             <button
               disabled={pagination.page === 1}
-              className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -511,7 +604,7 @@ const NotificationPage = () => {
                 className={`px-3 py-2 rounded-lg transition-colors ${
                   page === pagination.page
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-gray-300 hover:bg-gray-50'
+                    : 'bg-white dark:bg-gray-800 border border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 {page}
@@ -520,7 +613,7 @@ const NotificationPage = () => {
             
             <button
               disabled={pagination.page === pagination.pages}
-              className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowRight className="w-4 h-4" />
             </button>

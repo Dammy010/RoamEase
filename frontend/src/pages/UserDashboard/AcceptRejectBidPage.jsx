@@ -124,13 +124,13 @@ const AcceptRejectBidPage = () => {
       case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
       case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
   if (shipmentLoading || bidsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Package className="text-white text-2xl" />
@@ -144,7 +144,7 @@ const AcceptRejectBidPage = () => {
 
   if (shipmentError || bidsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="text-red-500 text-2xl" />
@@ -164,7 +164,7 @@ const AcceptRejectBidPage = () => {
 
   if (!currentShipment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="text-gray-500 text-2xl" />
@@ -184,7 +184,7 @@ const AcceptRejectBidPage = () => {
 
   if (!isOwner) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Shield className="text-red-500 text-2xl" />
@@ -203,22 +203,22 @@ const AcceptRejectBidPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate("/user/my-shipments")}
-            className="mb-6 px-4 py-2 bg-white text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-300 flex items-center gap-2 shadow-sm border border-gray-200"
+            className="mb-6 px-4 py-2 bg-white dark:bg-gray-800 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-300 flex items-center gap-2 shadow-sm border border-gray-200 dark:border-gray-700"
           >
             <ArrowLeft size={16} />
             Back to My Shipments
           </button>
           
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                   <Package className="text-white text-2xl" />
                 </div>
                 <div>
@@ -232,7 +232,7 @@ const AcceptRejectBidPage = () => {
               {currentShipment ? (
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <div className="space-y-2">
-                    <h2 className="text-xl font-semibold text-gray-800">{currentShipment.shipmentTitle || 'N/A'}</h2>
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{currentShipment.shipmentTitle || 'N/A'}</h2>
                     <div className="flex items-center gap-2 text-gray-600">
                       <MapPin size={16} />
                       <span>{currentShipment.pickupCity || 'N/A'} → {currentShipment.deliveryCity || 'N/A'}</span>
@@ -273,7 +273,7 @@ const AcceptRejectBidPage = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Selected Bid Details */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Star size={20} />
@@ -286,7 +286,7 @@ const AcceptRejectBidPage = () => {
                   <div className="space-y-6">
                     {/* Bid Price */}
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-800 mb-2">
+                      <div className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
                         ${selectedBid.price?.toFixed(2) || 'N/A'}
                       </div>
                       <div className="text-lg text-gray-600">Bid Amount</div>
@@ -297,7 +297,7 @@ const AcceptRejectBidPage = () => {
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                         <Clock className="text-blue-500" size={20} />
                         <div>
-                          <div className="font-medium text-gray-800">Estimated Delivery</div>
+                          <div className="font-medium text-gray-800 dark:text-gray-200">Estimated Delivery</div>
                           <div className="text-gray-600">{selectedBid.eta || 'N/A'}</div>
                         </div>
                       </div>
@@ -305,7 +305,7 @@ const AcceptRejectBidPage = () => {
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                         <Calendar className="text-green-500" size={20} />
                         <div>
-                          <div className="font-medium text-gray-800">Pickup Date</div>
+                          <div className="font-medium text-gray-800 dark:text-gray-200">Pickup Date</div>
                           <div className="text-gray-600">
                             N/A
                           </div>
@@ -314,7 +314,7 @@ const AcceptRejectBidPage = () => {
 
                       {selectedBid.message && (
                         <div className="p-4 bg-blue-50 rounded-xl">
-                          <div className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                          <div className="font-medium text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
                             <MessageSquare size={16} />
                             Message
                           </div>
@@ -325,12 +325,12 @@ const AcceptRejectBidPage = () => {
 
                     {/* Carrier Info */}
                     <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl">
-                      <div className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                      <div className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                         <User size={16} />
                         Carrier Information
                       </div>
                       <div className="space-y-2">
-                        <div className="font-semibold text-gray-800">
+                        <div className="font-semibold text-gray-800 dark:text-gray-200">
                           {selectedBid.carrier?.companyName || selectedBid.carrier?.name || 'Unknown Carrier'}
                         </div>
                         <div className="text-sm text-gray-600 flex items-center gap-2">
@@ -406,7 +406,7 @@ const AcceptRejectBidPage = () => {
 
           {/* Bids List */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <TrendingUp size={20} />
@@ -424,7 +424,7 @@ const AcceptRejectBidPage = () => {
                       placeholder="Search by carrier name or message..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                   </div>
                   
@@ -455,11 +455,11 @@ const AcceptRejectBidPage = () => {
                         className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 ${
                           selectedBid?._id === bid._id
                             ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-md'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-3">
-                          <div className="text-2xl font-bold text-gray-800">
+                          <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                             ${bid.price?.toFixed(2) || 'N/A'}
                           </div>
                           <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(bid.status)}`}>

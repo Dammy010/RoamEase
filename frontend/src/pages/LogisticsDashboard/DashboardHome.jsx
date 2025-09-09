@@ -9,11 +9,13 @@ import { getLogisticsDisplayName, getVerificationStatusText } from "../../utils/
 import { fetchProfile } from "../../redux/slices/authSlice";
 import { fetchLogisticsDashboardData, fetchLogisticsHistory } from "../../redux/slices/logisticsSlice";
 import { getProfilePictureUrl } from "../../utils/imageUtils";
+import { useTheme } from "../../contexts/ThemeContext";
 
 
 const LogisticsDashboardHome = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const { user } = useSelector((state) => state.auth);
   const { dashboardData, loading: countsLoading, history, historyLoading, historyError } = useSelector((state) => state.logistics);
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
@@ -39,10 +41,10 @@ const LogisticsDashboardHome = () => {
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-white dark:bg-gray-900">
                   <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
             <button
               onClick={handleRefreshProfile}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -140,7 +142,7 @@ const LogisticsDashboardHome = () => {
   }
 
   return (
-    <main className="p-6 md:p-10"> {/* Removed flex min-h-screen and background, as App.jsx handles it */}
+    <main className="p-6 md:p-10 bg-white dark:bg-gray-900 min-h-screen">
       {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl mb-8">
         {/* Background Pattern */}

@@ -1,10 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
-  const { theme, toggleTheme } = useTheme();
-  
   const linkClass = ({ isActive }) =>
     `px-3 py-2 rounded-md text-sm font-medium transition ${isActive
       ? 'bg-blue-600 text-white'
@@ -37,13 +34,7 @@ const Navbar = () => {
       {/* Right-aligned Auth Links */}
       <div className="flex items-center space-x-2">
         {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-        </button>
+        <ThemeToggle />
         
         <NavLink to="/login" className={linkClass}>
           Login

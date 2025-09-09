@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../../contexts/ThemeContext';
 import { markShipmentAsDeliveredByLogistics } from '../../redux/slices/shipmentSlice';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
@@ -12,6 +13,7 @@ import {
 
 const ActiveShipments = () => {
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const { user } = useSelector((state) => state.auth);
   const [activeShipments, setActiveShipments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -102,13 +104,13 @@ const ActiveShipments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Loading Active Shipments</h3>
-              <p className="text-gray-600">Fetching your current deliveries...</p>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Loading Active Shipments</h3>
+              <p className="text-gray-600 dark:text-gray-400">Fetching your current deliveries...</p>
             </div>
           </div>
         </div>
@@ -117,14 +119,14 @@ const ActiveShipments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                   <Truck className="text-white text-3xl" />
                 </div>
                 <div>
@@ -133,14 +135,14 @@ const ActiveShipments = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
                   <span className="text-white font-semibold text-lg">
                     {activeShipments.length} active
                   </span>
                 </div>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                 >
                   <RefreshCw size={16} />
                   Refresh
@@ -151,12 +153,12 @@ const ActiveShipments = () => {
         </div>
 
         {activeShipments.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Truck className="text-indigo-500 text-4xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">No Active Shipments</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">No Active Shipments</h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 You don't have any accepted bids or active shipments at the moment. 
                 Start by browsing available shipments and placing bids!
@@ -174,7 +176,7 @@ const ActiveShipments = () => {
             {activeShipments.map((shipment, index) => (
               <div
                 key={shipment._id}
-                className="group relative bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
               >
                 {/* Compact Header View */}
                 <div className="p-8">
@@ -192,7 +194,7 @@ const ActiveShipments = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-2xl font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300">
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 transition-colors duration-300">
                               {shipment.shipmentTitle}
                             </h3>
                             <button
@@ -234,7 +236,7 @@ const ActiveShipments = () => {
                               shipment.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
                               shipment.status === 'completed' ? 'bg-yellow-100 text-yellow-800' :
                               shipment.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
+                              'bg-gray-100 text-gray-800 dark:text-gray-200'
                             }`}>
                               {shipment.status}
                             </div>
@@ -246,7 +248,7 @@ const ActiveShipments = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Bid Price</div>
-                            <div className="text-sm font-semibold text-gray-800">${shipment.acceptedBid?.price}</div>
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">${shipment.acceptedBid?.price}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
@@ -255,7 +257,7 @@ const ActiveShipments = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">ETA</div>
-                            <div className="text-sm font-semibold text-gray-800">{shipment.acceptedBid?.eta}</div>
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.acceptedBid?.eta}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
@@ -264,7 +266,7 @@ const ActiveShipments = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Pickup Date</div>
-                            <div className="text-sm font-semibold text-gray-800">N/A</div>
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">N/A</div>
                           </div>
                         </div>
                       </div>
@@ -275,7 +277,7 @@ const ActiveShipments = () => {
                           <div className="flex items-center gap-2">
                             <User className="text-gray-400" size={16} />
                             <span className="text-gray-600 font-medium">Shipper:</span>
-                            <span className="font-semibold text-gray-800">
+                            <span className="font-semibold text-gray-800 dark:text-gray-200">
                               {shipment.user?.companyName || shipment.user?.name}
                             </span>
                           </div>
@@ -313,26 +315,26 @@ const ActiveShipments = () => {
                     <div className="p-8">
                       {/* Key Information Summary */}
                       <div className="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
-                        <h4 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
                           <Truck className="text-indigo-600" size={20} />
                           Delivery Information
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          <div className="bg-white p-4 rounded-xl border border-indigo-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Route</div>
-                            <div className="font-semibold text-gray-800">{shipment.pickupCity} → {shipment.deliveryCity}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCity} → {shipment.deliveryCity}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border border-indigo-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Pickup Date</div>
-                            <div className="font-semibold text-gray-800">{shipment.formattedPickupDate}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border border-indigo-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Delivery Date</div>
-                            <div className="font-semibold text-gray-800">{shipment.formattedDeliveryDate}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedDeliveryDate}</div>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border border-indigo-100">
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Transport Mode</div>
-                            <div className="font-semibold text-gray-800">{shipment.modeOfTransport}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.modeOfTransport}</div>
                           </div>
                         </div>
                       </div>
@@ -341,8 +343,8 @@ const ActiveShipments = () => {
                         {/* Left Column - Goods & Transport */}
                         <div className="space-y-6">
                           {/* Goods Information */}
-                          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                               <Package className="text-blue-600" size={20} />
                               Goods Information
                             </h4>
@@ -353,7 +355,7 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Type</div>
-                                  <div className="font-semibold text-gray-800">{shipment.typeOfGoods}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.typeOfGoods}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -362,7 +364,7 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Quantity</div>
-                                  <div className="font-semibold text-gray-800">{shipment.quantitySummary}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.quantitySummary}</div>
                                 </div>
                               </div>
                               {shipment.weight && (
@@ -372,7 +374,7 @@ const ActiveShipments = () => {
                                   </div>
                                   <div>
                                     <div className="text-sm text-gray-500 font-medium">Weight</div>
-                                    <div className="font-semibold text-gray-800">{shipment.weightSummary}</div>
+                                    <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.weightSummary}</div>
                                   </div>
                                 </div>
                               )}
@@ -383,20 +385,20 @@ const ActiveShipments = () => {
                                   </div>
                                   <div>
                                     <div className="text-sm text-gray-500 font-medium">Dimensions</div>
-                                    <div className="font-semibold text-gray-800">{shipment.dimensions}</div>
+                                    <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.dimensions}</div>
                                   </div>
                                 </div>
                               )}
                               <div className="mt-4 p-3 bg-gray-50 rounded-xl">
                                 <div className="text-sm text-gray-500 font-medium mb-1">Description</div>
-                                <div className="text-sm text-gray-800">{shipment.descriptionOfGoods}</div>
+                                <div className="text-sm text-gray-800 dark:text-gray-200">{shipment.descriptionOfGoods}</div>
                               </div>
                             </div>
                           </div>
 
                           {/* Transport Details */}
-                          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                               <Truck className="text-indigo-600" size={20} />
                               Transport Details
                             </h4>
@@ -407,7 +409,7 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Mode</div>
-                                  <div className="font-semibold text-gray-800">{shipment.modeOfTransport}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.modeOfTransport}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -416,13 +418,13 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Insurance</div>
-                                  <div className="font-semibold text-gray-800">{shipment.insuranceRequired}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.insuranceRequired}</div>
                                 </div>
                               </div>
                               {shipment.handlingInstructions && (
                                 <div className="mt-4 p-3 bg-gray-50 rounded-xl">
                                   <div className="text-sm text-gray-500 font-medium mb-1">Handling Instructions</div>
-                                  <div className="text-sm text-gray-800">{shipment.handlingInstructions}</div>
+                                  <div className="text-sm text-gray-800 dark:text-gray-200">{shipment.handlingInstructions}</div>
                                 </div>
                               )}
                             </div>
@@ -432,8 +434,8 @@ const ActiveShipments = () => {
                         {/* Right Column - Location Details */}
                         <div className="space-y-6">
                           {/* Pickup Details */}
-                          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                               <MapPin className="text-orange-600" size={20} />
                               Pickup Details
                             </h4>
@@ -444,17 +446,17 @@ const ActiveShipments = () => {
                                 </div>
                                 <div className="flex-1">
                                   <div className="text-sm text-gray-500 font-medium">Address</div>
-                                  <div className="font-semibold text-gray-800">{shipment.pickupAddress}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupAddress}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">City</div>
-                                  <div className="font-semibold text-gray-800">{shipment.pickupCity}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCity}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Country</div>
-                                  <div className="font-semibold text-gray-800">{shipment.pickupCountry}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCountry}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -463,25 +465,25 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Pickup Date</div>
-                                  <div className="font-semibold text-gray-800">{shipment.formattedPickupDate}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Contact Person</div>
-                                  <div className="font-semibold text-gray-800">{shipment.pickupContactPerson}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupContactPerson}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Phone</div>
-                                  <div className="font-semibold text-gray-800">{shipment.pickupPhoneNumber}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupPhoneNumber}</div>
                                 </div>
                               </div>
                             </div>
                           </div>
 
                           {/* Delivery Details */}
-                          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                               <MapPin className="text-green-600" size={20} />
                               Delivery Details
                             </h4>
@@ -492,17 +494,17 @@ const ActiveShipments = () => {
                                 </div>
                                 <div className="flex-1">
                                   <div className="text-sm text-gray-500 font-medium">Address</div>
-                                  <div className="font-semibold text-gray-800">{shipment.deliveryAddress}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryAddress}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">City</div>
-                                  <div className="font-semibold text-gray-800">{shipment.deliveryCity}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryCity}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Country</div>
-                                  <div className="font-semibold text-gray-800">{shipment.deliveryCountry}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryCountry}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -511,17 +513,17 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Delivery Date</div>
-                                  <div className="font-semibold text-gray-800">{shipment.formattedDeliveryDate}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedDeliveryDate}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Contact Person</div>
-                                  <div className="font-semibold text-gray-800">{shipment.deliveryContactPerson}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryContactPerson}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Phone</div>
-                                  <div className="font-semibold text-gray-800">{shipment.deliveryPhoneNumber}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryPhoneNumber}</div>
                                 </div>
                               </div>
                             </div>
@@ -531,8 +533,8 @@ const ActiveShipments = () => {
 
                       {/* Photos Section */}
                       {shipment.photos && shipment.photos.length > 0 && (
-                        <div className="mt-8 pt-8 border-t border-gray-200">
-                          <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
                             <Image className="text-pink-600" size={20} />
                             Photos ({shipment.photos.length})
                           </h4>
@@ -556,14 +558,14 @@ const ActiveShipments = () => {
 
                       {/* Documents Section */}
                       {shipment.documents && shipment.documents.length > 0 && (
-                        <div className="mt-8 pt-8 border-t border-gray-200">
-                          <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
                             <FileText className="text-blue-600" size={20} />
                             Documents ({shipment.documents.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {shipment.documents.map((document, index) => (
-                              <div key={index} className="flex items-center p-4 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 group">
+                              <div key={index} className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 group">
                                 <div className="flex-shrink-0 mr-4">
                                   <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-200 transition-colors">
                                     <FileText className="w-6 h-6 text-red-600" />
@@ -591,7 +593,7 @@ const ActiveShipments = () => {
                       )}
 
                       {/* Shipment ID and Actions */}
-                      <div className="mt-8 pt-6 border-t border-gray-200">
+                      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                           <div className="text-sm text-gray-500">
                             <span className="font-mono text-xs text-gray-400">Shipment ID: {shipment._id.slice(-8)}</span>

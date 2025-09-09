@@ -16,11 +16,11 @@ const BidModal = ({ isOpen, onClose, onSubmit, shipment, bidDetails, setBidDetai
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-6 relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
           <FaTimes size={20} />
         </button>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Submit Bid for Shipment</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">Submit Bid for Shipment</h2>
         
         {shipment && (
           <div className="mb-4 p-3 bg-blue-50 rounded-md border border-blue-200">

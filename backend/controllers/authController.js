@@ -64,7 +64,7 @@ const registerUser = async (req, res) => {
         .json({ message: "All required fields must be provided" });
     }
 
-    // Only require name, phoneNumber, and country for non-logistics users
+    // Only require name and phoneNumber for non-logistics users
     if (role !== 'logistics') {
       if (!name) {
         return res.status(400).json({ message: "Name is required" });
@@ -73,10 +73,7 @@ const registerUser = async (req, res) => {
       if (!phoneNumber) {
         return res.status(400).json({ message: "Phone number is required" });
       }
-
-      if (!country) {
-        return res.status(400).json({ message: "Country is required" });
-      }
+      // Country is optional for normal users
     }
 
     if (role === "logistics" && !registrationNumber) {
@@ -116,11 +113,14 @@ const registerUser = async (req, res) => {
       verificationCodeExpires,
     };
 
-    // Add name, phoneNumber, and country for non-logistics users
+    // Add name and phoneNumber for non-logistics users
     if (role !== 'logistics') {
       userData.name = name || "";
       userData.phoneNumber = phoneNumber || "";
-      userData.country = country || "";
+      // Country is optional for normal users
+      if (country) {
+        userData.country = country;
+      }
     }
 
     // Add logistics-specific fields
@@ -153,7 +153,9 @@ const registerUser = async (req, res) => {
     // Send verification email
     try {
       console.log('📧 Attempting to send verification email to:', user.email);
-      const emailResult = await sendVerificationEmail(user.email, verificationCode, user.name);
+      // Use appropriate name field based on user role
+      const displayName = role === 'logistics' ? (user.contactName || user.companyName || 'Logistics Partner') : (user.name || 'User');
+      const emailResult = await sendVerificationEmail(user.email, verificationCode, displayName);
       if (emailResult.success) {
         console.log('✅ Verification email sent successfully to:', user.email);
       } else {
@@ -589,7 +591,9 @@ const resendVerificationEmail = async (req, res) => {
 
     // Send verification email
     try {
-      const emailResult = await sendResendVerificationEmail(user.email, verificationCode, user.name);
+      // Use appropriate name field based on user role
+      const displayName = user.role === 'logistics' ? (user.contactName || user.companyName || 'Logistics Partner') : (user.name || 'User');
+      const emailResult = await sendResendVerificationEmail(user.email, verificationCode, displayName);
       if (!emailResult.success) {
         console.error('Failed to send resend verification email:', emailResult.error);
         return res.status(500).json({ 

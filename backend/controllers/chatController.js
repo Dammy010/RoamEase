@@ -1,6 +1,7 @@
 // backend/controllers/chatController.js
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const ChatNotificationService = require('../services/chatNotificationService');
 
 const createConversation = async (req, res) => {
   const { recipientId, shipmentId } = req.body; // New: Add shipmentId
@@ -23,6 +24,15 @@ const createConversation = async (req, res) => {
       ],
       ...(shipmentId && { shipment: shipmentId }), // New: Assign shipmentId to the conversation
     });
+
+    // Create notification for new conversation
+    try {
+      await ChatNotificationService.createConversationStartedNotification(conversation, req.user._id);
+    } catch (notificationError) {
+      console.error('Error creating conversation started notification:', notificationError);
+      // Don't fail the conversation creation if notification creation fails
+    }
+
     res.status(201).json(conversation);
   } catch (error) {
     console.error("Error creating conversation:", error);
@@ -95,6 +105,24 @@ const sendMessage = async (req, res) => {
 
     await conversation.save();
 
+    // Create notification for the new message
+    try {
+      console.log('Creating message notification for conversation:', conversation._id);
+      console.log('Message details:', {
+        id: message._id,
+        sender: message.sender,
+        text: message.text,
+        conversationId: conversation._id
+      });
+      console.log('Conversation participants:', conversation.participants);
+      
+      await ChatNotificationService.createMessageNotification(message, conversation);
+      console.log('Message notification created successfully');
+    } catch (notificationError) {
+      console.error('Error creating message notification:', notificationError);
+      // Don't fail the message sending if notification creation fails
+    }
+
     const populatedMessage = await message.populate('sender', 'name email role companyName contactName contactPosition country yearsInOperation registrationNumber companySize');
     res.status(201).json(populatedMessage); // Return populated message for real-time updates
   } catch (error) {
@@ -129,6 +157,15 @@ const markConversationAsRead = async (req, res) => {
     if (userUnreadEntry) {
       userUnreadEntry.count = 0; // Set unread count to 0 for the current user
       await conversation.save();
+      
+      // Mark chat notifications as read
+      try {
+        await ChatNotificationService.markConversationNotificationsAsRead(req.user._id, conversationId);
+      } catch (notificationError) {
+        console.error('Error marking conversation notifications as read:', notificationError);
+        // Don't fail the conversation read marking if notification update fails
+      }
+      
       return res.status(200).json({ message: "Conversation marked as read" });
     } else {
       return res.status(404).json({ message: "User not found in conversation unread counts" });

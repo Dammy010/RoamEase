@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 import { fetchShipmentById, updateShipmentStatus, deleteShipment, markShipmentAsReceivedByUser } from '../../redux/slices/shipmentSlice';
 import { toast } from 'react-toastify';
 import { 
@@ -17,6 +18,7 @@ const ShipmentDetail = () => {
   const { id } = useParams(); // Get shipment ID from URL
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
 
   const { currentShipment, loading: shipmentLoading, error: shipmentError } = useSelector((state) => state.shipment);
   // Removed bidsForShipment from useSelector as bids are handled by MyShipments/BidListModal
@@ -93,7 +95,7 @@ const ShipmentDetail = () => {
       case 'open':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -117,13 +119,13 @@ const ShipmentDetail = () => {
 
   if (shipmentLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Package className="text-white text-2xl" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Shipment Details</h3>
-          <p className="text-gray-500">Please wait while we fetch the shipment information...</p>
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Loading Shipment Details</h3>
+          <p className="text-gray-500 dark:text-gray-400">Please wait while we fetch the shipment information...</p>
         </div>
       </div>
     );
@@ -131,13 +133,13 @@ const ShipmentDetail = () => {
 
   if (shipmentError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="text-red-500 text-2xl" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Error Loading Shipment</h3>
-          <p className="text-red-600 mb-4">{shipmentError}</p>
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Error Loading Shipment</h3>
+          <p className="text-red-600 dark:text-red-400 mb-4">{shipmentError}</p>
           <button
             onClick={() => navigate('/user/my-shipments')}
             className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-medium"
@@ -151,13 +153,13 @@ const ShipmentDetail = () => {
 
   if (!currentShipment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="text-gray-500 text-2xl" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Shipment Not Found</h3>
-          <p className="text-gray-500 mb-4">The shipment you're looking for doesn't exist or has been removed.</p>
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Shipment Not Found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">The shipment you're looking for doesn't exist or has been removed.</p>
           <button
             onClick={() => navigate('/user/my-shipments')}
             className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-medium"
@@ -172,16 +174,16 @@ const ShipmentDetail = () => {
   const isShipper = userInfo && currentShipment.user && currentShipment.user._id === userInfo._id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
               <div className="flex items-center justify-between mb-6">
                 <button
                   onClick={() => navigate("/user/my-shipments")}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all duration-300 font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800/20 text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 font-medium"
                 >
                   <ArrowLeft size={18} />
                   Back to My Shipments
@@ -202,7 +204,7 @@ const ShipmentDetail = () => {
               </div>
               
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
                   <Package className="text-white text-3xl" />
                 </div>
                 <div>
@@ -219,7 +221,7 @@ const ShipmentDetail = () => {
           <div className="lg:col-span-2 space-y-8">
 
             {/* Goods Information */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Package size={20} />
@@ -321,7 +323,7 @@ const ShipmentDetail = () => {
               </div>
             </div>
             {/* Location & Contact Details */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <MapPin size={20} />
@@ -438,7 +440,7 @@ const ShipmentDetail = () => {
 
             {/* Photos Section */}
             {currentShipment.photos && currentShipment.photos.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <Image size={20} />
@@ -472,7 +474,7 @@ const ShipmentDetail = () => {
 
             {/* Documents Section */}
             {currentShipment.documents && currentShipment.documents.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <FileText size={20} />
@@ -483,7 +485,7 @@ const ShipmentDetail = () => {
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {currentShipment.documents.map((document, index) => (
-                      <div key={index} className="group flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 hover:shadow-md transition-all duration-300">
+                      <div key={index} className="group flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 hover:shadow-md transition-all duration-300">
                         <div className="flex-shrink-0 mr-4">
                           <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-200 transition-colors duration-300">
                             <FileText className="w-6 h-6 text-red-600" />
@@ -515,7 +517,7 @@ const ShipmentDetail = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Action Buttons */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Zap size={18} />
@@ -569,7 +571,7 @@ const ShipmentDetail = () => {
             </div>
 
             {/* Shipment Info Card */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-gray-500 to-gray-600 p-6">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Info size={18} />
@@ -616,12 +618,12 @@ const ShipmentDetail = () => {
       {/* Custom Confirmation Popup */}
       {showConfirmPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
             {/* Header */}
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white dark:bg-gray-800/20 rounded-full flex items-center justify-center">
                     <CheckCircle className="text-white text-xl" />
                   </div>
                   <h3 className="text-xl font-bold text-white">Confirm Receipt</h3>
@@ -641,7 +643,7 @@ const ShipmentDetail = () => {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="text-green-600 text-3xl" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
                   Got it! Mark this shipment as received?
                 </h4>
                 <p className="text-gray-600 text-sm">

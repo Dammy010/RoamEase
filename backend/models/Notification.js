@@ -29,6 +29,12 @@ const notificationSchema = new mongoose.Schema({
       'account_suspended',
       'account_reactivated',
       
+      // Chat notifications
+      'new_message',
+      'message_received',
+      'conversation_started',
+      'conversation_updated',
+      
       // Logistics notifications
       'new_shipment_available',
       'bid_placed',

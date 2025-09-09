@@ -27,12 +27,13 @@ export const initSocket = () => {
   });
 
   socket.on('connect', () => {
-    console.log('Socket.io connected successfully');
+    console.log('✅ Socket.io connected successfully');
+    console.log('🔗 Socket ID:', socket.id);
   });
 
   socket.on('connect_error', (error) => {
-    console.error('Socket.io connection error:', error);
-    console.error('Error details:', {
+    console.error('❌ Socket.io connection error:', error);
+    console.error('🔍 Error details:', {
       message: error.message,
       description: error.description,
       context: error.context,
@@ -40,18 +41,38 @@ export const initSocket = () => {
     });
     
     if (error.message.includes('Authentication error')) {
-      console.log('Socket authentication failed, but not logging out user automatically');
+      console.log('🔐 Socket authentication failed, but not logging out user automatically');
       // Don't automatically logout on socket auth errors
       // Let the API interceptor handle authentication failures
     }
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('Socket.io disconnected:', reason);
+    console.log('⚠️ Socket.io disconnected:', reason);
     if (reason === 'io server disconnect') {
       // Server disconnected the client, reconnect manually
-      socket.connect();
+      console.log('🔄 Attempting to reconnect...');
+      setTimeout(() => {
+        socket.connect();
+      }, 1000);
     }
+  });
+
+  // Handle reconnection events
+  socket.on('reconnect', (attemptNumber) => {
+    console.log('✅ Socket.io reconnected after', attemptNumber, 'attempts');
+  });
+
+  socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log('🔄 Socket.io reconnection attempt', attemptNumber);
+  });
+
+  socket.on('reconnect_error', (error) => {
+    console.error('❌ Socket.io reconnection error:', error);
+  });
+
+  socket.on('reconnect_failed', () => {
+    console.error('❌ Socket.io reconnection failed');
   });
 
   return socket;

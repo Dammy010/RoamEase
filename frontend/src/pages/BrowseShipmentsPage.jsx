@@ -90,7 +90,7 @@ const BrowseShipmentsPage = () => {
       case 'completed': return 'bg-purple-100 text-purple-800';
       case 'delivered': return 'bg-orange-100 text-orange-800';
       case 'received': return 'bg-emerald-100 text-emerald-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800 dark:text-gray-200';
     }
   };
 
@@ -107,28 +107,28 @@ const BrowseShipmentsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading shipments...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">Loading shipments...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
+              <Link to="/" className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <ArrowLeft className="w-5 h-5" />
                 <span className="font-medium">Back to Home</span>
               </Link>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-2xl font-bold text-gray-900">Open Shipments</h1>
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Open Shipments</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -170,13 +170,13 @@ const BrowseShipmentsPage = () => {
             <CheckCircle className="w-4 h-4" />
             Only Open Shipments
           </div>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Browse shipments that are currently open for bidding. These are active opportunities waiting for logistics providers to place competitive bids.
           </p>
         </div>
 
         {/* Search and Sort Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -307,19 +307,19 @@ const BrowseShipmentsPage = () => {
             </div>
           ) : (
             sortedShipments.map((shipment) => (
-              <div key={shipment._id} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div key={shipment._id} className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300">
                 {/* Shipment Header */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">{shipment.shipmentTitle}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{shipment.shipmentTitle}</h3>
                         <span className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 bg-green-100 text-green-800">
                           <CheckCircle className="w-4 h-4" />
                           Open for Bidding
                         </span>
                       </div>
-                      <div className="flex items-center gap-6 text-gray-600">
+                      <div className="flex items-center gap-6 text-gray-600 dark:text-gray-300">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4" />
                           <span className="font-medium">{shipment.pickupCity}</span>

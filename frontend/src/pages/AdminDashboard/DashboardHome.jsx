@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTheme } from '../../contexts/ThemeContext';
 import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, DollarSign, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { fetchDashboardData, fetchTotalUsers, fetchNormalUsersCount } from '../../redux/slices/adminSlice';
 import isEqual from 'lodash.isequal';
 import { ProfilePictureModal } from '../../components/forms/ProfileForm';
 import { getProfilePictureUrl } from '../../utils/imageUtils';
+import NotificationTestPanel from '../../components/NotificationTestPanel';
 
 const AdminDashboardHome = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const didFetch = useRef(false);
   const prevDataRef = useRef(null);
 
@@ -85,14 +88,14 @@ const AdminDashboardHome = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-purple-100 via-pink-100 to-yellow-100">
-        <p className="text-gray-700 text-lg font-semibold animate-pulse">Loading dashboard data...</p>
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900">
+        <p className="text-gray-700 dark:text-gray-300 text-lg font-semibold animate-pulse">Loading dashboard data...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 p-6">
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-indigo-700 to-blue-800 rounded-3xl shadow-2xl mb-8">
@@ -329,6 +332,17 @@ const AdminDashboardHome = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Notification Test Panel */}
+        <section className="mt-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+              <AlertTriangle className="w-8 h-8 text-purple-600" />
+              Notification System Test
+            </h2>
+            <NotificationTestPanel />
           </div>
         </section>
 
