@@ -81,7 +81,7 @@ const ShipmentsList = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'delivered':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'received':
+      case 'delivered':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -100,7 +100,7 @@ const ShipmentsList = () => {
         return <Award className="w-4 h-4" />;
       case 'delivered':
         return <Truck className="w-4 h-4" />;
-      case 'received':
+      case 'delivered':
         return <UserCheck className="w-4 h-4" />;
       case 'cancelled':
         return <AlertCircle className="w-4 h-4" />;
@@ -156,16 +156,16 @@ const ShipmentsList = () => {
             <div className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
-                    <Package className="text-white text-3xl" />
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                    <Package className="text-white text-2xl" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">All Shipments</h1>
-                    <p className="text-blue-100 text-lg">Monitor and manage all platform shipments</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">All Shipments</h1>
+                    <p className="text-blue-100 text-base">Monitor and manage all platform shipments</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white">{allShipments.length}</div>
+                  <div className="text-3xl font-bold text-white">{allShipments.length}</div>
                   <div className="text-blue-100 text-sm">Total Shipments</div>
                 </div>
               </div>
@@ -197,7 +197,6 @@ const ShipmentsList = () => {
                     <option value="accepted">Accepted</option>
                     <option value="completed">Completed</option>
                     <option value="delivered">Delivered</option>
-                    <option value="received">Received</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
@@ -281,8 +280,8 @@ const ShipmentsList = () => {
                       <UserCheck className="text-indigo-600" size={20} />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-indigo-600">{getStatusCount('received')}</div>
-                      <div className="text-sm text-indigo-600">Received</div>
+                      <div className="text-2xl font-bold text-indigo-600">{getStatusCount('delivered')}</div>
+                      <div className="text-sm text-indigo-600">Delivered</div>
                     </div>
                   </div>
                 </div>

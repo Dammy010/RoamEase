@@ -223,7 +223,7 @@ const getShipments = async (req, res) => {
     console.log("DEBUG: getShipments - User ID:", req.user._id); // Log the user ID
     const query = {
       user: req.user._id,
-      status: { $in: ['open', 'accepted'] } // Fetch only 'open' and 'accepted' shipments
+      status: { $in: ['open', 'accepted', 'delivered'] } // Fetch 'open', 'accepted', and 'delivered' shipments
     };
     console.log("DEBUG: getShipments - Query:", query); // Log the query
 
@@ -252,7 +252,7 @@ const getShipmentHistory = async (req, res) => {
   try {
     const history = await Shipment.find({
       user: req.user._id,
-      status: { $in: ["completed", "delivered", "received", "returned"] },
+      status: { $in: ["completed", "delivered", "returned"] },
     }).sort({ updatedAt: -1 });
 
     return res.json({
@@ -504,8 +504,8 @@ const getPublicOpenShipments = async (req, res) => {
   }
 };
 
-// New: Mark shipment as delivered and add rating/feedback
-const markAsDeliveredAndRate = async (req, res) => {
+// New: Rate a completed shipment (only after user confirms delivery)
+const rateCompletedShipment = async (req, res) => {
   try {
     const { id } = req.params;
     const { rating, feedback } = req.body;
@@ -521,27 +521,81 @@ const markAsDeliveredAndRate = async (req, res) => {
       return res.status(404).json({ success: false, message: "Shipment not found or unauthorized." });
     }
 
-    // Only allow marking as delivered if status is 'accepted' or 'completed'
-    if (shipment.status !== 'accepted' && shipment.status !== 'completed') {
-      return res.status(400).json({ success: false, message: "Shipment must be accepted or completed before marking as delivered." });
+    // Only allow rating if status is 'completed' (user has confirmed delivery)
+    if (shipment.status !== 'completed') {
+      return res.status(400).json({ 
+        success: false, 
+        message: "You can only rate shipments after confirming delivery. Please confirm delivery first." 
+      });
     }
 
-    // Update shipment fields
-    shipment.status = 'delivered';
-    shipment.deliveryDate = Date.now();
+    // Check if already rated
+    if (shipment.rating) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "This shipment has already been rated." 
+      });
+    }
+
+    // Update shipment with rating and feedback
     shipment.rating = rating;
     shipment.feedback = feedback || '';
+    shipment.ratedAt = new Date();
 
     await shipment.save();
 
+    // Notify logistics company about the rating
+    try {
+      const NotificationService = require('../services/notificationService');
+      
+      if (shipment.deliveredByLogistics) {
+        const notificationData = {
+          recipient: shipment.deliveredByLogistics,
+          type: 'shipment_rated',
+          title: 'Shipment Rated',
+          message: `Your delivery of "${shipment.shipmentTitle}" has been rated ${rating} stars by the customer.`,
+          priority: 'medium',
+          relatedEntity: {
+            type: 'shipment',
+            id: shipment._id
+          },
+          metadata: {
+            shipmentId: shipment._id,
+            shipmentTitle: shipment.shipmentTitle,
+            rating: rating,
+            feedback: feedback || '',
+            ratedBy: req.user._id,
+            ratedAt: shipment.ratedAt
+          },
+          actions: [
+            {
+              label: 'View Rating',
+              action: 'view',
+              url: `/logistics/ratings`,
+              method: 'GET'
+            }
+          ]
+        };
+
+        await NotificationService.createNotification(notificationData);
+        console.log('✅ Rating notification created for logistics company');
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating rating notification:', notificationError);
+    }
+
     const populatedShipment = await shipment.populate('user', 'name email companyName country');
     const io = getIO();
-    io.emit('shipment-updated', populatedShipment); // Emit shipment updated event
+    io.emit('shipment-rated', populatedShipment); // Emit shipment rated event
 
-    return res.json({ success: true, message: "Shipment marked as delivered and rated.", shipment: populatedShipment });
+    return res.json({ 
+      success: true, 
+      message: "Thank you for rating the delivery service!", 
+      shipment: populatedShipment 
+    });
   } catch (err) {
-    console.error("ERROR: markAsDeliveredAndRate - Error marking shipment as delivered:", err);
-    return res.status(500).json({ success: false, message: "Error marking shipment as delivered", error: err.message });
+    console.error("ERROR: rateCompletedShipment - Error rating shipment:", err);
+    return res.status(500).json({ success: false, message: "Error rating shipment", error: err.message });
   }
 };
 
@@ -699,8 +753,69 @@ const markAsDeliveredByLogistics = async (req, res) => {
   }
 };
 
-// New: Mark shipment as received by user
-const markAsReceivedByUser = async (req, res) => {
+// New: Get delivered shipments awaiting user confirmation
+const getDeliveredShipments = async (req, res) => {
+  try {
+    console.log("DEBUG: getDeliveredShipments - User ID:", req.user._id);
+    console.log("DEBUG: getDeliveredShipments - User role:", req.user.role);
+    const query = {
+      user: req.user._id,
+      status: 'delivered',
+      awaitingUserConfirmation: true
+    };
+    console.log("DEBUG: getDeliveredShipments - Query:", query);
+
+    // First, let's check all shipments for this user to see what we have
+    const allUserShipments = await Shipment.find({ user: req.user._id });
+    console.log("DEBUG: getDeliveredShipments - All user shipments:", allUserShipments.map(s => ({
+      id: s._id,
+      title: s.shipmentTitle,
+      status: s.status,
+      awaitingUserConfirmation: s.awaitingUserConfirmation,
+      deliveredAt: s.deliveredAt
+    })));
+
+    // Also check if there are any delivered shipments at all (regardless of awaitingUserConfirmation)
+    const allDeliveredShipments = await Shipment.find({ 
+      user: req.user._id, 
+      status: 'delivered' 
+    });
+    console.log("DEBUG: getDeliveredShipments - All delivered shipments for user:", allDeliveredShipments.map(s => ({
+      id: s._id,
+      title: s.shipmentTitle,
+      status: s.status,
+      awaitingUserConfirmation: s.awaitingUserConfirmation,
+      deliveredAt: s.deliveredAt
+    })));
+
+    const shipments = await Shipment.find(query)
+      .populate('deliveredByLogistics', 'name email companyName phone')
+      .sort({ deliveredAt: -1 });
+    
+    console.log("DEBUG: getDeliveredShipments - Shipments found:", shipments.length);
+    console.log("DEBUG: getDeliveredShipments - Found shipments:", shipments.map(s => ({
+      id: s._id,
+      title: s.shipmentTitle,
+      status: s.status,
+      awaitingUserConfirmation: s.awaitingUserConfirmation
+    })));
+
+    return res.json({
+      success: true,
+      shipments,
+    });
+  } catch (err) {
+    console.error("ERROR: getDeliveredShipments - Error fetching delivered shipments:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching delivered shipments",
+      error: err.message,
+    });
+  }
+};
+
+// New: Mark shipment as delivered by user
+const markAsDeliveredByUser = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -711,7 +826,7 @@ const markAsReceivedByUser = async (req, res) => {
     if (!shipment) {
       return res.status(404).json({ 
         success: false, 
-        message: "Shipment not found or you don't have permission to mark it as received." 
+        message: "Shipment not found or you don't have permission to mark it as delivered." 
       });
     }
 
@@ -719,15 +834,15 @@ const markAsReceivedByUser = async (req, res) => {
     if (shipment.status !== 'delivered' || !shipment.awaitingUserConfirmation) {
       return res.status(400).json({ 
         success: false, 
-        message: "Shipment must be delivered and awaiting confirmation before marking as received." 
+        message: "Shipment must be delivered and awaiting confirmation before you can confirm receipt." 
       });
     }
 
-    // Update shipment fields
-    shipment.status = 'received';
+    // Update shipment fields - mark as completed since user confirmed delivery
+    shipment.status = 'completed';
     shipment.awaitingUserConfirmation = false;
-    shipment.receivedAt = new Date();
-    shipment.receivedByUser = userId;
+    shipment.completedAt = new Date();
+    shipment.completedByUser = userId;
 
     await shipment.save();
 
@@ -736,12 +851,12 @@ const markAsReceivedByUser = async (req, res) => {
     
     // Emit socket event for real-time updates
     const io = getIO();
-    io.emit('shipment-received-by-user', populatedShipment);
+    io.emit('shipment-delivered-by-user', populatedShipment);
     
     // Emit specific event to the logistics company
     if (shipment.deliveredByLogistics) {
       io.emit(`user-${shipment.deliveredByLogistics._id}`, {
-        type: 'shipment-received',
+        type: 'shipment-delivered',
         message: `Your delivery of "${shipment.shipmentTitle}" has been confirmed by the user.`,
         shipment: populatedShipment
       });
@@ -755,7 +870,7 @@ const markAsReceivedByUser = async (req, res) => {
       if (shipment.deliveredByLogistics) {
         const logisticsNotificationData = {
           recipient: shipment.deliveredByLogistics._id,
-          type: 'shipment_received',
+          type: 'shipment_delivered',
           title: 'Delivery Confirmed',
           message: `Your delivery of "${shipment.shipmentTitle}" has been confirmed by the user. Great job!`,
           priority: 'high',
@@ -766,8 +881,8 @@ const markAsReceivedByUser = async (req, res) => {
           metadata: {
             shipmentId: shipment._id,
             shipmentTitle: shipment.shipmentTitle,
-            receivedBy: userId,
-            receivedAt: shipment.receivedAt,
+            deliveredBy: userId,
+            deliveredAt: shipment.deliveredAt,
             ownerName: req.user.name || req.user.companyName
           },
           actions: [
@@ -789,9 +904,9 @@ const markAsReceivedByUser = async (req, res) => {
       if (adminUsers.length > 0) {
         const adminNotifications = adminUsers.map(adminUser => ({
           recipient: adminUser._id,
-          type: 'shipment_received',
-          title: 'Shipment Received',
-          message: `Shipment "${shipment.shipmentTitle}" has been confirmed as received by the user.`,
+          type: 'shipment_delivered',
+          title: 'Shipment Delivered',
+          message: `Shipment "${shipment.shipmentTitle}" has been confirmed as delivered by the user.`,
           priority: 'medium',
           relatedEntity: {
             type: 'shipment',
@@ -800,8 +915,8 @@ const markAsReceivedByUser = async (req, res) => {
           metadata: {
             shipmentId: shipment._id,
             shipmentTitle: shipment.shipmentTitle,
-            receivedBy: userId,
-            receivedAt: shipment.receivedAt,
+            deliveredBy: userId,
+            deliveredAt: shipment.deliveredAt,
             deliveredBy: shipment.deliveredByLogistics,
             ownerName: req.user.name || req.user.companyName
           },
@@ -825,14 +940,14 @@ const markAsReceivedByUser = async (req, res) => {
 
     return res.json({ 
       success: true, 
-      message: "Shipment marked as received. You can now rate the delivery service.", 
+      message: "Delivery confirmed successfully! You can now rate the delivery service.", 
       shipment: populatedShipment 
     });
   } catch (err) {
-    console.error("ERROR: markAsReceivedByUser - Error marking shipment as received:", err);
+    console.error("ERROR: markAsDeliveredByUser - Error confirming delivery:", err);
     return res.status(500).json({ 
       success: false, 
-      message: "Error marking shipment as received", 
+      message: "Error confirming delivery", 
       error: err.message 
     });
   }
@@ -862,9 +977,10 @@ const getActiveShipmentsForLogistics = async (req, res) => {
     console.log("DEBUG: Shipment IDs from bids:", shipmentIds);
     
     // Find shipments that this logistics company is handling
+    // Only include 'accepted' status - completed shipments should not appear in active shipments
     const activeShipments = await Shipment.find({
       _id: { $in: shipmentIds },
-      status: { $in: ['accepted', 'completed'] }
+      status: 'accepted'
     }).populate('user', 'name email companyName country');
     
     console.log("DEBUG: Found active shipments:", activeShipments.length);
@@ -980,10 +1096,10 @@ const getLogisticsHistory = async (req, res) => {
     // Get shipment IDs from accepted bids
     const shipmentIds = acceptedBids.map(bid => bid.shipment._id);
     
-    // Find shipments that are completed, delivered, or received
+    // Find shipments that are completed or delivered
     const history = await Shipment.find({
       _id: { $in: shipmentIds },
-      status: { $in: ['completed', 'delivered', 'received'] }
+      status: { $in: ['completed', 'delivered'] }
     })
     .populate('user', 'name email companyName country phoneNumber')
     .sort({ updatedAt: -1 });
@@ -1019,6 +1135,57 @@ const getLogisticsHistory = async (req, res) => {
   }
 };
 
+// Get ratings for logistics company
+const getLogisticsRatings = async (req, res) => {
+  try {
+    const logisticsCompanyId = req.user._id;
+    
+    // Find all shipments delivered by this logistics company that have been rated
+    const ratedShipments = await Shipment.find({
+      deliveredByLogistics: logisticsCompanyId,
+      rating: { $exists: true, $ne: null }
+    })
+    .populate('user', 'name email companyName country phoneNumber')
+    .sort({ ratedAt: -1 });
+
+    // Format the response
+    const formattedRatings = ratedShipments.map(shipment => ({
+      _id: shipment._id,
+      shipmentTitle: shipment.shipmentTitle,
+      rating: shipment.rating,
+      feedback: shipment.feedback,
+      ratedAt: shipment.ratedAt,
+      user: shipment.user,
+      pickupCity: shipment.pickupCity,
+      pickupCountry: shipment.pickupCountry,
+      deliveryCity: shipment.deliveryCity,
+      deliveryCountry: shipment.deliveryCountry,
+      weight: shipment.weight,
+      typeOfGoods: shipment.typeOfGoods,
+      modeOfTransport: shipment.modeOfTransport,
+      status: shipment.status,
+      budget: shipment.budget,
+      estimatedCost: shipment.estimatedCost,
+      currency: shipment.currency,
+      completedAt: shipment.completedAt,
+      deliveredAt: shipment.deliveredAt
+    }));
+
+    res.json({
+      success: true,
+      ratings: formattedRatings,
+      total: formattedRatings.length
+    });
+  } catch (err) {
+    console.error("ERROR: getLogisticsRatings - Error fetching ratings:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching ratings",
+      error: err.message
+    });
+  }
+};
+
 module.exports = {
   createShipment,
   getShipments,
@@ -1027,10 +1194,12 @@ module.exports = {
   updateShipmentStatus,
   getAvailableShipmentsForCarrier,
   getPublicOpenShipments, // New: Export the public open shipments function
-  markAsDeliveredAndRate,
   markAsDeliveredByLogistics,
-  markAsReceivedByUser,
+  markAsDeliveredByUser,
+  getDeliveredShipments, // New: Export the delivered shipments function
   getActiveShipmentsForLogistics, // New: Export the active shipments function
   deleteShipment, // New: Export the delete shipment function
   getLogisticsHistory, // New: Export the logistics history function
+  rateCompletedShipment, // New: Export the rate completed shipment function
+  getLogisticsRatings, // New: Export the get logistics ratings function
 };

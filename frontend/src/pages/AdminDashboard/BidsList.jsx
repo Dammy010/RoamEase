@@ -126,7 +126,7 @@ const BidsList = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <DollarSign className="text-white text-2xl" />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Bids</h3>
@@ -162,19 +162,19 @@ const BidsList = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600 p-8">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
-                    <DollarSign className="text-white text-3xl" />
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                    <DollarSign className="text-white text-2xl" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">All Bids</h1>
-                    <p className="text-green-100 text-lg">Monitor and manage all platform bids</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">All Bids</h1>
+                    <p className="text-green-100 text-base">Monitor and manage all platform bids</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white">{allBids.length}</div>
+                  <div className="text-3xl font-bold text-white">{allBids.length}</div>
                   <div className="text-green-100 text-sm">Total Bids</div>
                 </div>
               </div>
@@ -331,7 +331,7 @@ const BidsList = () => {
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-semibold">
+                          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-semibold">
                             <DollarSign size={20} />
                           </div>
                           <div>
@@ -393,14 +393,14 @@ const BidsList = () => {
                           <>
                             <button 
                               onClick={() => alert('Accept Bid: ' + bid._id)}
-                              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-4 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                             >
                               <CheckCircle size={16} />
                               Accept
                             </button>
                             <button 
                               onClick={() => alert('Reject Bid: ' + bid._id)}
-                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 px-4 rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                              className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 px-4 rounded-xl hover:from-orange-600 hover:to-red-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                             >
                               <XCircle size={16} />
                               Reject

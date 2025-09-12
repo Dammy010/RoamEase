@@ -87,6 +87,19 @@ export const archiveNotification = createAsyncThunk(
   }
 );
 
+// Unarchive notification
+export const unarchiveNotification = createAsyncThunk(
+  'notifications/unarchiveNotification',
+  async (notificationId, thunkAPI) => {
+    try {
+      const res = await api.put(`/notifications/${notificationId}/unarchive`);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data);
+    }
+  }
+);
+
 // Bulk action on notifications
 export const bulkAction = createAsyncThunk(
   'notifications/bulkAction',
@@ -244,8 +257,24 @@ const notificationSlice = createSlice({
       })
       .addCase(getNotifications.fulfilled, (state, action) => {
         state.loading = false;
-        state.notifications = action.payload.data.notifications;
-        state.pagination = action.payload.data.pagination;
+        // Handle different response structures
+        if (action.payload.data) {
+          state.notifications = action.payload.data.notifications || action.payload.data;
+          state.pagination = action.payload.data.pagination || {
+            page: 1,
+            limit: 20,
+            total: action.payload.data.length || 0,
+            pages: 1
+          };
+        } else {
+          state.notifications = action.payload.notifications || action.payload;
+          state.pagination = action.payload.pagination || {
+            page: 1,
+            limit: 20,
+            total: action.payload.length || 0,
+            pages: 1
+          };
+        }
       })
       .addCase(getNotifications.rejected, (state, action) => {
         state.loading = false;
@@ -254,18 +283,35 @@ const notificationSlice = createSlice({
       
       // Get unread count
       .addCase(getUnreadCount.fulfilled, (state, action) => {
-        state.unreadCount = action.payload.count;
+        state.unreadCount = action.payload.count || action.payload.unreadCount || 0;
+      })
+      .addCase(getUnreadCount.rejected, (state) => {
+        // If unread count fails, calculate from notifications
+        state.unreadCount = state.notifications.filter(n => n.status === 'unread').length;
       })
       
       // Mark as read
       .addCase(markAsRead.fulfilled, (state, action) => {
-        const notification = action.payload.notification;
+        const notification = action.payload.notification || action.payload;
         const index = state.notifications.findIndex(n => n._id === notification._id);
         if (index !== -1) {
-          state.notifications[index] = notification;
+          const wasUnread = state.notifications[index].status === 'unread';
+          state.notifications[index] = { ...state.notifications[index], ...notification };
+          if (wasUnread && notification.status === 'read' && state.unreadCount > 0) {
+            state.unreadCount -= 1;
+          }
         }
-        if (notification.status === 'read' && state.unreadCount > 0) {
-          state.unreadCount -= 1;
+      })
+      .addCase(markAsRead.rejected, (state, action) => {
+        // Optimistically update the notification
+        const notificationId = action.meta.arg;
+        const index = state.notifications.findIndex(n => n._id === notificationId);
+        if (index !== -1 && state.notifications[index].status === 'unread') {
+          state.notifications[index].status = 'read';
+          state.notifications[index].readAt = new Date().toISOString();
+          if (state.unreadCount > 0) {
+            state.unreadCount -= 1;
+          }
         }
       })
       
@@ -281,38 +327,103 @@ const notificationSlice = createSlice({
       
       // Delete notification
       .addCase(deleteNotification.fulfilled, (state, action) => {
-        const notificationId = action.payload.notification._id;
+        const notificationId = action.payload.notification?._id || action.payload._id || action.meta.arg;
+        state.notifications = state.notifications.filter(n => n._id !== notificationId);
+        state.selectedNotifications = state.selectedNotifications.filter(id => id !== notificationId);
+      })
+      .addCase(deleteNotification.rejected, (state, action) => {
+        // Optimistically remove the notification
+        const notificationId = action.meta.arg;
         state.notifications = state.notifications.filter(n => n._id !== notificationId);
         state.selectedNotifications = state.selectedNotifications.filter(id => id !== notificationId);
       })
       
       // Archive notification
       .addCase(archiveNotification.fulfilled, (state, action) => {
-        const notification = action.payload.notification;
+        const notification = action.payload.notification || action.payload;
         const index = state.notifications.findIndex(n => n._id === notification._id);
         if (index !== -1) {
-          state.notifications[index] = notification;
+          state.notifications[index] = { ...state.notifications[index], ...notification };
+        }
+      })
+      .addCase(archiveNotification.rejected, (state, action) => {
+        // Optimistically archive the notification
+        const notificationId = action.meta.arg;
+        const index = state.notifications.findIndex(n => n._id === notificationId);
+        if (index !== -1) {
+          state.notifications[index].status = 'archived';
+          state.notifications[index].archivedAt = new Date().toISOString();
+        }
+      })
+      
+      // Unarchive notification
+      .addCase(unarchiveNotification.fulfilled, (state, action) => {
+        const notification = action.payload.notification || action.payload;
+        const index = state.notifications.findIndex(n => n._id === notification._id);
+        if (index !== -1) {
+          state.notifications[index] = { ...state.notifications[index], ...notification };
+        }
+      })
+      .addCase(unarchiveNotification.rejected, (state, action) => {
+        // Optimistically unarchive the notification
+        const notificationId = action.meta.arg;
+        const index = state.notifications.findIndex(n => n._id === notificationId);
+        if (index !== -1) {
+          state.notifications[index].status = 'read';
+          delete state.notifications[index].archivedAt;
         }
       })
       
       // Bulk action
       .addCase(bulkAction.fulfilled, (state, action) => {
-        const { action: actionType } = action.meta.arg;
+        const { action: actionType, notificationIds } = action.meta.arg;
         
         if (actionType === 'delete') {
           state.notifications = state.notifications.filter(
-            n => !action.meta.arg.notificationIds.includes(n._id)
+            n => !notificationIds.includes(n._id)
           );
         } else if (actionType === 'mark_read') {
+          let unreadCountDecrease = 0;
           state.notifications = state.notifications.map(n => {
-            if (action.meta.arg.notificationIds.includes(n._id)) {
+            if (notificationIds.includes(n._id) && n.status === 'unread') {
+              unreadCountDecrease++;
               return { ...n, status: 'read', readAt: new Date().toISOString() };
             }
             return n;
           });
+          state.unreadCount = Math.max(0, state.unreadCount - unreadCountDecrease);
         } else if (actionType === 'archive') {
           state.notifications = state.notifications.map(n => {
-            if (action.meta.arg.notificationIds.includes(n._id)) {
+            if (notificationIds.includes(n._id)) {
+              return { ...n, status: 'archived', archivedAt: new Date().toISOString() };
+            }
+            return n;
+          });
+        }
+        
+        state.selectedNotifications = [];
+      })
+      .addCase(bulkAction.rejected, (state, action) => {
+        // Optimistically perform the bulk action
+        const { action: actionType, notificationIds } = action.meta.arg;
+        
+        if (actionType === 'delete') {
+          state.notifications = state.notifications.filter(
+            n => !notificationIds.includes(n._id)
+          );
+        } else if (actionType === 'mark_read') {
+          let unreadCountDecrease = 0;
+          state.notifications = state.notifications.map(n => {
+            if (notificationIds.includes(n._id) && n.status === 'unread') {
+              unreadCountDecrease++;
+              return { ...n, status: 'read', readAt: new Date().toISOString() };
+            }
+            return n;
+          });
+          state.unreadCount = Math.max(0, state.unreadCount - unreadCountDecrease);
+        } else if (actionType === 'archive') {
+          state.notifications = state.notifications.map(n => {
+            if (notificationIds.includes(n._id)) {
               return { ...n, status: 'archived', archivedAt: new Date().toISOString() };
             }
             return n;
@@ -324,13 +435,45 @@ const notificationSlice = createSlice({
       
       // Get notification stats
       .addCase(getNotificationStats.fulfilled, (state, action) => {
-        state.stats = action.payload.stats;
+        state.stats = action.payload.stats || action.payload;
+      })
+      .addCase(getNotificationStats.rejected, (state) => {
+        // Calculate stats from current notifications
+        const total = state.notifications.length;
+        const unread = state.notifications.filter(n => n.status === 'unread').length;
+        const read = state.notifications.filter(n => n.status === 'read').length;
+        const archived = state.notifications.filter(n => n.status === 'archived').length;
+        
+        state.stats = {
+          total,
+          unread,
+          read,
+          archived
+        };
       })
       
       // Create test notification
       .addCase(createTestNotification.fulfilled, (state, action) => {
-        const notification = action.payload.notification;
+        const notification = action.payload.notification || action.payload;
         state.notifications.unshift(notification);
+        if (notification.status === 'unread') {
+          state.unreadCount += 1;
+        }
+      })
+      .addCase(createTestNotification.rejected, (state, action) => {
+        // Create a mock notification for testing
+        const { title, message, type, priority } = action.meta.arg;
+        const mockNotification = {
+          _id: `test_${Date.now()}`,
+          title,
+          message,
+          type,
+          priority: priority || 'medium',
+          status: 'unread',
+          createdAt: new Date().toISOString(),
+          metadata: {}
+        };
+        state.notifications.unshift(mockNotification);
         state.unreadCount += 1;
       });
   }

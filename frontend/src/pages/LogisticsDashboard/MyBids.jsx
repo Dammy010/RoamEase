@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { fetchMyBids } from "../../redux/slices/bidSlice";
+import { fetchMyBids, cancelBid, updateBid } from "../../redux/slices/bidSlice";
 import { getSocket } from '../../services/socket';
 import { toast } from 'react-toastify';
+import api from '../../services/api';
 import { 
   DollarSign, Clock, MessageSquare, MapPin, Calendar, 
   Package, User, Phone, Eye, RefreshCw, ArrowLeft,
@@ -19,6 +20,38 @@ const MyBids = () => {
   const { myBids, loading, error } = useSelector((state) => state.bid);
   const { user } = useSelector((state) => state.auth);
   const [expandedBids, setExpandedBids] = useState(new Set());
+  const [showEditBidModal, setShowEditBidModal] = useState(false);
+  const [editingBid, setEditingBid] = useState(null);
+  const [editBidPrice, setEditBidPrice] = useState('');
+  const [editBidCurrency, setEditBidCurrency] = useState('USD');
+  const [editBidEta, setEditBidEta] = useState('');
+  const [editBidMessage, setEditBidMessage] = useState('');
+  const [showPriceResponseModal, setShowPriceResponseModal] = useState(false);
+  const [respondingToBid, setRespondingToBid] = useState(null);
+  const [priceResponse, setPriceResponse] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
+  const [priceResponseLoading, setPriceResponseLoading] = useState(false);
+
+  // Currency symbol helper function
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'AUD': 'A$',
+      'JPY': '¥',
+      'CHF': 'CHF',
+      'CNY': '¥',
+      'INR': '₹',
+      'BRL': 'R$',
+      'MXN': '$',
+      'ZAR': 'R',
+      'NGN': '#'
+    };
+    return symbols[currency] || '$';
+  };
 
   const toggleExpanded = (bidId) => {
     const newExpanded = new Set(expandedBids);
@@ -28,6 +61,103 @@ const MyBids = () => {
       newExpanded.add(bidId);
     }
     setExpandedBids(newExpanded);
+  };
+
+  const handleCancelBid = async (bidId, shipmentTitle) => {
+    if (window.confirm(`Are you sure you want to cancel your bid for "${shipmentTitle}"? This action cannot be undone.`)) {
+      try {
+        const result = await dispatch(cancelBid(bidId));
+        if (cancelBid.fulfilled.match(result)) {
+          toast.success('Bid cancelled successfully!');
+        } else {
+          toast.error(result.payload || 'Failed to cancel bid');
+        }
+      } catch (error) {
+        toast.error('Error cancelling bid');
+        console.error('Error:', error);
+      }
+    }
+  };
+
+  const handleEditBidClick = (bid) => {
+    setEditingBid(bid);
+    setEditBidPrice(bid.price.toString());
+    setEditBidCurrency(bid.currency || 'USD');
+    setEditBidEta(bid.eta);
+    setEditBidMessage(bid.message || '');
+    setShowEditBidModal(true);
+  };
+
+  const handleEditBidSubmit = async (e) => {
+    e.preventDefault();
+    if (!editBidPrice || !editBidEta || !editingBid) {
+      toast.error('Please fill in price and ETA.');
+      return;
+    }
+
+    const bidData = {
+      price: Number(editBidPrice),
+      currency: editBidCurrency,
+      eta: editBidEta,
+      message: editBidMessage,
+    };
+    
+    const result = await dispatch(updateBid({ bidId: editingBid._id, bidData }));
+    if (updateBid.fulfilled.match(result)) {
+      setShowEditBidModal(false);
+      setEditingBid(null);
+      setEditBidPrice('');
+      setEditBidEta('');
+      setEditBidMessage('');
+      setEditBidCurrency('USD');
+      toast.success('Bid updated successfully!');
+    } else if (updateBid.rejected.match(result)) {
+      toast.error(result.payload || 'Failed to update bid. Please try again.');
+    }
+  };
+
+  const handlePriceUpdateRequest = (bid) => {
+    setRespondingToBid(bid);
+    setNewPrice(bid.priceUpdateRequest?.requestedPrice?.toString() || '');
+    setResponseMessage('');
+    setPriceResponse('');
+    setShowPriceResponseModal(true);
+  };
+
+  const handlePriceResponseSubmit = async () => {
+    if (!respondingToBid || !priceResponse) {
+      toast.error('Please select a response');
+      return;
+    }
+
+    if (priceResponse === 'accepted' && (!newPrice || parseFloat(newPrice) <= 0)) {
+      toast.error('Please enter a valid new price');
+      return;
+    }
+
+    setPriceResponseLoading(true);
+    try {
+      const response = await api.put(`/bids/${respondingToBid._id}/respond-price-update`, {
+        response: priceResponse,
+        newPrice: priceResponse === 'accepted' ? parseFloat(newPrice) : undefined,
+        message: responseMessage
+      });
+
+      toast.success(`Price update request ${priceResponse} successfully!`);
+      setShowPriceResponseModal(false);
+      setRespondingToBid(null);
+      setPriceResponse('');
+      setNewPrice('');
+      setResponseMessage('');
+      
+      // Refresh bids
+      dispatch(fetchMyBids());
+    } catch (error) {
+      console.error('Error responding to price update request:', error);
+      toast.error(error.response?.data?.message || 'Failed to respond to price update request');
+    } finally {
+      setPriceResponseLoading(false);
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -67,8 +197,15 @@ const MyBids = () => {
       toast.info(`Your bid for shipment "${updatedBid.shipment?.shipmentTitle}" was updated!`);
     });
 
+    socket.on('bid-deleted', (data) => {
+      toast.info(`Your bid has been cancelled successfully!`);
+      // Refresh the bids list to remove the cancelled bid
+      dispatch(fetchMyBids());
+    });
+
     return () => {
       socket.off('bid-updated');
+      socket.off('bid-deleted');
     };
   }, [dispatch, user]);
 
@@ -117,7 +254,7 @@ const MyBids = () => {
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -127,26 +264,26 @@ const MyBids = () => {
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <DollarSign className="text-white text-3xl" />
+                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <DollarSign className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">My Bids</h1>
-                  <p className="text-indigo-100 text-lg">Track and manage your submitted bids</p>
+                  <h1 className="text-2xl font-bold text-white">My Bids</h1>
+                  <p className="text-indigo-100 text-base">Track and manage your submitted bids</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                  <span className="text-white font-semibold text-lg">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
+                  <span className="text-white font-semibold text-base">
                     {myBids.length} bids
                   </span>
                 </div>
                 <button
                   onClick={() => dispatch(fetchMyBids())}
-                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                 >
-                  <RefreshCw size={16} />
-                  Refresh
+                  <RefreshCw size={16} className="text-white" />
+                  <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
             </div>
@@ -232,7 +369,10 @@ const MyBids = () => {
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Bid Amount</div>
-                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">${bid.price.toFixed(2)}</div>
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              {getCurrencySymbol(bid.currency || 'USD')}{bid.price.toFixed(2)}
+                              {bid.currency && <span className="text-xs text-gray-500 ml-1">({bid.currency})</span>}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
@@ -242,17 +382,6 @@ const MyBids = () => {
                           <div>
                             <div className="text-xs text-gray-500 font-medium">ETA</div>
                             <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{bid.eta}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
-                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Calendar className="text-purple-600" size={16} />
-                          </div>
-                          <div>
-                            <div className="text-xs text-gray-500 font-medium">Pickup Date</div>
-                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                              N/A
-                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
@@ -303,6 +432,48 @@ const MyBids = () => {
                           View Chat
                         </button>
                       )}
+                      {bid.status === 'pending' && (
+                        <div className="flex flex-col gap-3">
+                          {/* Price Update Request Indicator */}
+                          {bid.priceUpdateRequest && bid.priceUpdateRequest.status === 'pending' && (
+                            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <AlertCircle className="text-orange-600 dark:text-orange-400" size={16} />
+                                <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                                  Price Update Request
+                                </span>
+                              </div>
+                              <p className="text-xs text-orange-700 dark:text-orange-300 mb-2">
+                                Shipper prefers: {getCurrencySymbol(bid.priceUpdateRequest.requestedCurrency || bid.currency)}{bid.priceUpdateRequest.requestedPrice?.toLocaleString()}
+                              </p>
+                              <button
+                                onClick={() => handlePriceUpdateRequest(bid)}
+                                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2 text-sm"
+                              >
+                                <MessageSquare size={14} />
+                                Respond
+                              </button>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => handleEditBidClick(bid)}
+                              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                            >
+                              <DollarSign size={16} />
+                              Edit Bid
+                            </button>
+                            <button
+                              onClick={() => handleCancelBid(bid._id, bid.shipment?.shipmentTitle)}
+                              className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                            >
+                              <XCircle size={16} />
+                              Cancel Bid
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -320,17 +491,14 @@ const MyBids = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Bid Amount</div>
-                            <div className="font-semibold text-gray-800 dark:text-gray-200 text-lg">${bid.price.toFixed(2)}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200 text-lg">
+                              {getCurrencySymbol(bid.currency || 'USD')}{bid.price.toFixed(2)}
+                              {bid.currency && <span className="text-sm text-gray-500 ml-1">({bid.currency})</span>}
+                            </div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Estimated Time</div>
                             <div className="font-semibold text-gray-800 dark:text-gray-200">{bid.eta}</div>
-                          </div>
-                          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
-                            <div className="text-sm text-gray-600 mb-1">Pickup Date</div>
-                            <div className="font-semibold text-gray-800 dark:text-gray-200">
-                              N/A
-                            </div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Submitted</div>
@@ -554,6 +722,48 @@ const MyBids = () => {
                                 View Chat
                               </button>
                             )}
+                            {bid.status === 'pending' && (
+                              <div className="flex flex-col gap-3">
+                                {/* Price Update Request Indicator */}
+                                {bid.priceUpdateRequest && bid.priceUpdateRequest.status === 'pending' && (
+                                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <AlertCircle className="text-orange-600 dark:text-orange-400" size={16} />
+                                      <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                                        Price Update Request
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-orange-700 dark:text-orange-300 mb-2">
+                                      Shipper prefers: {getCurrencySymbol(bid.priceUpdateRequest.requestedCurrency || bid.currency)}{bid.priceUpdateRequest.requestedPrice?.toLocaleString()}
+                                    </p>
+                                    <button
+                                      onClick={() => handlePriceUpdateRequest(bid)}
+                                      className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2 text-sm"
+                                    >
+                                      <MessageSquare size={14} />
+                                      Respond
+                                    </button>
+                                  </div>
+                                )}
+                                
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleEditBidClick(bid)}
+                                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                  >
+                                    <DollarSign size={16} />
+                                    Edit Bid
+                                  </button>
+                                  <button
+                                    onClick={() => handleCancelBid(bid._id, bid.shipment?.shipmentTitle)}
+                                    className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                  >
+                                    <XCircle size={16} />
+                                    Cancel Bid
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                             <button
                               onClick={() => navigate('/logistics/available-shipments')}
                               className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
@@ -571,7 +781,314 @@ const MyBids = () => {
             ))}
           </div>
         )}
+
+        {/* Edit Bid Modal */}
+        {showEditBidModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white p-8 rounded-t-3xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
+                      <DollarSign className="text-white text-2xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Edit Your Bid</h3>
+                      <p className="text-indigo-100">Update your offer for this shipment</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowEditBidModal(false)}
+                    className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <span className="text-white text-xl font-bold">×</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-8">
+                {/* Shipment Summary */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
+                  <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <Package className="text-blue-600" size={20} />
+                    Shipment Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Title</div>
+                      <div className="font-semibold text-gray-800">{editingBid?.shipment?.shipmentTitle}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Route</div>
+                      <div className="font-semibold text-gray-800">{editingBid?.shipment?.routeSummary}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Edit Bid Form */}
+                <form onSubmit={handleEditBidSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidPrice">
+                        <DollarSign className="text-green-600" size={16} />
+                        Your Bid Price ({getCurrencySymbol(editBidCurrency)})
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-lg font-semibold">
+                            {getCurrencySymbol(editBidCurrency)}
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          id="editBidPrice"
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
+                          value={editBidPrice}
+                          onChange={(e) => setEditBidPrice(e.target.value)}
+                          placeholder="Enter your bid amount"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidCurrency">
+                        <Globe className="text-purple-600" size={16} />
+                        Currency
+                      </label>
+                      <select
+                        id="editBidCurrency"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
+                        value={editBidCurrency}
+                        onChange={(e) => setEditBidCurrency(e.target.value)}
+                        required
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="CHF">CHF - Swiss Franc</option>
+                        <option value="CNY">CNY - Chinese Yuan</option>
+                        <option value="INR">INR - Indian Rupee</option>
+                        <option value="BRL">BRL - Brazilian Real</option>
+                        <option value="MXN">MXN - Mexican Peso</option>
+                        <option value="ZAR">ZAR - South African Rand</option>
+                        <option value="NGN">NGN - Nigerian Naira</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidEta">
+                        <Clock className="text-blue-600" size={16} />
+                        Estimated Time of Arrival
+                      </label>
+                      <input
+                        type="text"
+                        id="editBidEta"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                        value={editBidEta}
+                        onChange={(e) => setEditBidEta(e.target.value)}
+                        placeholder="e.g., 3 days, 24 hours"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidMessage">
+                      <MessageSquare className="text-purple-600" size={16} />
+                      Additional Message (Optional)
+                    </label>
+                    <textarea
+                      id="editBidMessage"
+                      rows="4"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 resize-none"
+                      value={editBidMessage}
+                      onChange={(e) => setEditBidMessage(e.target.value)}
+                      placeholder="Add any additional information about your bid..."
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditBidModal(false)}
+                      className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign size={16} />
+                          Update Bid
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Price Response Modal */}
+      {showPriceResponseModal && respondingToBid && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Respond to Price Update Request
+                </h3>
+                <button
+                  onClick={() => setShowPriceResponseModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Price Update Request Details
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Shipment:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {respondingToBid.shipment?.shipmentTitle || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Current Price:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {getCurrencySymbol(respondingToBid.currency || 'USD')}{respondingToBid.price?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Requested Price:</span>
+                      <span className="font-medium text-orange-600 dark:text-orange-400">
+                        {getCurrencySymbol(respondingToBid.priceUpdateRequest?.requestedCurrency || respondingToBid.currency || 'USD')}{respondingToBid.priceUpdateRequest?.requestedPrice?.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Your Response
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="priceResponse"
+                          value="accepted"
+                          checked={priceResponse === 'accepted'}
+                          onChange={(e) => setPriceResponse(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Accept the requested price</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="priceResponse"
+                          value="rejected"
+                          checked={priceResponse === 'rejected'}
+                          onChange={(e) => setPriceResponse(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Reject and keep current price</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {priceResponse === 'accepted' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        New Price ({respondingToBid.currency || 'USD'})
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                          {getCurrencySymbol(respondingToBid.currency || 'USD')}
+                        </span>
+                        <input
+                          type="number"
+                          value={newPrice}
+                          onChange={(e) => setNewPrice(e.target.value)}
+                          placeholder="Enter new price"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Message (Optional)
+                    </label>
+                    <textarea
+                      value={responseMessage}
+                      onChange={(e) => setResponseMessage(e.target.value)}
+                      placeholder="Add a message to the shipper..."
+                      className="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows="3"
+                      maxLength="500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handlePriceResponseSubmit}
+                  disabled={priceResponseLoading || !priceResponse || (priceResponse === 'accepted' && !newPrice)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {priceResponseLoading ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Sending Response...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare size={18} />
+                      Send Response
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
+                The shipper will be notified of your response.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

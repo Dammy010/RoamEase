@@ -99,6 +99,32 @@ export const fetchBidsOnMyShipments = createAsyncThunk(
   }
 );
 
+// Cancel/Delete a bid (for logistics companies)
+export const cancelBid = createAsyncThunk(
+  'bid/cancelBid',
+  async (bidId, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/bids/${bidId}`);
+      return { bidId, message: response.data.message };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// Update a bid (for logistics companies)
+export const updateBid = createAsyncThunk(
+  'bid/updateBid',
+  async ({ bidId, bidData }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/bids/${bidId}`, bidData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 const bidSlice = createSlice({
   name: 'bid',
   initialState: {
@@ -216,6 +242,45 @@ const bidSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.bids = [];
+      })
+
+      // Cancel Bid
+      .addCase(cancelBid.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(cancelBid.fulfilled, (state, action) => {
+        state.loading = false;
+        // Remove the cancelled bid from myBids array
+        state.myBids = state.myBids.filter(bid => bid._id !== action.payload.bidId);
+        // Also remove from bids array if it exists there
+        state.bids = state.bids.filter(bid => bid._id !== action.payload.bidId);
+      })
+      .addCase(cancelBid.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Update Bid
+      .addCase(updateBid.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateBid.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update the bid in myBids array
+        const updatedBid = action.payload;
+        state.myBids = state.myBids.map(bid => 
+          bid._id === updatedBid._id ? updatedBid : bid
+        );
+        // Also update in bids array if it exists there
+        state.bids = state.bids.map(bid => 
+          bid._id === updatedBid._id ? updatedBid : bid
+        );
+      })
+      .addCase(updateBid.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

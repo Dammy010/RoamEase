@@ -8,12 +8,12 @@ import {
   Image, TrendingUp, Building2, MessageSquare, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 
-import { markShipmentAsDeliveredAndRate, fetchShipmentHistory, fetchUserShipments } from '../../redux/slices/shipmentSlice';
+import { rateCompletedShipment, fetchShipmentHistory, fetchUserShipments, fetchDeliveredShipments } from '../../redux/slices/shipmentSlice';
 
 const RateShipment = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { history, shipments, loading, error } = useSelector((state) => state.shipment);
+  const { history, shipments, deliveredShipments, loading, error } = useSelector((state) => state.shipment);
   
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [rating, setRating] = useState(0);
@@ -23,43 +23,63 @@ const RateShipment = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   
-  // Fetch both shipment history and user shipments when component mounts
+  // Fetch all shipment data when component mounts
   useEffect(() => {
-    try {
-      dispatch(fetchShipmentHistory());
-      dispatch(fetchUserShipments());
-    } catch (error) {
-      console.error('Error fetching shipments:', error);
-    }
+    const fetchAllShipments = async () => {
+      try {
+        await Promise.all([
+          dispatch(fetchShipmentHistory()),
+          dispatch(fetchUserShipments()),
+          dispatch(fetchDeliveredShipments())
+        ]);
+      } catch (error) {
+        console.error('Error fetching shipments:', error);
+      }
+    };
+    
+    fetchAllShipments();
   }, [dispatch]);
   
-  // Combine both data sources
-  const allShipments = [...(history || []), ...(shipments || [])];
+  // Combine all data sources and remove duplicates
+  const allShipments = [...(history || []), ...(shipments || []), ...(deliveredShipments || [])];
   
-  // Filter shipments that can be rated
-  const rateableShipments = allShipments.filter(shipment => {
-    const eligibleStatuses = ['accepted', 'completed', 'delivered', 'received'];
-    const isEligible = eligibleStatuses.includes(shipment.status);
+  // Debug logging
+  console.log('RateShipment Debug - Redux State:', {
+    history: history?.length || 0,
+    shipments: shipments?.length || 0,
+    deliveredShipments: deliveredShipments?.length || 0,
+    loading,
+    error
+  });
+  
+  // Remove duplicates based on _id
+  const uniqueShipments = allShipments.filter((shipment, index, self) => 
+    index === self.findIndex(s => s._id === shipment._id)
+  );
+  
+  console.log('RateShipment Debug - Combined shipments:', uniqueShipments.length);
+  
+  // Filter shipments that can be rated (only completed shipments that haven't been rated)
+  const rateableShipments = uniqueShipments.filter(shipment => {
+    const isCompleted = shipment.status === 'completed';
     const notRated = !shipment.rating;
     
     // Debug logging for first shipment
-    if (allShipments.length > 0 && shipment === allShipments[0]) {
+    if (uniqueShipments.length > 0 && shipment === uniqueShipments[0]) {
       console.log('RateShipment Debug - First shipment fields:', Object.keys(shipment));
-      console.log('RateShipment Debug - Budget field:', shipment.budget);
-      console.log('RateShipment Debug - EstimatedCost field:', shipment.estimatedCost);
-      console.log('RateShipment Debug - Weight field:', shipment.weight);
+      console.log('RateShipment Debug - Status:', shipment.status);
+      console.log('RateShipment Debug - Has rating:', !!shipment.rating);
       console.log('RateShipment Debug - Full shipment data:', shipment);
     }
     
-    return isEligible && notRated;
+    return isCompleted && notRated;
   });
   
-  // Get shipments that are eligible but already rated
-  const alreadyRatedShipments = allShipments.filter(shipment => {
-    const eligibleStatuses = ['accepted', 'completed', 'delivered', 'received'];
-    const isEligible = eligibleStatuses.includes(shipment.status);
+  // Get shipments that are completed and already rated
+  const alreadyRatedShipments = uniqueShipments.filter(shipment => {
+    const isCompleted = shipment.status === 'completed';
     const hasRating = !!shipment.rating;
-    return isEligible && hasRating;
+    return isCompleted && hasRating;
   });
 
   // Filter and sort rateable shipments
@@ -104,22 +124,44 @@ const RateShipment = () => {
     }
 
     try {
-      await dispatch(markShipmentAsDeliveredAndRate({
+      const result = await dispatch(rateCompletedShipment({
         id: selectedShipment._id,
         rating,
         feedback
       })).unwrap();
       
-      toast.success('Rating submitted successfully!');
+      console.log('Rating submitted successfully:', result);
+      
       setShowRatingForm(false);
       setSelectedShipment(null);
       setRating(0);
       setFeedback('');
       
-      // Refresh the page or update the shipment list
-      window.location.reload();
+      // Refresh all data sources
+      await Promise.all([
+        dispatch(fetchShipmentHistory()),
+        dispatch(fetchUserShipments()),
+        dispatch(fetchDeliveredShipments())
+      ]);
+      
+      // Show additional success message
+      toast.success(`Rating submitted! The logistics company has been notified of your ${rating}-star rating.`);
     } catch (error) {
-      toast.error(error.message || 'Failed to submit rating');
+      console.error('Rating submission error:', error);
+      // Error is already handled in the Redux action
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([
+        dispatch(fetchShipmentHistory()),
+        dispatch(fetchUserShipments()),
+        dispatch(fetchDeliveredShipments())
+      ]);
+      toast.success('Data refreshed successfully!');
+    } catch (error) {
+      toast.error('Failed to refresh data');
     }
   };
 
@@ -154,6 +196,26 @@ const RateShipment = () => {
     }
   };
 
+  // Currency symbol helper function
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'AUD': 'A$',
+      'JPY': '¥',
+      'CHF': 'CHF',
+      'CNY': '¥',
+      'INR': '₹',
+      'BRL': 'R$',
+      'MXN': '$',
+      'ZAR': 'R',
+      'NGN': '#'
+    };
+    return symbols[currency] || currency || '$';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -168,21 +230,50 @@ const RateShipment = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="text-red-500 text-2xl" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">Error Loading Data</h3>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                  <Star className="text-white text-2xl" />
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
+                    <Star className="text-white text-2xl" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-white">Rate Your Shipments</h1>
+                    <p className="text-indigo-100">Rate and provide feedback for your completed shipments</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-white">Rate Your Shipments</h1>
-                  <p className="text-indigo-100">Rate and provide feedback for your completed shipments</p>
-                </div>
+                <button
+                  onClick={handleRefresh}
+                  className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors backdrop-blur-sm flex items-center gap-2"
+                >
+                  <RefreshCw size={16} />
+                  Refresh
+                </button>
               </div>
             </div>
             
@@ -197,7 +288,7 @@ const RateShipment = () => {
                   <div className="text-sm text-gray-600">Already Rated</div>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl">
-                  <div className="text-2xl font-bold text-pink-600 mb-1">{allShipments.length}</div>
+                  <div className="text-2xl font-bold text-pink-600 mb-1">{uniqueShipments.length}</div>
                   <div className="text-sm text-gray-600">Total Shipments</div>
                 </div>
               </div>
@@ -234,7 +325,7 @@ const RateShipment = () => {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Shipment List */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -255,17 +346,28 @@ const RateShipment = () => {
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
                       {searchTerm 
                         ? 'Try adjusting your search criteria to find shipments to rate.'
-                        : 'You don\'t have any completed shipments that need rating yet.'
+                        : uniqueShipments.length === 0 
+                          ? 'You don\'t have any shipments yet. Complete some deliveries to start rating.'
+                          : 'You don\'t have any completed shipments that need rating yet.'
                       }
                     </p>
-                    {searchTerm && (
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        >
+                          Clear Search
+                        </button>
+                      )}
                       <button
-                        onClick={() => setSearchTerm('')}
-                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        onClick={handleRefresh}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
                       >
-                        Clear Search
+                        <RefreshCw size={16} />
+                        Refresh Data
                       </button>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -284,11 +386,9 @@ const RateShipment = () => {
                             <div className="flex items-center gap-3 mb-3">
                               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 shipment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                shipment.status === 'delivered' ? 'bg-blue-100 text-blue-800' :
-                                shipment.status === 'received' ? 'bg-purple-100 text-purple-800' :
                                 'bg-gray-100 text-gray-800 dark:text-gray-200'
                               }`}>
-                                {shipment.status}
+                                {shipment.status === 'completed' ? 'Ready to Rate' : shipment.status}
                               </div>
                               <span className="text-sm text-gray-500">
                                 #{shipment._id.slice(-6)}
@@ -309,7 +409,17 @@ const RateShipment = () => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Calendar className="text-purple-500" size={16} />
-                                <span>Completed: {new Date(shipment.updatedAt || shipment.createdAt).toLocaleDateString()}</span>
+                                <span>Completed: {new Date(shipment.completedAt || shipment.updatedAt || shipment.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              {shipment.deliveredByLogistics && (
+                                <div className="flex items-center gap-2">
+                                  <Truck className="text-green-500" size={16} />
+                                  <span>Delivered by: {shipment.deliveredByLogistics?.companyName || shipment.deliveredByLogistics?.name || 'Logistics Company'}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2">
+                                <Clock className="text-orange-500" size={16} />
+                                <span>Status: {shipment.status}</span>
                               </div>
                             </div>
 
@@ -323,7 +433,7 @@ const RateShipment = () => {
                               <div className="flex items-center gap-2">
                                 <TrendingUp className="text-gray-400" size={16} />
                                 <span>
-                                  ${shipment.budget || shipment.estimatedCost || 'N/A'}
+                                  {getCurrencySymbol(shipment.currency || shipment.bidCurrency || 'USD')}{shipment.budget || shipment.estimatedCost || shipment.bidAmount || 'N/A'}
                                 </span>
                               </div>
                             </div>
@@ -331,7 +441,7 @@ const RateShipment = () => {
                           
                           <div className="text-right">
                             <div className="text-2xl font-bold text-gray-900 mb-1">
-                              ${shipment.budget || shipment.estimatedCost || 'N/A'}
+                              {getCurrencySymbol(shipment.currency || shipment.bidCurrency || 'USD')}{shipment.budget || shipment.estimatedCost || shipment.bidAmount || 'N/A'}
                             </div>
                             <div className="text-sm text-gray-500">
                               {shipment.weight ? `${shipment.weight}kg` : 'N/A'}
@@ -362,9 +472,21 @@ const RateShipment = () => {
                     <h4 className="font-semibold text-gray-900 mb-2">
                       {selectedShipment.shipmentTitle || selectedShipment.title || 'N/A'}
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 mb-2">
                       #{selectedShipment._id.slice(-6)} • {selectedShipment.pickupCity || selectedShipment.pickupLocation || 'N/A'} → {selectedShipment.deliveryCity || selectedShipment.deliveryLocation || 'N/A'}
                     </p>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-4">
+                        <span className="text-gray-600">
+                          <strong>Price:</strong> {getCurrencySymbol(selectedShipment.currency || selectedShipment.bidCurrency || 'USD')}{selectedShipment.budget || selectedShipment.estimatedCost || selectedShipment.bidAmount || 'N/A'}
+                        </span>
+                        {selectedShipment.deliveredByLogistics && (
+                          <span className="text-gray-600">
+                            <strong>Delivered by:</strong> {selectedShipment.deliveredByLogistics?.companyName || selectedShipment.deliveredByLogistics?.name || 'Logistics Company'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <form onSubmit={handleRatingSubmit} className="space-y-6">

@@ -9,7 +9,7 @@ const PostShipment = () => {
   const { isDark } = useTheme();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 py-6">
       <ShipmentForm />
     </div>
   );

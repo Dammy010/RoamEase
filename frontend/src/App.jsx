@@ -59,6 +59,7 @@ import MyBids from './pages/LogisticsDashboard/MyBids';
 import LogisticsHistory from './pages/LogisticsDashboard/LogisticsHistory';
 import ChatWithUsers from './pages/LogisticsDashboard/ChatWithUsers';
 import LogisticsProfile from './pages/LogisticsDashboard/Profile';
+import Ratings from './pages/LogisticsDashboard/Ratings';
 
 // Admin Dashboard Pages
 import AdminDashboardHome from './pages/AdminDashboard/DashboardHome';
@@ -126,6 +127,9 @@ function App() {
             <Sidebar role={user.role} />
             <div className="flex-1 ml-48 bg-white dark:bg-gray-900">
               <Routes>
+                {/* Notifications route - MUST be first to avoid catch-all */}
+                <Route path="/notifications" element={<NotificationPage />} />
+
                 {/* User Protected Routes */}
                 <Route element={<ProtectedRoute allowedRoles={['user']} />}>
                   <Route path="/user/dashboard" element={<UserDashboardHome />} />
@@ -154,6 +158,7 @@ function App() {
                   <Route path="/logistics/history" element={<LogisticsHistory />} />
                   <Route path="/logistics/chat" element={<ChatWithUsers />} />
                   <Route path="/logistics/profile" element={<LogisticsProfile />} />
+                  <Route path="/logistics/ratings" element={<Ratings />} />
                 </Route>
 
                 {/* Admin Protected Routes */}
@@ -174,7 +179,6 @@ function App() {
 
                 {/* Common routes for all authenticated users */}
                 <Route element={<ProtectedRoute allowedRoles={['user', 'logistics', 'admin']} />}>
-                  <Route path="/notifications" element={<NotificationPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>

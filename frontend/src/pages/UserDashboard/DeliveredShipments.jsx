@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { markShipmentAsReceivedByUser } from '../../redux/slices/shipmentSlice';
+import { markShipmentAsDeliveredByUser } from '../../redux/slices/shipmentSlice';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { getSocket } from '../../services/socket';
@@ -24,15 +24,23 @@ const DeliveredShipments = () => {
     const fetchDeliveredShipments = async () => {
       setLoading(true);
       try {
-        const response = await api.get('/shipments');
-        // Filter for delivered shipments awaiting user confirmation
-        const delivered = response.data.shipments?.filter(shipment => 
-          shipment.status === 'delivered' && shipment.awaitingUserConfirmation
-        ) || [];
+        console.log('🔍 DeliveredShipments - Starting API call to /shipments/delivered');
+        console.log('🔍 DeliveredShipments - User:', user);
+        
+        const response = await api.get('/shipments/delivered');
+        console.log('🔍 DeliveredShipments - API Response:', response.data);
+        console.log('🔍 DeliveredShipments - Delivered shipments:', response.data.shipments);
+        
+        // The API already returns only delivered shipments awaiting confirmation
+        const delivered = response.data.shipments || [];
+        
+        console.log('🔍 DeliveredShipments - Number of delivered shipments:', delivered.length);
         setDeliveredShipments(delivered);
       } catch (error) {
         console.error('Error fetching delivered shipments:', error);
-        toast.error('Failed to fetch delivered shipments. Please try again.');
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        toast.error(`Failed to fetch delivered shipments: ${error.response?.data?.message || error.message}`);
         setDeliveredShipments([]);
       } finally {
         setLoading(false);
@@ -68,23 +76,23 @@ const DeliveredShipments = () => {
     };
   }, [user]);
 
-  const handleMarkAsReceived = async (shipmentId) => {
+  const handleMarkAsDelivered = async (shipmentId) => {
     try {
-      const result = await dispatch(markShipmentAsReceivedByUser(shipmentId));
+      const result = await dispatch(markShipmentAsDeliveredByUser(shipmentId));
       
-      if (markShipmentAsReceivedByUser.fulfilled.match(result)) {
-        toast.success('Shipment marked as received successfully! You can now rate the delivery service.');
+      if (markShipmentAsDeliveredByUser.fulfilled.match(result)) {
+        toast.success('Delivery confirmed successfully! You can now rate the delivery service.');
         
         // Update local state
         setDeliveredShipments(prev => 
           prev.filter(shipment => shipment._id !== shipmentId)
         );
       } else {
-        const errorMessage = result.payload || 'Failed to mark shipment as received';
+        const errorMessage = result.payload || 'Failed to confirm delivery';
         toast.error(errorMessage);
       }
     } catch (error) {
-      toast.error('Error marking shipment as received');
+      toast.error('Error confirming delivery');
       console.error('Error:', error);
     }
   };
@@ -130,13 +138,13 @@ const DeliveredShipments = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
                   <Package className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Delivered Shipments</h1>
+                  <h1 className="text-xl font-bold text-white">Delivered Shipments</h1>
                   <p className="text-indigo-100">Confirm receipt of your delivered shipments</p>
                 </div>
               </div>
@@ -197,7 +205,7 @@ const DeliveredShipments = () => {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Package className="text-indigo-500 text-4xl" />
+                <Package className="text-indigo-500 text-3xl" />
               </div>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 {searchTerm ? 'No Matching Deliveries' : 'No Deliveries to Confirm'}
@@ -229,7 +237,7 @@ const DeliveredShipments = () => {
                 <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
                         <Truck className="text-white text-2xl" />
                       </div>
                       <div>
@@ -240,7 +248,7 @@ const DeliveredShipments = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800/20 rounded-xl">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl border border-white/20">
                       <CheckCircle className="text-white" size={20} />
                       <span className="text-white font-medium">Delivered</span>
                     </div>
@@ -318,16 +326,16 @@ const DeliveredShipments = () => {
                     {/* Right Side - Actions */}
                     <div className="space-y-4">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">Ready to Confirm</div>
+                        <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Ready to Confirm</div>
                         <div className="text-gray-600">Your shipment is waiting for confirmation</div>
                       </div>
 
                       <button
-                        onClick={() => handleMarkAsReceived(shipment._id)}
+                        onClick={() => handleMarkAsDelivered(shipment._id)}
                         className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
                       >
                         <CheckCircle size={20} />
-                        Confirm Receipt
+                        Confirm Delivery
                       </button>
 
                       <div className="text-center">

@@ -88,8 +88,7 @@ const BrowseShipmentsPage = () => {
       case 'open': return 'bg-green-100 text-green-800';
       case 'accepted': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-orange-100 text-orange-800';
-      case 'received': return 'bg-emerald-100 text-emerald-800';
+      case 'delivered': return 'bg-emerald-100 text-emerald-800';
       default: return 'bg-gray-100 text-gray-800 dark:text-gray-200';
     }
   };
@@ -99,8 +98,7 @@ const BrowseShipmentsPage = () => {
       case 'open': return <CheckCircle className="w-4 h-4" />;
       case 'accepted': return <Clock className="w-4 h-4" />;
       case 'completed': return <CheckCircle className="w-4 h-4" />;
-      case 'delivered': return <Truck className="w-4 h-4" />;
-      case 'received': return <CheckCircle className="w-4 h-4" />;
+      case 'delivered': return <CheckCircle className="w-4 h-4" />;
       default: return <AlertCircle className="w-4 h-4" />;
     }
   };
@@ -117,7 +115,7 @@ const BrowseShipmentsPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen py-6">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -170,7 +168,7 @@ const BrowseShipmentsPage = () => {
             <CheckCircle className="w-4 h-4" />
             Only Open Shipments
           </div>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Browse shipments that are currently open for bidding. These are active opportunities waiting for logistics providers to place competitive bids.
           </p>
         </div>

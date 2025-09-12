@@ -9,12 +9,14 @@ const {
   updateShipmentStatus,
   getAvailableShipmentsForCarrier,
   getPublicOpenShipments, // New: Import the public open shipments function
-  markAsDeliveredAndRate,
   markAsDeliveredByLogistics,
-  markAsReceivedByUser,
+  markAsDeliveredByUser,
+  getDeliveredShipments, // New: Import the delivered shipments function
   getActiveShipmentsForLogistics, // New: Import the active shipments function
   deleteShipment, // New: Import the delete shipment function
-  getLogisticsHistory // New: Import the logistics history function
+  getLogisticsHistory, // New: Import the logistics history function
+  rateCompletedShipment, // New: Import the rate completed shipment function
+  getLogisticsRatings // New: Import the get logistics ratings function
 } = require('../controllers/shipmentController');
 
 const { protect, allowRoles } = require('../middlewares/authMiddleware'); // Destructure both protect and allowRoles
@@ -42,11 +44,18 @@ router.get('/my-active-shipments', protect, allowRoles('logistics'), getActiveSh
 // New: Route for logistics companies to get their history
 router.get('/logistics-history', protect, allowRoles('logistics'), getLogisticsHistory);
 
+// New: Route for users to get delivered shipments awaiting confirmation
+router.get('/delivered', protect, allowRoles('user'), getDeliveredShipments);
+
 router.get('/:id', protect, getShipmentById);
 router.put('/:id/status', protect, updateShipmentStatus);
 router.delete('/:id', protect, deleteShipment); // New: Route to delete shipment
-router.put('/:id/deliver', protect, allowRoles('user'), markAsDeliveredAndRate); // Route to mark shipment as delivered and rate
+// Removed: markAsDeliveredAndRate route (replaced with separate rate and deliver routes)
 router.put('/:id/mark-delivered-by-logistics', protect, allowRoles('logistics'), markAsDeliveredByLogistics); // New: Route for logistics to mark as delivered
-router.put('/:id/mark-received-by-user', protect, allowRoles('user'), markAsReceivedByUser); // New: Route for users to mark as received
+router.put('/:id/mark-delivered-by-user', protect, allowRoles('user'), markAsDeliveredByUser); // New: Route for users to mark as delivered
+router.put('/:id/rate', protect, allowRoles('user'), rateCompletedShipment); // New: Route for users to rate completed shipments
+
+// New: Route for logistics companies to get their ratings
+router.get('/my-ratings', protect, allowRoles('logistics'), getLogisticsRatings);
 
 module.exports = router;

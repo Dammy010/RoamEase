@@ -46,11 +46,11 @@ const Profile = () => {
         {/* Profile Header */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-              <Truck className="w-10 h-10 text-blue-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <Truck className="w-8 h-8 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                 {getLogisticsDisplayName(user)}
               </h1>
               <p className="text-gray-600">{user.email}</p>

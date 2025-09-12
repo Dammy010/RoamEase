@@ -11,7 +11,7 @@ import {
 const SectionHeader = ({ title, icon: Icon, description }) => (
   <div className="mb-8">
     <div className="flex items-center gap-3 mb-3">
-      <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+      <div className="w-10 h-10 bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 rounded-xl flex items-center justify-center">
         <Icon className="text-white" size={20} />
       </div>
       <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">{title}</h2>
@@ -22,7 +22,7 @@ const SectionHeader = ({ title, icon: Icon, description }) => (
   </div>
 );
 
-const Input = ({ label, id, required, icon: Icon, ...props }) => (
+const Input = ({ label, id, required, icon: Icon, error, ...props }) => (
   <div className="mb-6">
     {label && (
       <label
@@ -42,15 +42,25 @@ const Input = ({ label, id, required, icon: Icon, ...props }) => (
       <input
         id={id}
         {...props}
-        className={`w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 ${
+        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:border-indigo-500 outline-none transition-all duration-200 ${
           Icon ? 'pl-10' : ''
-        } hover:border-gray-400`}
+        } ${
+          error 
+            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+            : 'border-gray-300 focus:ring-indigo-500 hover:border-gray-400'
+        }`}
       />
     </div>
+    {error && (
+      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+        <AlertCircle size={14} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
-const TextArea = ({ label, id, required, icon: Icon, ...props }) => (
+const TextArea = ({ label, id, required, icon: Icon, error, ...props }) => (
   <div className="mb-6">
     {label && (
       <label
@@ -70,15 +80,25 @@ const TextArea = ({ label, id, required, icon: Icon, ...props }) => (
       <textarea
         id={id}
         {...props}
-        className={`w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 resize-none ${
+        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:border-indigo-500 outline-none transition-all duration-200 resize-none ${
           Icon ? 'pl-10' : ''
-        } hover:border-gray-400`}
+        } ${
+          error 
+            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+            : 'border-gray-300 focus:ring-indigo-500 hover:border-gray-400'
+        }`}
       />
     </div>
+    {error && (
+      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+        <AlertCircle size={14} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
-const Select = ({ label, id, options, required, icon: Icon, ...props }) => (
+const Select = ({ label, id, options, required, icon: Icon, error, ...props }) => (
   <div className="mb-6">
     {label && (
       <label
@@ -98,9 +118,13 @@ const Select = ({ label, id, options, required, icon: Icon, ...props }) => (
       <select
         id={id}
         {...props}
-        className={`w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 ${
+        className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:border-indigo-500 outline-none transition-all duration-200 ${
           Icon ? 'pl-10' : ''
-        } hover:border-gray-400`}
+        } ${
+          error 
+            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+            : 'border-gray-300 focus:ring-indigo-500 hover:border-gray-400'
+        }`}
       >
         <option value="">Select {label?.toLowerCase()}</option>
         {options.map((opt) => (
@@ -110,10 +134,16 @@ const Select = ({ label, id, options, required, icon: Icon, ...props }) => (
         ))}
       </select>
     </div>
+    {error && (
+      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+        <AlertCircle size={14} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
-const RadioGroup = ({ label, name, options, value, onChange, required, icon: Icon }) => (
+const RadioGroup = ({ label, name, options, value, onChange, required, icon: Icon, error }) => (
   <div className="mb-6">
     {label && (
       <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -128,6 +158,8 @@ const RadioGroup = ({ label, name, options, value, onChange, required, icon: Ico
           className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
             value === option
               ? 'border-indigo-500 bg-indigo-50'
+              : error
+              ? 'border-red-200 hover:border-red-300'
               : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
           }`}
         >
@@ -142,6 +174,8 @@ const RadioGroup = ({ label, name, options, value, onChange, required, icon: Ico
           <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
             value === option
               ? 'border-indigo-500 bg-indigo-500'
+              : error
+              ? 'border-red-300'
               : 'border-gray-300'
           }`}>
             {value === option && (
@@ -152,6 +186,12 @@ const RadioGroup = ({ label, name, options, value, onChange, required, icon: Ico
         </label>
       ))}
     </div>
+    {error && (
+      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+        <AlertCircle size={14} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
@@ -287,14 +327,233 @@ const ShipmentForm = () => {
     agreeToPolicy: false,
   });
 
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
   const dispatch = useDispatch();
 
+  // Validation functions
+  const validateField = useCallback((name, value) => {
+    const newErrors = { ...errors };
+    
+    switch (name) {
+      case 'shipmentTitle':
+        if (!value.trim()) {
+          newErrors[name] = 'Shipment title is required';
+        } else if (value.trim().length < 5) {
+          newErrors[name] = 'Shipment title must be at least 5 characters';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'descriptionOfGoods':
+        if (!value.trim()) {
+          newErrors[name] = 'Description of goods is required';
+        } else if (value.trim().length < 10) {
+          newErrors[name] = 'Description must be at least 10 characters';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'typeOfGoods':
+        if (!value) {
+          newErrors[name] = 'Type of goods is required';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'weight':
+        if (!value) {
+          newErrors[name] = 'Weight is required';
+        } else if (isNaN(value) || parseFloat(value) <= 0) {
+          newErrors[name] = 'Weight must be a positive number';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'length':
+      case 'width':
+      case 'height':
+        if (!value) {
+          newErrors[name] = `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+        } else if (isNaN(value) || parseFloat(value) <= 0) {
+          newErrors[name] = `${name.charAt(0).toUpperCase() + name.slice(1)} must be a positive number`;
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'quantity':
+        if (!value) {
+          newErrors[name] = 'Quantity is required';
+        } else if (isNaN(value) || parseInt(value) <= 0) {
+          newErrors[name] = 'Quantity must be a positive number';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'pickupAddress':
+      case 'deliveryAddress':
+        if (!value.trim()) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} address is required`;
+        } else if (value.trim().length < 10) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} address must be at least 10 characters`;
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'pickupCity':
+      case 'deliveryCity':
+        if (!value.trim()) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} city is required`;
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'pickupCountry':
+      case 'deliveryCountry':
+        if (!value) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} country is required`;
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'preferredPickupDate':
+      case 'preferredDeliveryDate':
+        if (!value) {
+          newErrors[name] = `${name.includes('Pickup') ? 'Pickup' : 'Delivery'} date is required`;
+        } else {
+          const selectedDate = new Date(value);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          if (selectedDate < today) {
+            newErrors[name] = `${name.includes('Pickup') ? 'Pickup' : 'Delivery'} date cannot be in the past`;
+          } else {
+            delete newErrors[name];
+          }
+        }
+        break;
+        
+      case 'pickupContactPerson':
+      case 'deliveryContactPerson':
+        if (!value.trim()) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} contact person is required`;
+        } else if (value.trim().length < 2) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} contact person must be at least 2 characters`;
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'pickupPhoneNumber':
+      case 'deliveryPhoneNumber':
+        if (!value.trim()) {
+          newErrors[name] = `${name.includes('pickup') ? 'Pickup' : 'Delivery'} phone number is required`;
+        } else {
+          // Remove all non-digit characters for validation
+          const digitsOnly = value.replace(/\D/g, '');
+          if (digitsOnly.length < 10) {
+            newErrors[name] = 'Phone number must have at least 10 digits';
+          } else if (digitsOnly.length > 15) {
+            newErrors[name] = 'Phone number cannot exceed 15 digits';
+          } else {
+            delete newErrors[name];
+          }
+        }
+        break;
+        
+      case 'modeOfTransport':
+        if (!value) {
+          newErrors[name] = 'Mode of transport is required';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'insuranceRequired':
+        if (!value) {
+          newErrors[name] = 'Insurance requirement is required';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [errors]);
+
+  const validateStep = useCallback((stepIndex) => {
+    const newErrors = {};
+    
+    switch (stepIndex) {
+      case 0: // Shipment Details
+        if (!formData.shipmentTitle.trim()) newErrors.shipmentTitle = 'Shipment title is required';
+        if (!formData.descriptionOfGoods.trim()) newErrors.descriptionOfGoods = 'Description is required';
+        break;
+        
+      case 1: // Goods Specifications
+        if (!formData.typeOfGoods) newErrors.typeOfGoods = 'Type of goods is required';
+        if (!formData.weight) newErrors.weight = 'Weight is required';
+        if (!formData.length) newErrors.length = 'Length is required';
+        if (!formData.width) newErrors.width = 'Width is required';
+        if (!formData.height) newErrors.height = 'Height is required';
+        if (!formData.quantity) newErrors.quantity = 'Quantity is required';
+        break;
+        
+      case 2: // Pickup Information
+        if (!formData.pickupAddress.trim()) newErrors.pickupAddress = 'Pickup address is required';
+        if (!formData.pickupCity.trim()) newErrors.pickupCity = 'Pickup city is required';
+        if (!formData.pickupCountry) newErrors.pickupCountry = 'Pickup country is required';
+        if (!formData.preferredPickupDate) newErrors.preferredPickupDate = 'Pickup date is required';
+        if (!formData.pickupContactPerson.trim()) newErrors.pickupContactPerson = 'Pickup contact is required';
+        if (!formData.pickupPhoneNumber.trim()) newErrors.pickupPhoneNumber = 'Pickup phone is required';
+        break;
+        
+      case 3: // Delivery Information
+        if (!formData.deliveryAddress.trim()) newErrors.deliveryAddress = 'Delivery address is required';
+        if (!formData.deliveryCity.trim()) newErrors.deliveryCity = 'Delivery city is required';
+        if (!formData.deliveryCountry) newErrors.deliveryCountry = 'Delivery country is required';
+        if (!formData.preferredDeliveryDate) newErrors.preferredDeliveryDate = 'Delivery date is required';
+        if (!formData.deliveryContactPerson.trim()) newErrors.deliveryContactPerson = 'Delivery contact is required';
+        if (!formData.deliveryPhoneNumber.trim()) newErrors.deliveryPhoneNumber = 'Delivery phone is required';
+        break;
+        
+      case 4: // Transport & Insurance
+        if (!formData.modeOfTransport) newErrors.modeOfTransport = 'Mode of transport is required';
+        if (!formData.insuranceRequired) newErrors.insuranceRequired = 'Insurance requirement is required';
+        break;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  }, []);
+    validateField(name, value);
+  }, [validateField]);
+
+  const handlePhoneChange = useCallback((e) => {
+    const { name, value } = e.target;
+    // Only allow numbers, +, -, (, ), and spaces
+    const phoneValue = value.replace(/[^0-9+\-() ]/g, '');
+    setFormData((prev) => ({ ...prev, [name]: phoneValue }));
+    validateField(name, phoneValue);
+  }, [validateField]);
 
   const handleCheckboxChange = useCallback((e) => {
     const { name, checked } = e.target;
@@ -316,10 +575,79 @@ const ShipmentForm = () => {
     }));
   }, []);
 
+  const handleNextStep = useCallback(() => {
+    const isValid = validateStep(step);
+    
+    if (isValid) {
+      setStep(step + 1);
+    } else {
+      // Scroll to first error
+      const firstErrorField = Object.keys(errors)[0];
+      if (firstErrorField) {
+        const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          errorElement.focus();
+        }
+      }
+    }
+  }, [step, validateStep, errors]);
+
+  const handlePrevStep = useCallback(() => {
+    setStep(step - 1);
+  }, [step]);
+
   const handleSubmit = useCallback(
     (e) => {
       e.preventDefault();
-      if (!formData.confirmDetails || !formData.agreeToPolicy) return;
+      
+      // Validate all steps before submission
+      const allStepsValid = [0, 1, 2, 3].every(stepIndex => {
+        const stepErrors = {};
+        switch (stepIndex) {
+          case 0:
+            if (!formData.shipmentTitle.trim()) stepErrors.shipmentTitle = 'Required';
+            if (!formData.descriptionOfGoods.trim()) stepErrors.descriptionOfGoods = 'Required';
+            if (!formData.typeOfGoods) stepErrors.typeOfGoods = 'Required';
+            if (!formData.weight) stepErrors.weight = 'Required';
+            if (!formData.length) stepErrors.length = 'Required';
+            if (!formData.width) stepErrors.width = 'Required';
+            if (!formData.height) stepErrors.height = 'Required';
+            if (!formData.quantity) stepErrors.quantity = 'Required';
+            break;
+          case 1:
+            if (!formData.pickupAddress.trim()) stepErrors.pickupAddress = 'Required';
+            if (!formData.pickupCity.trim()) stepErrors.pickupCity = 'Required';
+            if (!formData.pickupCountry) stepErrors.pickupCountry = 'Required';
+            if (!formData.preferredPickupDate) stepErrors.preferredPickupDate = 'Required';
+            if (!formData.pickupContactPerson.trim()) stepErrors.pickupContactPerson = 'Required';
+            if (!formData.pickupPhoneNumber.trim()) stepErrors.pickupPhoneNumber = 'Required';
+            break;
+          case 2:
+            if (!formData.deliveryAddress.trim()) stepErrors.deliveryAddress = 'Required';
+            if (!formData.deliveryCity.trim()) stepErrors.deliveryCity = 'Required';
+            if (!formData.deliveryCountry) stepErrors.deliveryCountry = 'Required';
+            if (!formData.preferredDeliveryDate) stepErrors.preferredDeliveryDate = 'Required';
+            if (!formData.deliveryContactPerson.trim()) stepErrors.deliveryContactPerson = 'Required';
+            if (!formData.deliveryPhoneNumber.trim()) stepErrors.deliveryPhoneNumber = 'Required';
+            break;
+          case 3:
+            if (!formData.modeOfTransport) stepErrors.modeOfTransport = 'Required';
+            if (!formData.insuranceRequired) stepErrors.insuranceRequired = 'Required';
+            break;
+        }
+        return Object.keys(stepErrors).length === 0;
+      });
+
+      if (!allStepsValid) {
+        setErrors({ general: 'Please complete all required fields before submitting' });
+        return;
+      }
+
+      if (!formData.confirmDetails || !formData.agreeToPolicy) {
+        setErrors({ general: 'Please confirm details and agree to policy' });
+        return;
+      }
 
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -365,6 +693,7 @@ const ShipmentForm = () => {
             placeholder="Brief, descriptive title for your shipment"
             icon={Package}
             required
+            error={errors.shipmentTitle}
           />
           <TextArea
             label="Description of Goods"
@@ -376,6 +705,7 @@ const ShipmentForm = () => {
             placeholder="Provide detailed description of the goods being shipped"
             icon={Info}
             required
+            error={errors.descriptionOfGoods}
           />
         </div>
       ),
@@ -407,6 +737,7 @@ const ShipmentForm = () => {
               ]}
               icon={Package}
               required
+              error={errors.typeOfGoods}
             />
             <Input
               label="Weight (kg)"
@@ -420,6 +751,7 @@ const ShipmentForm = () => {
               min="0.1"
               step="0.1"
               required
+              error={errors.weight}
             />
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -433,6 +765,8 @@ const ShipmentForm = () => {
               placeholder="Length"
               icon={Ruler}
               min="1"
+              required
+              error={errors.length}
             />
             <Input
               label="Width (cm)"
@@ -444,6 +778,8 @@ const ShipmentForm = () => {
               placeholder="Width"
               icon={Ruler}
               min="1"
+              required
+              error={errors.width}
             />
             <Input
               label="Height (cm)"
@@ -455,6 +791,8 @@ const ShipmentForm = () => {
               placeholder="Height"
               icon={Ruler}
               min="1"
+              required
+              error={errors.height}
             />
           </div>
           <Input
@@ -468,6 +806,7 @@ const ShipmentForm = () => {
             icon={Package}
             min="1"
             required
+            error={errors.quantity}
           />
         </div>
       ),
@@ -538,10 +877,11 @@ const ShipmentForm = () => {
               name="pickupPhoneNumber"
               type="tel"
               value={formData.pickupPhoneNumber}
-              onChange={handleChange}
-              placeholder="+1 (555) 123-4567"
+              onChange={handlePhoneChange}
+              placeholder="Enter phone number (numbers only)"
               icon={Phone}
               required
+              error={errors.pickupPhoneNumber}
             />
           </div>
         </div>
@@ -613,10 +953,11 @@ const ShipmentForm = () => {
               name="deliveryPhoneNumber"
               type="tel"
               value={formData.deliveryPhoneNumber}
-              onChange={handleChange}
-              placeholder="+1 (555) 123-4567"
+              onChange={handlePhoneChange}
+              placeholder="Enter phone number (numbers only)"
               icon={Phone}
               required
+              error={errors.deliveryPhoneNumber}
             />
           </div>
         </div>
@@ -720,7 +1061,7 @@ const ShipmentForm = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
             <Package className="text-white text-3xl" />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-4">Post a Shipment</h1>
@@ -741,11 +1082,33 @@ const ShipmentForm = () => {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((step + 1) / steps.length) * 100}%` }}
             ></div>
           </div>
         </div>
+
+        {/* General Error Display */}
+        {errors.general && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="text-red-600" size={20} />
+              <p className="text-red-800 font-medium">{errors.general}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Step Validation Error Display */}
+        {Object.keys(errors).length > 0 && !errors.general && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="text-yellow-600" size={20} />
+              <p className="text-yellow-800 font-medium">
+                Please complete all required fields before continuing
+              </p>
+            </div>
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -788,8 +1151,8 @@ const ShipmentForm = () => {
               {step < steps.length - 1 ? (
                 <button
                   type="button"
-                  onClick={() => setStep(step + 1)}
-                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  onClick={handleNextStep}
+                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white rounded-xl hover:from-blue-700 hover:via-indigo-800 hover:to-purple-900 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   Continue
                   <ArrowRight size={20} />
@@ -800,7 +1163,7 @@ const ShipmentForm = () => {
                   className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 ${
                     loading || !formData.confirmDetails || !formData.agreeToPolicy
                       ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                      : "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:shadow-xl transform hover:-translate-y-0.5"
+                      : "bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white hover:from-blue-700 hover:via-indigo-800 hover:to-purple-900 hover:shadow-xl transform hover:-translate-y-0.5"
                   }`}
                   disabled={loading || !formData.confirmDetails || !formData.agreeToPolicy}
                 >

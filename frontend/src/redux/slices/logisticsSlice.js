@@ -9,15 +9,21 @@ import { toast } from 'react-toastify';
       try {
         // Fetch available shipments count
         const shipmentsResponse = await api.get('/shipments/available-for-bidding');
-        const availableShipmentsCount = shipmentsResponse.data?.length || 0;
+        console.log('🔍 Available shipments API response:', shipmentsResponse.data);
+        const availableShipmentsCount = shipmentsResponse.data?.shipments?.length || shipmentsResponse.data?.length || 0;
+        console.log('🔍 Available shipments count:', availableShipmentsCount);
         
         // Fetch user's bids count
         const bidsResponse = await api.get('/bids/my-bids');
+        console.log('🔍 My bids API response:', bidsResponse.data);
         const myBidsCount = bidsResponse.data?.length || 0;
+        console.log('🔍 My bids count:', myBidsCount);
         
         // Fetch user's active shipments count (using the correct endpoint)
         const activeShipmentsResponse = await api.get('/shipments/my-active-shipments');
+        console.log('🔍 Active shipments API response:', activeShipmentsResponse.data);
         const activeShipmentsCount = activeShipmentsResponse.data?.shipments?.length || 0;
+        console.log('🔍 Active shipments count:', activeShipmentsCount);
         
         return {
           availableShipments: availableShipmentsCount,

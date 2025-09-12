@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { fetchShipmentById, updateShipmentStatus, deleteShipment, markShipmentAsReceivedByUser } from '../../redux/slices/shipmentSlice';
+import { fetchShipmentById, updateShipmentStatus, deleteShipment, markShipmentAsDeliveredByUser } from '../../redux/slices/shipmentSlice';
 import { toast } from 'react-toastify';
 import { 
   ArrowLeft, Package, MapPin, Calendar, Clock, Truck, User, Phone, Mail, 
@@ -60,31 +60,31 @@ const ShipmentDetail = () => {
     }
   };
 
-  const handleMarkAsReceived = () => {
+  const handleMarkAsDelivered = () => {
     setShowConfirmPopup(true);
   };
 
-  const confirmMarkAsReceived = async () => {
+  const confirmMarkAsDelivered = async () => {
     setShowConfirmPopup(false);
-    const result = await dispatch(markShipmentAsReceivedByUser(id));
-    if (markShipmentAsReceivedByUser.fulfilled.match(result)) {
-      toast.success('Shipment marked as received successfully!');
+    const result = await dispatch(markShipmentAsDeliveredByUser(id));
+    if (markShipmentAsDeliveredByUser.fulfilled.match(result)) {
+      toast.success('Shipment marked as delivered successfully!');
       // Refresh the shipment data
       dispatch(fetchShipmentById(id));
     } else {
-      const errorMessage = result.payload || 'Failed to mark shipment as received';
+      const errorMessage = result.payload || 'Failed to mark shipment as delivered';
       toast.error(errorMessage);
     }
   };
 
-  const cancelMarkAsReceived = () => {
+  const cancelMarkAsDelivered = () => {
     setShowConfirmPopup(false);
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
-      case 'received':
+      case 'delivered':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'delivered':
         return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -102,7 +102,7 @@ const ShipmentDetail = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed':
-      case 'received':
+      case 'delivered':
         return <CheckCircle className="w-4 h-4" />;
       case 'delivered':
         return <Truck className="w-4 h-4" />;
@@ -179,14 +179,14 @@ const ShipmentDetail = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center justify-between mb-6">
                 <button
                   onClick={() => navigate("/user/my-shipments")}
-                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800/20 text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all duration-300 font-medium border border-white/20"
                 >
-                  <ArrowLeft size={18} />
-                  Back to My Shipments
+                  <ArrowLeft size={18} className="text-white" />
+                  <span className="text-white">Back to My Shipments</span>
                 </button>
                 
                 <div className="flex items-center gap-3">
@@ -204,12 +204,12 @@ const ShipmentDetail = () => {
               </div>
               
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
-                  <Package className="text-white text-3xl" />
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
+                  <Package className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">{currentShipment.shipmentTitle}</h1>
-                  <p className="text-indigo-100 text-lg">Shipment ID: #{currentShipment._id.slice(-8)}</p>
+                  <h1 className="text-2xl font-bold text-white mb-2">{currentShipment.shipmentTitle}</h1>
+                  <p className="text-indigo-100 text-base">Shipment ID: #{currentShipment._id.slice(-8)}</p>
                 </div>
               </div>
             </div>
@@ -324,7 +324,7 @@ const ShipmentDetail = () => {
             </div>
             {/* Location & Contact Details */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <MapPin size={20} />
                   Location & Contact Details
@@ -441,7 +441,7 @@ const ShipmentDetail = () => {
             {/* Photos Section */}
             {currentShipment.photos && currentShipment.photos.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <Image size={20} />
                     Photos ({currentShipment.photos.length})
@@ -475,7 +475,7 @@ const ShipmentDetail = () => {
             {/* Documents Section */}
             {currentShipment.documents && currentShipment.documents.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <FileText size={20} />
                     Documents ({currentShipment.documents.length})
@@ -538,11 +538,11 @@ const ShipmentDetail = () => {
                 {/* Mark as Received Button */}
                 {(currentShipment?.status === 'delivered' || isShipper) && (
                   <button
-                    onClick={handleMarkAsReceived}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    onClick={handleMarkAsDelivered}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
                     <CheckCircle size={18} />
-                    Mark as Received
+                    Mark as Delivered
                   </button>
                 )}
 
@@ -550,7 +550,7 @@ const ShipmentDetail = () => {
                 {isShipper && currentShipment.status === 'accepted' && (
                   <button
                     onClick={() => handleUpdateShipmentStatus('completed')}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
                     <Award size={18} />
                     Mark as Completed
@@ -561,7 +561,7 @@ const ShipmentDetail = () => {
                 {isShipper && (currentShipment.status === 'open' || currentShipment.status === 'pending') && (
                   <button
                     onClick={handleDeleteShipment}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl hover:from-red-600 hover:to-rose-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:from-orange-600 hover:to-red-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
                     <Trash2 size={18} />
                     Delete Shipment
@@ -620,7 +620,7 @@ const ShipmentDetail = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-t-2xl">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white dark:bg-gray-800/20 rounded-full flex items-center justify-center">
@@ -629,7 +629,7 @@ const ShipmentDetail = () => {
                   <h3 className="text-xl font-bold text-white">Confirm Receipt</h3>
                 </div>
                 <button
-                  onClick={cancelMarkAsReceived}
+                  onClick={cancelMarkAsDelivered}
                   className="text-white/80 hover:text-white transition-colors"
                 >
                   <AlertCircle size={20} />
@@ -644,7 +644,7 @@ const ShipmentDetail = () => {
                   <Package className="text-green-600 text-3xl" />
                 </div>
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                  Got it! Mark this shipment as received?
+                  Got it! Mark this shipment as delivered?
                 </h4>
                 <p className="text-gray-600 text-sm">
                   This will confirm that you have received the shipment and update its status.
@@ -654,18 +654,18 @@ const ShipmentDetail = () => {
               {/* Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={cancelMarkAsReceived}
+                  onClick={cancelMarkAsDelivered}
                   className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={confirmMarkAsReceived}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  onClick={confirmMarkAsDelivered}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   <div className="flex items-center justify-center gap-2">
                     <CheckCircle size={16} />
-                    Confirm Receipt
+                    Confirm Delivery
                   </div>
                 </button>
               </div>

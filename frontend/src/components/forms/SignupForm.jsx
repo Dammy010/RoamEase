@@ -302,53 +302,53 @@ const SignupForm = () => {
 
     try {
       let resultAction;
-      
-      if (formData.role === ROLES.LOGISTICS) {
-        const payload = new FormData();
 
-        // Append primitive top-level fields
-        const primitiveFields = [
-          'companyName',
-          'country',
-          'yearsInOperation',
-          'registrationNumber',
-          'companySize',
-          'contactName',
-          'contactEmail',
-          'contactPosition',
-          'contactPhone',
-          'password',
-          'confirmPassword',
-          'fleetSize',
-          'website',
-          'agreements',
-          'terms',
-        ];
-        primitiveFields.forEach((key) => {
-          let value = formData[key];
-          if (key === 'yearsInOperation') value = Number(value);
-          if (typeof value === 'boolean') value = value ? 'true' : 'false';
-          payload.append(key, value);
-        });
+    if (formData.role === ROLES.LOGISTICS) {
+      const payload = new FormData();
 
-        // Explicitly append email and role for logistics to FormData
-        console.log('DEBUG - Frontend formData.email before FormData append:', formData.email);
-        console.log('DEBUG - Frontend formData.contactEmail before FormData append:', formData.contactEmail);
-        payload.append('email', formData.contactEmail);
-        payload.append('role', formData.role);
+      // Append primitive top-level fields
+      const primitiveFields = [
+        'companyName',
+        'country',
+        'yearsInOperation',
+        'registrationNumber',
+        'companySize',
+        'contactName',
+        'contactEmail',
+        'contactPosition',
+        'contactPhone',
+        'password',
+        'confirmPassword',
+        'fleetSize',
+        'website',
+        'agreements',
+        'terms',
+      ];
+      primitiveFields.forEach((key) => {
+        let value = formData[key];
+        if (key === 'yearsInOperation') value = Number(value);
+        if (typeof value === 'boolean') value = value ? 'true' : 'false';
+        payload.append(key, value);
+      });
 
-        // Append arrays
-        ['services', 'regions'].forEach((key) => {
-          formData[key].forEach((item) => payload.append(key, item));
-        });
+      // Explicitly append email and role for logistics to FormData
+      console.log('DEBUG - Frontend formData.email before FormData append:', formData.email);
+      console.log('DEBUG - Frontend formData.contactEmail before FormData append:', formData.contactEmail);
+      payload.append('email', formData.contactEmail);
+      payload.append('role', formData.role);
 
-        // Append documents
-        Object.keys(formData.documents).forEach((docKey) => {
-          payload.append(docKey, formData.documents[docKey]);
-        });
+      // Append arrays
+      ['services', 'regions'].forEach((key) => {
+        formData[key].forEach((item) => payload.append(key, item));
+      });
+
+      // Append documents
+      Object.keys(formData.documents).forEach((docKey) => {
+        payload.append(docKey, formData.documents[docKey]);
+      });
 
         resultAction = await dispatch(signupUser(payload));
-      } else {
+    } else {
         resultAction = await dispatch(signupUser(formData));
       }
 
@@ -430,7 +430,7 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+    <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
       <div className="max-w-6xl mx-auto">
         {/* Email Verification Prompt */}
         {showVerificationPrompt && (
@@ -456,16 +456,16 @@ const SignupForm = () => {
           </p>
         </div>
 
-        {/* Role Toggle */}
+      {/* Role Toggle */}
         <div className="flex justify-center mb-12">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-lg border border-gray-200 dark:border-gray-700">
-            {Object.values(ROLES).map((role) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => switchRole(role)}
+        {Object.values(ROLES).map((role) => (
+          <button
+            key={role}
+            type="button"
+            onClick={() => switchRole(role)}
                 className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center gap-3 ${
-                  formData.role === role
+              formData.role === role
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg transform scale-105'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
@@ -481,10 +481,10 @@ const SignupForm = () => {
                     Sign Up as Logistics Provider
                   </>
                 )}
-              </button>
-            ))}
+          </button>
+        ))}
           </div>
-        </div>
+      </div>
 
         {/* Main Form Container */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
@@ -498,7 +498,7 @@ const SignupForm = () => {
           </div>
 
           <div className="p-8">
-            {formData.role === ROLES.USER ? (
+      {formData.role === ROLES.USER ? (
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Personal Information */}
                 <div className="space-y-6">
@@ -509,101 +509,101 @@ const SignupForm = () => {
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Personal Information</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                         Full Name <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="name"
-                        name="name"
-                        type="text"
-                        value={formData.name}
-                        onChange={handleChange}
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
                         placeholder="Enter your full name"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.name ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                         Email Address <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Enter your email"
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
-                        autoComplete="off"
-                      />
+                  autoComplete="off"
+                />
                       {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
                         Phone Number <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="phoneNumber"
-                        name="phoneNumber"
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
                         type="tel"
-                        value={formData.phoneNumber}
-                        onChange={handleChange}
-                        placeholder="Enter your phone number"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  placeholder="Enter your phone number"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.phoneNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
-                      />
+                />
                       {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
-                    </div>
-                  </div>
+              </div>
+            </div>
                 </div>
 
                 {/* Account Security */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                       <Shield className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Account Security</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <PasswordInput
-                      label="Password"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter your password"
-                      required
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <PasswordInput
+                label="Password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
                       error={errors.password}
-                    />
-                    <PasswordInput
-                      label="Confirm Password"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirm your password"
-                      required
+              />
+              <PasswordInput
+                label="Confirm Password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                required
                       error={errors.confirmPassword}
-                    />
-                  </div>
+              />
+            </div>
                 </div>
 
                 {/* Submit Button */}
                 <div className="pt-6">
-                  <button
-                    type="submit"
+          <button
+            type="submit"
                     disabled={loading}
                     onClick={(e) => {
                       console.log('User form button clicked!', e);
@@ -624,7 +624,7 @@ const SignupForm = () => {
                     ) : (
                       'Create Account'
                     )}
-                  </button>
+          </button>
                   
                   {error && (
                     <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -632,16 +632,16 @@ const SignupForm = () => {
                     </div>
                   )}
                   
-                  <p className="mt-6 text-center text-gray-600">
-                    Already have an account?{' '}
+          <p className="mt-6 text-center text-gray-600">
+            Already have an account?{' '}
                     <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline transition-colors">
                       Sign in here
-                    </Link>
-                  </p>
+            </Link>
+          </p>
                 </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-8">
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Company Information */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-6">
@@ -651,134 +651,134 @@ const SignupForm = () => {
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Company Information</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
                         Company Name <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="companyName"
-                        name="companyName"
-                        type="text"
-                        value={formData.companyName}
-                        onChange={handleChange}
+                <input
+                  id="companyName"
+                  name="companyName"
+                  type="text"
+                  value={formData.companyName}
+                  onChange={handleChange}
                         placeholder="Enter your company name"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.companyName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="yearsInOperation" className="block text-sm font-medium text-gray-700">
                         Years in Operation <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="yearsInOperation"
-                        name="yearsInOperation"
-                        type="number"
-                        value={formData.yearsInOperation}
-                        onChange={handleChange}
+                <input
+                  id="yearsInOperation"
+                  name="yearsInOperation"
+                  type="number"
+                  value={formData.yearsInOperation}
+                  onChange={handleChange}
                         placeholder="e.g. 5"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.yearsInOperation ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.yearsInOperation && <p className="text-red-500 text-sm mt-1">{errors.yearsInOperation}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700">
                         Registration Number <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="registrationNumber"
-                        name="registrationNumber"
-                        type="text"
-                        value={formData.registrationNumber}
-                        onChange={handleChange}
+                <input
+                  id="registrationNumber"
+                  name="registrationNumber"
+                  type="text"
+                  value={formData.registrationNumber}
+                  onChange={handleChange}
                         placeholder="Enter registration number"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.registrationNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.registrationNumber && <p className="text-red-500 text-sm mt-1">{errors.registrationNumber}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="country" className="block text-sm font-medium text-gray-700">
                         Country <span className="text-red-500">*</span>
                       </label>
                       <CountrySelect
-                        value={formData.country}
+                  value={formData.country}
                         onChange={(value) => handleChange({ target: { name: 'country', value } })}
                         placeholder="Select country"
                         error={!!errors.country}
                         className="w-full"
                       />
                       {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="companySize" className="block text-sm font-medium text-gray-700">
                         Company Size <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        id="companySize"
-                        name="companySize"
-                        value={formData.companySize}
-                        onChange={handleChange}
+                <select
+                  id="companySize"
+                  name="companySize"
+                  value={formData.companySize}
+                  onChange={handleChange}
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 ${
                           errors.companySize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
-                      >
-                        <option value="">Select size</option>
-                        <option value="small">1-50 employees</option>
-                        <option value="medium">51-200 employees</option>
-                        <option value="large">201-500 employees</option>
-                        <option value="enterprise">500+ employees</option>
-                      </select>
+                >
+                  <option value="">Select size</option>
+                  <option value="small">1-50 employees</option>
+                  <option value="medium">51-200 employees</option>
+                  <option value="large">201-500 employees</option>
+                  <option value="enterprise">500+ employees</option>
+                </select>
                       {errors.companySize && <p className="text-red-500 text-sm mt-1">{errors.companySize}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="website" className="block text-sm font-medium text-gray-700">
                         Website
                       </label>
-                      <input
-                        id="website"
-                        name="website"
-                        type="url"
-                        value={formData.website}
-                        onChange={handleChange}
+                <input
+                  id="website"
+                  name="website"
+                  type="url"
+                  value={formData.website}
+                  onChange={handleChange}
                         placeholder="https://www.example.com"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.website ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.website && <p className="text-red-500 text-sm mt-1">{errors.website}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="fleetSize" className="block text-sm font-medium text-gray-700">
                         Fleet Size
                       </label>
-                      <input
-                        id="fleetSize"
-                        name="fleetSize"
-                        type="number"
-                        value={formData.fleetSize}
-                        onChange={handleChange}
+                <input
+                  id="fleetSize"
+                  name="fleetSize"
+                  type="number"
+                  value={formData.fleetSize}
+                  onChange={handleChange}
                         placeholder="Number of vehicles"
-                        min="0"
+                  min="0"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.fleetSize ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
-                      />
+                />
                       {errors.fleetSize && <p className="text-red-500 text-sm mt-1">{errors.fleetSize}</p>}
-                    </div>
-                  </div>
+              </div>
+            </div>
                 </div>
 
                 {/* Contact Person Information */}
@@ -790,179 +790,179 @@ const SignupForm = () => {
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Contact Person Information</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
                         Contact Name <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="contactName"
-                        name="contactName"
-                        type="text"
-                        value={formData.contactName}
-                        onChange={handleChange}
+                <input
+                  id="contactName"
+                  name="contactName"
+                  type="text"
+                  value={formData.contactName}
+                  onChange={handleChange}
                         placeholder="Enter contact person name"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.contactName && <p className="text-red-500 text-sm mt-1">{errors.contactName}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
                         Contact Email <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="contactEmail"
-                        name="contactEmail"
-                        type="email"
-                        value={formData.contactEmail}
-                        onChange={handleChange}
+                <input
+                  id="contactEmail"
+                  name="contactEmail"
+                  type="email"
+                  value={formData.contactEmail}
+                  onChange={handleChange}
                         placeholder="Enter contact email"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactEmail ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
-                        autoComplete="off"
-                      />
+                  autoComplete="off"
+                />
                       {errors.contactEmail && <p className="text-red-500 text-sm mt-1">{errors.contactEmail}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="contactPosition" className="block text-sm font-medium text-gray-700">
                         Contact Position <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="contactPosition"
-                        name="contactPosition"
-                        type="text"
-                        value={formData.contactPosition}
-                        onChange={handleChange}
+                <input
+                  id="contactPosition"
+                  name="contactPosition"
+                  type="text"
+                  value={formData.contactPosition}
+                  onChange={handleChange}
                         placeholder="e.g. Operations Manager"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactPosition ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.contactPosition && <p className="text-red-500 text-sm mt-1">{errors.contactPosition}</p>}
-                    </div>
+              </div>
                     
                     <div className="space-y-2">
                       <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700">
                         Contact Phone <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        id="contactPhone"
-                        name="contactPhone"
-                        type="tel"
-                        value={formData.contactPhone}
-                        onChange={handleChange}
+                <input
+                  id="contactPhone"
+                  name="contactPhone"
+                  type="tel"
+                  value={formData.contactPhone}
+                  onChange={handleChange}
                         placeholder="Enter contact phone number"
                         className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 text-gray-800 dark:text-gray-200 placeholder-gray-400 ${
                           errors.contactPhone ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       />
                       {errors.contactPhone && <p className="text-red-500 text-sm mt-1">{errors.contactPhone}</p>}
-                    </div>
-                  </div>
+              </div>
+            </div>
                 </div>
 
                 {/* Account Security */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                       <Shield className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Account Security</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <PasswordInput
-                      label="Password"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter your password"
-                      required
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <PasswordInput
+                label="Password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
                       error={errors.password}
-                    />
-                    <PasswordInput
-                      label="Confirm Password"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirm your password"
-                      required
+              />
+              <PasswordInput
+                label="Confirm Password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                required
                       error={errors.confirmPassword}
-                    />
-                  </div>
+              />
+            </div>
                 </div>
 
                 {/* Logistics Capabilities & Regions */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                       <MapPin className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Logistics Capabilities & Regions</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Services */}
+              {/* Services */}
                     <div className="space-y-4">
                       <h4 className="font-medium text-gray-700 flex items-center gap-2">
                         <Truck className="w-5 h-5 text-indigo-500" />
                         Transport Services <span className="text-red-500">*</span>
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl">
-                        {['Trucking', 'Shipping', 'Air Freight', 'Rail', 'Last-Mile Delivery', 'Warehousing'].map(
-                          (service) => (
+                  {['Trucking', 'Shipping', 'Air Freight', 'Rail', 'Last-Mile Delivery', 'Warehousing'].map(
+                    (service) => (
                             <label key={service} className="flex items-center text-gray-700 hover:bg-white dark:bg-gray-800 p-2 rounded-lg transition-colors cursor-pointer">
-                              <input
-                                type="checkbox"
-                                name={`services-${service}`}
-                                value={service}
-                                checked={formData.services.includes(service)}
-                                onChange={handleChange}
+                        <input
+                          type="checkbox"
+                          name={`services-${service}`}
+                          value={service}
+                          checked={formData.services.includes(service)}
+                          onChange={handleChange}
                                 className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              />
+                        />
                               <span className="flex items-center gap-2">
-                                {getServiceIcon(service)} {service}
-                              </span>
-                            </label>
-                          )
-                        )}
-                      </div>
+                          {getServiceIcon(service)} {service}
+                        </span>
+                      </label>
+                    )
+                  )}
+                </div>
                       {errors.services && <p className="text-red-500 text-sm mt-1">{errors.services}</p>}
-                    </div>
+              </div>
 
-                    {/* Regions */}
+              {/* Regions */}
                     <div className="space-y-4">
                       <h4 className="font-medium text-gray-700 flex items-center gap-2">
                         <MapPin className="w-5 h-5 text-indigo-500" />
                         Regions Served <span className="text-red-500">*</span>
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl">
-                        {['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East', 'Africa'].map(
-                          (region) => (
+                  {['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East', 'Africa'].map(
+                    (region) => (
                             <label key={region} className="flex items-center text-gray-700 hover:bg-white dark:bg-gray-800 p-2 rounded-lg transition-colors cursor-pointer">
-                              <input
-                                type="checkbox"
-                                name={`regions-${region}`}
-                                value={region}
-                                checked={formData.regions.includes(region)}
-                                onChange={handleChange}
+                        <input
+                          type="checkbox"
+                          name={`regions-${region}`}
+                          value={region}
+                          checked={formData.regions.includes(region)}
+                          onChange={handleChange}
                                 className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                              />
-                              {region}
-                            </label>
-                          )
-                        )}
-                      </div>
+                        />
+                        {region}
+                      </label>
+                    )
+                  )}
+                </div>
                       {errors.regions && <p className="text-red-500 text-sm mt-1">{errors.regions}</p>}
-                    </div>
-                  </div>
+              </div>
+            </div>
                 </div>
 
                 {/* Required Documents */}
@@ -974,28 +974,28 @@ const SignupForm = () => {
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Required Documents</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[
-                      { label: 'Business License', key: 'businessLicense' },
-                      { label: 'Insurance Certificate', key: 'insuranceCertificate' },
-                      { label: 'Government ID', key: 'governmentId' },
-                    ].map((doc) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { label: 'Business License', key: 'businessLicense' },
+                { label: 'Insurance Certificate', key: 'insuranceCertificate' },
+                { label: 'Government ID', key: 'governmentId' },
+              ].map((doc) => (
                       <div key={doc.key} className="space-y-2">
                         <label htmlFor={doc.key} className="block text-sm font-medium text-gray-700">
                           {doc.label} <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <input
-                            id={doc.key}
-                            type="file"
-                            onChange={(e) => handleFileUpload(e, doc.key)}
+                  <input
+                    id={doc.key}
+                    type="file"
+                    onChange={(e) => handleFileUpload(e, doc.key)}
                             className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-indigo-50 file:to-purple-50 file:text-indigo-700 hover:file:from-indigo-100 hover:file:to-purple-100 cursor-pointer border border-gray-300 rounded-xl p-2"
-                          />
+                  />
                         </div>
                         {errors[doc.key] && <p className="text-red-500 text-sm mt-1">{errors[doc.key]}</p>}
-                      </div>
-                    ))}
-                  </div>
+                </div>
+              ))}
+            </div>
                 </div>
 
                 {/* Final Agreements */}
@@ -1009,42 +1009,42 @@ const SignupForm = () => {
                   
                   <div className="space-y-4 p-6 bg-gray-50 rounded-xl border border-gray-200 dark:border-gray-700">
                     <label className="flex items-start text-gray-700 hover:bg-white dark:bg-gray-800 p-3 rounded-lg transition-colors cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="agreements"
-                        checked={formData.agreements}
-                        onChange={handleChange}
+                <input
+                  type="checkbox"
+                  name="agreements"
+                  checked={formData.agreements}
+                  onChange={handleChange}
                         className="mt-1 mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        required
-                      />
+                  required
+                />
                       <span className="text-sm">
                         I certify that all information provided is accurate and complete. <span className="text-red-500">*</span>
                       </span>
-                    </label>
+              </label>
                     {errors.agreements && <p className="text-red-500 text-sm mt-1">{errors.agreements}</p>}
                     
                     <label className="flex items-start text-gray-700 hover:bg-white dark:bg-gray-800 p-3 rounded-lg transition-colors cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="terms"
-                        checked={formData.terms}
-                        onChange={handleChange}
+                <input
+                  type="checkbox"
+                  name="terms"
+                  checked={formData.terms}
+                  onChange={handleChange}
                         className="mt-1 mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        required
-                      />
+                  required
+                />
                       <span className="text-sm">
                         I agree to RoamEase's Terms & Conditions and Privacy Policy. <span className="text-red-500">*</span>
                       </span>
-                    </label>
+              </label>
                     {errors.terms && <p className="text-red-500 text-sm mt-1">{errors.terms}</p>}
-                  </div>
+            </div>
                 </div>
 
                 {/* Submit Button */}
                 <div className="pt-6">
-                  <button
-                    type="submit"
-                    disabled={loading}
+            <button
+              type="submit"
+              disabled={loading}
                     className={`w-full py-4 px-6 rounded-xl text-white font-semibold text-lg transition-all duration-300 transform ${
                       loading 
                         ? 'bg-gray-400 cursor-not-allowed' 
@@ -1059,7 +1059,7 @@ const SignupForm = () => {
                     ) : (
                       'Submit Application'
                     )}
-                  </button>
+            </button>
                   
                   {error && (
                     <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -1067,15 +1067,15 @@ const SignupForm = () => {
                     </div>
                   )}
                   
-                  <p className="mt-6 text-center text-gray-600">
-                    Already have an account?{' '}
+            <p className="mt-6 text-center text-gray-600">
+              Already have an account?{' '}
                     <Link to="/login" className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline transition-colors">
                       Sign in here
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            )}
+              </Link>
+            </p>
+          </div>
+        </form>
+      )}
           </div>
         </div>
       </div>

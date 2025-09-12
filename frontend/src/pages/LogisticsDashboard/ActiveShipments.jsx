@@ -122,30 +122,30 @@ const ActiveShipments = () => {
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <Truck className="text-white text-3xl" />
+                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Truck className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Active Shipments</h1>
-                  <p className="text-indigo-100 text-lg">Manage your accepted bids and track deliveries</p>
+                  <h1 className="text-2xl font-bold text-white">Active Shipments</h1>
+                  <p className="text-indigo-100 text-base">Manage your accepted bids and track deliveries</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                  <span className="text-white font-semibold text-lg">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
+                  <span className="text-white font-semibold text-base">
                     {activeShipments.length} active
                   </span>
                 </div>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                 >
-                  <RefreshCw size={16} />
-                  Refresh
+                  <RefreshCw size={16} className="text-white" />
+                  <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
             </div>
@@ -260,15 +260,6 @@ const ActiveShipments = () => {
                             <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{shipment.acceptedBid?.eta}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
-                          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <Calendar className="text-orange-600" size={16} />
-                          </div>
-                          <div>
-                            <div className="text-xs text-gray-500 font-medium">Pickup Date</div>
-                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">N/A</div>
-                          </div>
-                        </div>
                       </div>
 
                       {/* Shipper Info */}
@@ -323,10 +314,6 @@ const ActiveShipments = () => {
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Route</div>
                             <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCity} → {shipment.deliveryCity}</div>
-                          </div>
-                          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
-                            <div className="text-sm text-gray-600 mb-1">Pickup Date</div>
-                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Delivery Date</div>
@@ -457,15 +444,6 @@ const ActiveShipments = () => {
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Country</div>
                                   <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCountry}</div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                  <Calendar className="text-blue-600" size={16} />
-                                </div>
-                                <div>
-                                  <div className="text-sm text-gray-500 font-medium">Pickup Date</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">

@@ -18,6 +18,26 @@ const UserManageBidsPage = () => {
   const { bids, loading, error } = useSelector(state => state.bid);
   const { user } = useSelector((state) => state.auth);
 
+  // Currency symbol helper function
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'AUD': 'A$',
+      'JPY': '¥',
+      'CHF': 'CHF',
+      'CNY': '¥',
+      'INR': '₹',
+      'BRL': 'R$',
+      'MXN': '$',
+      'ZAR': 'R',
+      'NGN': '#'
+    };
+    return symbols[currency] || '$';
+  };
+
   const [selectedBid, setSelectedBid] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -188,14 +208,14 @@ const UserManageBidsPage = () => {
         <div className="mb-8">
           
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                   <TrendingUp className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Manage Bids</h1>
-                  <p className="text-indigo-100">Review and manage all bids on your shipments</p>
+                  <h1 className="text-2xl font-bold text-white">Manage Bids</h1>
+                  <p className="text-indigo-100 text-sm">Review and manage all bids on your shipments</p>
                 </div>
               </div>
             </div>
@@ -239,10 +259,12 @@ const UserManageBidsPage = () => {
                   <div className="space-y-6">
                     {/* Bid Price */}
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                        ${selectedBid.price?.toFixed(2) || 'N/A'}
+                      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                        {getCurrencySymbol(selectedBid.currency || 'USD')}{selectedBid.price?.toFixed(2) || 'N/A'}
                       </div>
-                      <div className="text-lg text-gray-600">Bid Amount</div>
+                      <div className="text-lg text-gray-600">
+                        Bid Amount {selectedBid.currency && `(${selectedBid.currency})`}
+                      </div>
                     </div>
 
                     {/* Shipment Info */}
@@ -270,7 +292,8 @@ const UserManageBidsPage = () => {
                         {selectedBid.shipment?.budget && (
                           <div className="text-sm text-gray-600 flex items-center gap-2">
                             <DollarSign size={14} />
-                            Budget: ${selectedBid.shipment.budget}
+                            Budget: {getCurrencySymbol(selectedBid.shipment.budgetCurrency || 'USD')}{selectedBid.shipment.budget}
+                            {selectedBid.shipment.budgetCurrency && ` (${selectedBid.shipment.budgetCurrency})`}
                           </div>
                         )}
                       </div>
@@ -286,15 +309,6 @@ const UserManageBidsPage = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                        <Calendar className="text-green-500" size={20} />
-                        <div>
-                          <div className="font-medium text-gray-800 dark:text-gray-200">Pickup Date</div>
-                          <div className="text-gray-600">
-                            {selectedBid.pickupDate ? new Date(selectedBid.pickupDate).toLocaleDateString() : 'N/A'}
-                          </div>
-                        </div>
-                      </div>
 
                       {selectedBid.message && (
                         <div className="p-4 bg-blue-50 rounded-xl">
@@ -459,7 +473,8 @@ const UserManageBidsPage = () => {
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                            ${bid.price?.toFixed(2) || 'N/A'}
+                            {getCurrencySymbol(bid.currency || 'USD')}{bid.price?.toFixed(2) || 'N/A'}
+                            {bid.currency && <span className="text-sm text-gray-500 ml-1">({bid.currency})</span>}
                           </div>
                           <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(bid.status)}`}>
                             {getStatusIcon(bid.status)}

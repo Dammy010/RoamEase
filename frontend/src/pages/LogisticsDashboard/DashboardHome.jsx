@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 // Removed: import Sidebar from "../../components/shared/Sidebar";
 import { FaTruck, FaFileUpload, FaList, FaGavel, FaComments, FaUserCircle, FaWallet, FaRedo, FaHistory } from "react-icons/fa";
+import { ArrowRight } from "lucide-react";
 import { initSocket } from "../../services/socket";
 import { ProfilePictureModal } from "../../components/forms/ProfileForm"; // New: Import ProfilePictureModal
 import { getLogisticsDisplayName, getVerificationStatusText } from "../../utils/logisticsUtils";
@@ -18,6 +19,14 @@ const LogisticsDashboardHome = () => {
   const { isDark } = useTheme();
   const { user } = useSelector((state) => state.auth);
   const { dashboardData, loading: countsLoading, history, historyLoading, historyError } = useSelector((state) => state.logistics);
+  
+  // Fallback data to ensure counts are always shown
+  const safeDashboardData = {
+    availableShipments: dashboardData?.availableShipments ?? 0,
+    myBids: dashboardData?.myBids ?? 0,
+    activeShipments: dashboardData?.activeShipments ?? 0,
+    ...dashboardData
+  };
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
 
   // Function to refresh user profile data
@@ -38,6 +47,8 @@ const LogisticsDashboardHome = () => {
 
   // Simple test component to debug the issue
   console.log("LogisticsDashboardHome rendering with user:", user);
+  console.log("Dashboard data:", dashboardData);
+  console.log("Available shipments count:", dashboardData?.availableShipments);
 
   if (!user) {
     return (
@@ -97,7 +108,7 @@ const LogisticsDashboardHome = () => {
       icon: <FaTruck size={28} />,
       color: "from-green-500 to-green-600",
       path: "/logistics/available-shipments",
-      notification: dashboardData?.availableShipments || 0,
+      notification: safeDashboardData.availableShipments,
     },
     {
       name: "My Bids",
@@ -105,7 +116,7 @@ const LogisticsDashboardHome = () => {
       icon: <FaGavel size={28} />,
       color: "from-blue-500 to-blue-600",
       path: "/logistics/my-bids",
-      notification: dashboardData?.myBids || 0,
+      notification: safeDashboardData.myBids,
     },
     {
       name: "Active Shipments",
@@ -113,7 +124,7 @@ const LogisticsDashboardHome = () => {
       icon: <FaList size={28} />,
       color: "from-purple-500 to-purple-600",
       path: "/logistics/active-shipments",
-      notification: dashboardData?.activeShipments || 0,
+      notification: safeDashboardData.activeShipments,
     },
   ];
 
@@ -122,7 +133,7 @@ const LogisticsDashboardHome = () => {
     return (
       <div className="p-6 md:p-10">
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Logistics Dashboard</h2>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Logistics Dashboard</h2>
           <p className="text-gray-600 mb-4">Loading user data...</p>
           <button
             onClick={handleRefreshProfile}
@@ -142,24 +153,24 @@ const LogisticsDashboardHome = () => {
   }
 
   return (
-    <main className="p-6 md:p-10 bg-white dark:bg-gray-900 min-h-screen">
+    <main className="p-6 bg-white dark:bg-gray-900 min-h-screen">
       {/* Welcome Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl mb-8">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl shadow-lg mb-6">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
         
-        <div className="relative p-8 md:p-12">
+        <div className="relative p-6 md:p-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             {/* Left Content */}
             <div className="flex-1 text-white">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <FaTruck className="text-white text-xl" />
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                  <FaTruck className="text-white w-5 h-5" />
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold">
+                  <h1 className="text-xl md:text-2xl font-bold">
                     Welcome back, {logisticsUser.name}
                   </h1>
                   <div className="flex items-center gap-2 mt-1">
@@ -175,21 +186,21 @@ const LogisticsDashboardHome = () => {
                 </div>
               </div>
               
-              <p className="text-blue-100 text-lg mb-6 max-w-2xl leading-relaxed">
+              <p className="text-blue-100 text-sm mb-4 max-w-2xl leading-relaxed">
                 Manage your logistics operations efficiently. Track shipments, place bids, and grow your business with our comprehensive platform.
               </p>
               
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={handleRefreshProfile}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm"
                 >
-                  <FaRedo size={14} />
+                  <FaRedo className="w-4 h-4" />
                   Refresh Profile
                 </button>
                 <button
                   onClick={() => navigate('/logistics/available-shipments')}
-                  className="px-6 py-2 bg-white text-indigo-700 rounded-xl hover:bg-blue-50 transition-all duration-300 font-semibold shadow-lg"
+                  className="px-4 py-2 bg-white text-indigo-700 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium shadow-md text-sm"
                 >
                   Browse Shipments
                 </button>
@@ -203,7 +214,7 @@ const LogisticsDashboardHome = () => {
                   <img
                     src={logisticsUser.avatar}
                     alt="Logistics Partner Avatar"
-                    className="w-24 h-24 rounded-2xl border-4 border-white/30 object-cover cursor-pointer shadow-2xl hover:scale-105 transition-transform duration-300"
+                    className="w-20 h-20 rounded-xl border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
                     onClick={() => setShowProfilePicModal(true)}
                     onError={(e) => {
                       console.error("Profile picture failed to load:", e.target.src);
@@ -215,7 +226,7 @@ const LogisticsDashboardHome = () => {
                 
                 {/* Fallback avatar */}
                 <div 
-                  className={`w-24 h-24 rounded-2xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-3xl font-bold shadow-2xl ${logisticsUser.avatar ? 'hidden' : 'flex'}`}
+                  className={`w-20 h-20 rounded-xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold shadow-lg ${logisticsUser.avatar ? 'hidden' : 'flex'}`}
                   style={{ display: logisticsUser.avatar ? 'none' : 'flex' }}
                 >
                   {logisticsUser.name ? logisticsUser.name[0].toUpperCase() : 'L'}
@@ -234,8 +245,8 @@ const LogisticsDashboardHome = () => {
       {/* Modules Section */}
       <section className="mt-8">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quick Actions</h2>
-          <p className="text-gray-600">Access your most important features and tools</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Quick Actions</h2>
+          <p className="text-gray-600 text-sm">Access your most important features and tools</p>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -243,39 +254,37 @@ const LogisticsDashboardHome = () => {
             <div
               key={idx}
               onClick={() => navigate(mod.path)}
-              className="group relative cursor-pointer p-6 rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden"
+              className="group relative cursor-pointer p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 hover:shadow-lg hover:border-indigo-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
-              {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${mod.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-              
               {/* Count Badge */}
-              {mod.notification && mod.notification > 0 && (
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg animate-pulse">
+              {mod.notification >= 0 && (
+                <div className={`absolute top-4 right-4 w-8 h-8 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 ${
+                  mod.notification > 0 
+                    ? 'bg-gradient-to-r from-red-500 to-pink-600' 
+                    : 'bg-gray-400'
+                }`}>
                   {mod.notification}
                 </div>
               )}
               
-              <div className="relative z-10">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${mod.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    {mod.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
-                      {mod.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {mod.description}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  {mod.icon}
                 </div>
-                
-                {/* Action Arrow */}
-                <div className="flex items-center justify-end">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-indigo-100 flex items-center justify-center transition-colors duration-300">
-                    <svg className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                    {mod.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    {mod.description}
+                  </p>
+                  {/* Debug info */}
+                  <p className="text-xs text-gray-400 mb-2">
+                    Count: {mod.notification}
+                  </p>
+                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                    <span>Access Module</span>
+                    <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </div>
               </div>
@@ -288,14 +297,14 @@ const LogisticsDashboardHome = () => {
       <section className="mt-12">
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-8">
+          <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                   <FaHistory className="text-white text-xl" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Recent Delivery History</h2>
+                  <h2 className="text-xl font-bold text-white">Recent Delivery History</h2>
                   <p className="text-indigo-100">Track your completed deliveries and performance</p>
                 </div>
               </div>
@@ -328,8 +337,8 @@ const LogisticsDashboardHome = () => {
               </div>
             ) : historyError ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-red-500 text-2xl">⚠️</span>
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-red-500 text-xl">⚠️</span>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Error Loading History</h3>
                 <p className="text-gray-600 mb-6">{historyError}</p>
@@ -400,10 +409,8 @@ const LogisticsDashboardHome = () => {
                           <div className="text-xs text-gray-500 font-medium">Your Bid</div>
                         </div>
                         <div className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
-                          shipment.status === 'completed' || shipment.status === 'received'
+                          shipment.status === 'completed' || shipment.status === 'delivered'
                             ? 'bg-green-100 text-green-800 border border-green-200'
-                            : shipment.status === 'delivered'
-                            ? 'bg-orange-100 text-orange-800 border border-orange-200'
                             : 'bg-gray-100 text-gray-800 border border-gray-200'
                         }`}>
                           {shipment.status.charAt(0).toUpperCase() + shipment.status.slice(1)}

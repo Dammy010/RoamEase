@@ -50,19 +50,21 @@ const shipmentSchema = new mongoose.Schema(
     agreeToPolicy: { type: Boolean, default: false },
 
     // Status
-    status: { type: String, enum: ['open', 'accepted', 'completed', 'delivered', 'received'], default: 'open' },
+    status: { type: String, enum: ['open', 'accepted', 'completed', 'delivered'], default: 'open' },
     deliveryDate: { type: Date }, // Date when the shipment was delivered
     rating: { type: Number, min: 1, max: 5 }, // User rating for the shipment (1-5 stars)
     feedback: { type: String }, // User feedback comments
+    ratedAt: { type: Date }, // When the shipment was rated
     
     // Logistics Delivery Tracking
     deliveredByLogistics: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Logistics company that delivered
     deliveredAt: { type: Date }, // When logistics marked as delivered
     
-    // User Receipt Confirmation
-    awaitingUserConfirmation: { type: Boolean, default: false }, // Flag to indicate user needs to confirm receipt
-    receivedAt: { type: Date }, // When user marked as received
-    receivedByUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who confirmed receipt
+    // User Delivery Confirmation
+    awaitingUserConfirmation: { type: Boolean, default: false }, // Flag to indicate user needs to confirm delivery
+    deliveredByUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who confirmed delivery
+    completedAt: { type: Date }, // When user confirmed delivery
+    completedByUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who completed the delivery
   },
   { timestamps: true }
 );

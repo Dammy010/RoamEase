@@ -214,7 +214,6 @@ exports.platformAnalytics = async (req, res) => {
       acceptedShipments,
       completedShipments,
       deliveredShipments,
-      receivedShipments,
       totalBids,
       disputesOpen,
     ] = await Promise.all([
@@ -227,13 +226,12 @@ exports.platformAnalytics = async (req, res) => {
       Shipment.countDocuments({ status: "accepted" }),
       Shipment.countDocuments({ status: "completed" }),
       Shipment.countDocuments({ status: "delivered" }),
-      Shipment.countDocuments({ status: "received" }),
       Bid.countDocuments({}),
       Dispute.countDocuments({ status: "open" }),
     ]);
 
-    // Calculate completed shipments (both completed and received statuses)
-    const completedShipmentsTotal = completedShipments + receivedShipments;
+    // Calculate completed shipments (both completed and delivered statuses)
+    const completedShipmentsTotal = completedShipments + deliveredShipments;
 
     res.json({
       users: { total: totalUsers },
@@ -246,17 +244,15 @@ exports.platformAnalytics = async (req, res) => {
         total: totalShipments,
         open: openShipments,
         accepted: acceptedShipments,
-        completed: completedShipmentsTotal, // Now includes both completed and received
+        completed: completedShipmentsTotal, // Now includes both completed and delivered
         completedOnly: completedShipments,
         delivered: deliveredShipments,
-        received: receivedShipments,
         // Status breakdown for detailed analytics
         statusBreakdown: {
           open: openShipments,
           accepted: acceptedShipments,
           completed: completedShipments,
-          delivered: deliveredShipments,
-          received: receivedShipments
+          delivered: deliveredShipments
         }
       },
       bids: { total: totalBids },
@@ -476,7 +472,6 @@ exports.dashboardSummary = async (req, res) => {
           acceptedShipments,
           completedShipments,
           deliveredShipments,
-          receivedShipments,
           totalBids,
           disputesOpen,
           normalUsersCount,
@@ -496,8 +491,8 @@ exports.dashboardSummary = async (req, res) => {
           User.countDocuments({ role: "user" }), // Fetch normal users count
         ]);
 
-        // Calculate completed shipments (both completed and received statuses)
-        const completedShipmentsTotal = completedShipments + receivedShipments;
+        // Calculate completed shipments (both completed and delivered statuses)
+        const completedShipmentsTotal = completedShipments + deliveredShipments;
 
         console.log('DEBUG - dashboardSummary: Fetched verifiedLogisticsCount:', verifiedLogisticsCount);
         console.log('DEBUG - dashboardSummary: Fetched pendingLogisticsCount:', pendingLogisticsCount);
@@ -509,16 +504,14 @@ exports.dashboardSummary = async (req, res) => {
             total: totalShipments, 
             open: openShipments, 
             accepted: acceptedShipments,
-            completed: completedShipmentsTotal, // Now includes both completed and received
+            completed: completedShipmentsTotal, // Now includes both completed and delivered
             completedOnly: completedShipments,
             delivered: deliveredShipments,
-            received: receivedShipments,
             statusBreakdown: {
               open: openShipments,
               accepted: acceptedShipments,
               completed: completedShipments,
-              delivered: deliveredShipments,
-              received: receivedShipments
+              delivered: deliveredShipments
             }
           },
           bids: { total: totalBids },

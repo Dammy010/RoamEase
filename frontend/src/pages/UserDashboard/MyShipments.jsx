@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { fetchUserShipments, addShipmentRealtime, updateShipmentRealtime, deleteShipment, markShipmentAsReceivedByUser } from "../../redux/slices/shipmentSlice";
+import { fetchUserShipments, addShipmentRealtime, updateShipmentRealtime, deleteShipment, markShipmentAsDeliveredByUser } from "../../redux/slices/shipmentSlice";
 import { getSocket } from '../../services/socket';
 import { toast } from 'react-toastify';
 import { 
@@ -36,18 +36,18 @@ const MyShipments = () => {
     }
   };
 
-  const handleMarkAsReceived = (shipmentId) => {
+  const handleMarkAsDelivered = (shipmentId) => {
     setSelectedShipmentId(shipmentId);
     setShowConfirmPopup(true);
   };
 
-  const confirmMarkAsReceived = async () => {
+  const confirmMarkAsDelivered = async () => {
     setShowConfirmPopup(false);
-    const result = await dispatch(markShipmentAsReceivedByUser(selectedShipmentId));
-    if (markShipmentAsReceivedByUser.fulfilled.match(result)) {
-      toast.success('Shipment marked as received successfully!');
+    const result = await dispatch(markShipmentAsDeliveredByUser(selectedShipmentId));
+    if (markShipmentAsDeliveredByUser.fulfilled.match(result)) {
+      toast.success('Shipment marked as delivered successfully!');
     } else {
-      const errorMessage = result.payload || 'Failed to mark shipment as received';
+      const errorMessage = result.payload || 'Failed to mark shipment as delivered';
       toast.error(errorMessage);
     }
     setSelectedShipmentId(null);
@@ -159,7 +159,7 @@ const MyShipments = () => {
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
 
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200 dark:text-white">My Shipments</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 dark:text-white">My Shipments</h2>
 
         {/* Loading */}
         {loading && (
@@ -174,10 +174,10 @@ const MyShipments = () => {
         {shipments.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Package className="text-indigo-500 text-4xl" />
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="text-indigo-500 text-2xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 No Shipments Yet
               </h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -322,12 +322,12 @@ const MyShipments = () => {
                         </button>
                         {shipment.status === 'delivered' && shipment.awaitingUserConfirmation && (
                           <button
-                            onClick={() => handleMarkAsReceived(shipment._id)}
+                            onClick={() => handleMarkAsDelivered(shipment._id)}
                             className="px-4 py-2 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2"
-                            title="Mark as Received"
+                            title="Mark as Delivered"
                           >
                             <CheckCircle size={16} />
-                            Received
+                            Delivered
                           </button>
                         )}
                         {(shipment.status === 'open' || shipment.status === 'pending') && (
@@ -374,10 +374,10 @@ const MyShipments = () => {
               <div className="p-6">
                 <div className="text-center mb-6">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-3xl">📦</span>
+                    <span className="text-2xl">📦</span>
                   </div>
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                    Got it! Mark this shipment as received?
+                    Got it! Mark this shipment as delivered?
                   </h4>
                   <p className="text-gray-600 text-sm">
                     This will confirm that you have received the shipment and update its status.
@@ -393,12 +393,12 @@ const MyShipments = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={confirmMarkAsReceived}
+                    onClick={confirmMarkAsDelivered}
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <CheckCircle size={16} />
-                      Confirm Receipt
+                      Confirm Delivery
                     </div>
                   </button>
                 </div>

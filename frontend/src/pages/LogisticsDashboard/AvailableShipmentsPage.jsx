@@ -60,15 +60,15 @@ const AvailableShipmentsPage = () => {
   if (error) return <div className="text-center p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="p-6 md:p-10">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">Available Shipments for Bidding</h2>
+    <div className="p-6">
+      <h2 className="text-xl font-bold text-gray-800 mb-6">Available Shipments for Bidding</h2>
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
         {availableShipments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableShipments.map(shipment => (
               <div key={shipment._id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-blue-700 mb-2">{shipment.shipmentTitle}</h3>
+                  <h3 className="text-lg font-semibold text-blue-700 mb-2">{shipment.shipmentTitle}</h3>
                   <p className="text-sm text-gray-700"><span className="font-medium">From:</span> {shipment.pickupAddress}, {shipment.pickupCity}, {shipment.pickupCountry}</p>
                   <p className="text-sm text-gray-700"><span className="font-medium">To:</span> {shipment.deliveryAddress}, {shipment.deliveryCity}, {shipment.deliveryCountry}</p>
                   <p className="text-sm text-gray-600 mt-2"><span className="font-medium">Goods:</span> {shipment.descriptionOfGoods} ({shipment.typeOfGoods})</p>
@@ -79,7 +79,7 @@ const AvailableShipmentsPage = () => {
                   <p className="text-xs text-gray-500 mt-3"><span className="font-medium">Posted by:</span> {shipment.user.name || shipment.user.email} (Company: {shipment.user.companyName || 'N/A'})</p>
                 </div>
                 <button 
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors self-end"
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors self-end text-sm"
                   onClick={() => openBidModal(shipment)}
                 >
                   Bid Now

@@ -4,11 +4,12 @@ const User = require('../models/User');
 const Conversation = require('../models/Conversation'); // New: Import Conversation model
 const { createConversation: chatCreateConversation } = require('../controllers/chatController'); // New: Import createConversation from chatController
 const { getIO } = require('../socket'); // New: Import getIO to access Socket.io instance
+const NotificationService = require('../services/notificationService'); // Import NotificationService
 
 // Create a bid for a shipment (only carriers/logistics)
 const createBid = async (req, res) => {
   try {
-    const { shipmentId, price, eta, message } = req.body;
+    const { shipmentId, price, currency, eta, message } = req.body;
 
     // --- DEBUGGING LOGS ---
     console.log("DEBUG: createBid - req.body:", req.body);
@@ -43,11 +44,27 @@ const createBid = async (req, res) => {
     const shipment = await Shipment.findById(shipmentId);
     if (!shipment) return res.status(404).json({ message: 'Shipment not found' });
 
+    // Check if logistics provider has already placed a bid on this shipment
+    const existingBid = await Bid.findOne({
+      shipment: shipmentId,
+      carrier: req.user._id,
+      status: { $in: ['pending', 'accepted'] } // Only check pending and accepted bids
+    });
+
+    if (existingBid) {
+      return res.status(400).json({ 
+        message: 'You have already placed a bid on this shipment',
+        existingBidId: existingBid._id,
+        details: 'You can only place one bid per shipment. You can edit your existing bid instead.'
+      });
+    }
+
     const bid = await Bid.create({
       shipment: shipmentId,
       carrier: req.user._id,
       role: 'carrier', // Always set as 'carrier' for the schema
       price,
+      currency: currency || 'USD', // Default to USD if not provided
       eta,
       message: message || '',
     });
@@ -56,6 +73,48 @@ const createBid = async (req, res) => {
     const populatedBid = await Bid.findById(bid._id)
       .populate('carrier', 'name email companyName country')
       .populate('shipment');
+
+    // Create notification for the shipment owner about the new bid
+    try {
+      console.log('📦 Creating notification for new bid:', bid._id);
+      
+      const notificationData = {
+        recipient: shipment.user,
+        type: 'bid_received',
+        title: 'New Bid Received',
+        message: `You received a new bid of ${populatedBid.carrier.companyName || populatedBid.carrier.name} for your shipment "${shipment.shipmentTitle}".`,
+        priority: 'high',
+        relatedEntity: {
+          type: 'bid',
+          id: bid._id
+        },
+        metadata: {
+          bidId: bid._id,
+          shipmentId: shipment._id,
+          shipmentTitle: shipment.shipmentTitle,
+          bidderId: req.user._id,
+          bidderName: populatedBid.carrier.companyName || populatedBid.carrier.name,
+          bidPrice: price,
+          bidCurrency: currency || 'USD',
+          bidEta: eta,
+          bidMessage: message
+        },
+        actions: [
+          {
+            label: 'View Bid',
+            action: 'view',
+            url: `/shipments/${shipment._id}`,
+            method: 'GET'
+          }
+        ]
+      };
+
+      await NotificationService.createNotification(notificationData);
+      console.log('✅ Notification created for new bid');
+    } catch (notificationError) {
+      console.error('❌ Error creating bid notification:', notificationError);
+      // Don't fail the bid creation if notification creation fails
+    }
 
     // New: Create or get conversation after bid is placed
     const conversationData = {
@@ -89,6 +148,12 @@ const createBid = async (req, res) => {
             shipmentId: shipmentId,
             conversationId: conversation._id,
             bid: populatedBid.toObject() // Include bid details for the notification
+        });
+        
+        // Emit notification refresh event to the user
+        io.to(shipment.user.toString()).emit('notification-refresh', {
+            type: 'bid_received',
+            message: 'You have a new bid notification'
         });
 
     } else {
@@ -352,7 +417,7 @@ const getAllBids = async (req, res) => {
 const updateBid = async (req, res) => {
   try {
     const { id } = req.params;
-    const { price, eta, message } = req.body;
+    const { price, currency, eta, message } = req.body;
 
     const bid = await Bid.findById(id);
     if (!bid) {
@@ -371,6 +436,7 @@ const updateBid = async (req, res) => {
 
     // Update bid fields
     if (price !== undefined) bid.price = price;
+    if (currency !== undefined) bid.currency = currency;
     if (eta !== undefined) bid.eta = eta;
     if (message !== undefined) bid.message = message;
 
@@ -453,6 +519,225 @@ const markBidAsSeen = async (req, res) => {
   }
 };
 
+// Request price update for a bid (only shipper)
+const requestPriceUpdate = async (req, res) => {
+  try {
+    const { requestedPrice, currency } = req.body;
+    const bidId = req.params.id;
+    const userId = req.user._id;
+
+    if (!requestedPrice || requestedPrice <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Valid requested price is required' 
+      });
+    }
+
+    const bid = await Bid.findById(bidId).populate('shipment', 'user shipmentTitle');
+    if (!bid) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Bid not found' 
+      });
+    }
+
+    // Check if user owns the shipment
+    if (bid.shipment.user.toString() !== userId.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Not authorized to request price update for this bid' 
+      });
+    }
+
+    // Check if bid is still pending
+    if (bid.status !== 'pending') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Can only request price update for pending bids' 
+      });
+    }
+
+    // Update bid with price update request
+    bid.priceUpdateRequest = {
+      requestedPrice: parseFloat(requestedPrice),
+      requestedCurrency: currency || bid.currency,
+      requestedAt: new Date(),
+      requestedBy: userId,
+      status: 'pending',
+    };
+
+    await bid.save();
+
+    // Create notification for logistics company
+    try {
+      const NotificationService = require('../services/notificationService');
+      
+      const notificationData = {
+        recipient: bid.carrier,
+        type: 'price_update_request',
+        title: 'Price Update Request',
+        message: `The shipper has requested a price update for shipment "${bid.shipment.shipmentTitle}". They prefer ${currency || bid.currency} ${parseFloat(requestedPrice).toLocaleString()}.`,
+        priority: 'high',
+        relatedEntity: {
+          type: 'bid',
+          id: bid._id
+        },
+        metadata: {
+          bidId: bid._id,
+          shipmentId: bid.shipment._id,
+          shipmentTitle: bid.shipment.shipmentTitle,
+          currentPrice: bid.price,
+          currentCurrency: bid.currency,
+          requestedPrice: parseFloat(requestedPrice),
+          requestedCurrency: currency || bid.currency,
+          requestedBy: userId
+        },
+        actions: [
+          {
+            label: 'View Bid',
+            action: 'view',
+            url: `/logistics/my-bids`,
+            method: 'GET'
+          },
+          {
+            label: 'Update Price',
+            action: 'update',
+            url: `/bids/${bid._id}/update-price`,
+            method: 'PUT'
+          }
+        ]
+      };
+
+      await NotificationService.createNotification(notificationData);
+      console.log('✅ Price update request notification created for logistics company');
+    } catch (notificationError) {
+      console.error('❌ Error creating price update request notification:', notificationError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Price update request sent successfully',
+      bid: bid
+    });
+
+  } catch (error) {
+    console.error('Error requesting price update:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error requesting price update', 
+      error: error.message 
+    });
+  }
+};
+
+// Respond to price update request (only logistics company)
+const respondToPriceUpdateRequest = async (req, res) => {
+  try {
+    const { response, newPrice, message } = req.body;
+    const bidId = req.params.id;
+    const userId = req.user._id;
+
+    if (!response || !['accepted', 'rejected'].includes(response)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Valid response (accepted/rejected) is required' 
+      });
+    }
+
+    const bid = await Bid.findById(bidId).populate('shipment', 'user shipmentTitle');
+    if (!bid) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Bid not found' 
+      });
+    }
+
+    // Check if user is the carrier
+    if (bid.carrier.toString() !== userId.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Not authorized to respond to this price update request' 
+      });
+    }
+
+    // Check if there's a pending price update request
+    if (!bid.priceUpdateRequest || bid.priceUpdateRequest.status !== 'pending') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No pending price update request found' 
+      });
+    }
+
+    // Update price update request status
+    bid.priceUpdateRequest.status = response;
+    bid.priceUpdateRequest.responseMessage = message || '';
+
+    // If accepted and new price provided, update the bid price
+    if (response === 'accepted' && newPrice && newPrice > 0) {
+      bid.price = parseFloat(newPrice);
+      if (bid.priceUpdateRequest.requestedCurrency) {
+        bid.currency = bid.priceUpdateRequest.requestedCurrency;
+      }
+    }
+
+    await bid.save();
+
+    // Create notification for shipper
+    try {
+      const NotificationService = require('../services/notificationService');
+      
+      const notificationData = {
+        recipient: bid.shipment.user,
+        type: 'price_update_response',
+        title: 'Price Update Response',
+        message: `The logistics company has ${response} your price update request for shipment "${bid.shipment.shipmentTitle}".`,
+        priority: 'medium',
+        relatedEntity: {
+          type: 'bid',
+          id: bid._id
+        },
+        metadata: {
+          bidId: bid._id,
+          shipmentId: bid.shipment._id,
+          shipmentTitle: bid.shipment.shipmentTitle,
+          response: response,
+          newPrice: newPrice || bid.price,
+          currency: bid.currency,
+          message: message || '',
+          respondedBy: userId
+        },
+        actions: [
+          {
+            label: 'View Bid',
+            action: 'view',
+            url: `/user/manage-bids/${bid.shipment._id}`,
+            method: 'GET'
+          }
+        ]
+      };
+
+      await NotificationService.createNotification(notificationData);
+      console.log('✅ Price update response notification created for shipper');
+    } catch (notificationError) {
+      console.error('❌ Error creating price update response notification:', notificationError);
+    }
+
+    res.json({
+      success: true,
+      message: `Price update request ${response} successfully`,
+      bid: bid
+    });
+
+  } catch (error) {
+    console.error('Error responding to price update request:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error responding to price update request', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createBid,
   getBidsForShipment,
@@ -465,4 +750,6 @@ module.exports = {
   deleteBid,
   markBidAsSeen,
   getBidsOnMyShipments, // New: Export getBidsOnMyShipments
+  requestPriceUpdate,
+  respondToPriceUpdateRequest,
 };

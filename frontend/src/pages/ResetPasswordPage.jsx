@@ -157,14 +157,14 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
-            {step === 1 ? <Key className="h-6 w-6 text-white" /> : <Lock className="h-6 w-6 text-white" />}
+          <div className="mx-auto h-10 w-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+            {step === 1 ? <Key className="h-5 w-5 text-white" /> : <Lock className="h-5 w-5 text-white" />}
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-4 text-xl font-bold text-gray-900">
             {step === 1 ? 'Enter Reset Code' : 'Reset Your Password'}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -210,7 +210,7 @@ const ResetPasswordPage = () => {
 
         {/* Step 2: Reset Password */}
         {step === 2 && (
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-4">
               {/* New Password */}
               <div>

@@ -2,10 +2,10 @@ import React from 'react';
 
 const PrivacyPolicyPage = () => {
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-8">Privacy Policy</h1>
-        <p className="text-lg text-gray-600 text-center mb-12">
+    <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-gray-900 text-center mb-6">Privacy Policy</h1>
+        <p className="text-base text-gray-600 text-center mb-8">
           Your privacy is important to us. This Privacy Policy explains how RoamEase collects, uses, and protects your information.
         </p>
 

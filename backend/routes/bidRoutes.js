@@ -13,6 +13,8 @@ const {
   deleteBid,
   markBidAsSeen,
   getBidsOnMyShipments, // Added getBidsOnMyShipments
+  requestPriceUpdate,
+  respondToPriceUpdateRequest,
 } = require('../controllers/bidController');
 
 console.log('createBid:', createBid);
@@ -52,5 +54,11 @@ router.delete('/:id', protect, allowRoles('carrier', 'logistics'), deleteBid);
 
 // Mark bid as seen by shipper
 router.put('/:id/seen', protect, allowRoles('user', 'admin'), markBidAsSeen);
+
+// Request price update for a bid (only shipper)
+router.post('/:id/request-price-update', protect, allowRoles('user'), requestPriceUpdate);
+
+// Respond to price update request (only logistics)
+router.put('/:id/respond-price-update', protect, allowRoles('carrier', 'logistics'), respondToPriceUpdateRequest);
 
 module.exports = router;

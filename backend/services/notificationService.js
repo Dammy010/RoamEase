@@ -325,10 +325,10 @@ class NotificationService {
     });
   }
 
-  static async notifyShipmentReceived(shipment, logisticsUser) {
+  static async notifyShipmentDelivered(shipment, logisticsUser) {
     return await this.createNotification({
       recipient: logisticsUser._id,
-      type: 'shipment_received',
+      type: 'shipment_delivered',
       title: 'Delivery Confirmed',
       message: `The user has confirmed receipt of your delivery for "${shipment.shipmentTitle}".`,
       relatedEntity: { type: 'shipment', id: shipment._id },

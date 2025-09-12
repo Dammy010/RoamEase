@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../contexts/ThemeContext';
 import { fetchAvailableShipments, addShipmentRealtime, updateShipmentRealtime } from '../../redux/slices/shipmentSlice';
-import { createBid } from '../../redux/slices/bidSlice';
+import { createBid, updateBid, fetchMyBids } from '../../redux/slices/bidSlice';
+import { fetchProfile } from '../../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import { getSocket } from '../../services/socket';
 import { getLogisticsDisplayName } from '../../utils/logisticsUtils';
@@ -17,22 +18,66 @@ const AvailableShipments = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
   const { availableShipments, loading, error } = useSelector((state) => state.shipment);
-  const { loading: bidLoading } = useSelector((state) => state.bid);
-  const { user } = useSelector((state) => state.auth); // New: Get user info for context in real-time updates
+  const { loading: bidLoading, myBids } = useSelector((state) => state.bid);
+  const { user, loading: profileLoading } = useSelector((state) => state.auth); // New: Get user info for context in real-time updates
+  const [isRefreshingProfile, setIsRefreshingProfile] = useState(false);
+  
+  // Debug: Log user verification status
+  console.log('🔍 AvailableShipments: User verification status:', {
+    userId: user?._id,
+    verificationStatus: user?.verificationStatus,
+    user: user
+  });
+
+  // Currency symbol helper function
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'AUD': 'A$',
+      'JPY': '¥',
+      'CHF': 'CHF',
+      'CNY': '¥',
+      'INR': '₹',
+      'BRL': 'R$',
+      'MXN': '$',
+      'ZAR': 'R',
+      'NGN': '#'
+    };
+    return symbols[currency] || currency;
+  };
+  
 
 
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
   const [bidPrice, setBidPrice] = useState('');
   const [bidEta, setBidEta] = useState('');
   const [bidMessage, setBidMessage] = useState('');
+  const [bidCurrency, setBidCurrency] = useState('USD');
   const [showBidModal, setShowBidModal] = useState(false);
   const [expandedShipments, setExpandedShipments] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [filterBy, setFilterBy] = useState('all');
+  const [showEditBidModal, setShowEditBidModal] = useState(false);
+  const [editingBid, setEditingBid] = useState(null);
 
   useEffect(() => {
     dispatch(fetchAvailableShipments());
+    
+    // Only fetch profile on mount if user data is incomplete or verification status is unknown
+    if (!user || !user.verificationStatus) {
+      console.log('🔄 Fetching profile on mount - user data incomplete...');
+      dispatch(fetchProfile());
+    } else {
+      console.log('🔄 User data complete, skipping initial profile fetch');
+    }
+
+    // Fetch user's bids to check for existing bids
+    dispatch(fetchMyBids());
+    
     const socket = getSocket();
 
     // New: Socket.io Listeners
@@ -52,15 +97,76 @@ const AvailableShipments = () => {
         }
     });
 
+    // Listen for verification status updates
+    socket.on('verification-updated', (userData) => {
+        if (userData._id === user?._id) {
+            dispatch(fetchProfile());
+            toast.success('Your verification status has been updated!');
+        }
+    });
+
     return () => {
       socket.off('new-shipment');
       socket.off('shipment-updated');
+      socket.off('verification-updated');
     };
   }, [dispatch, user]); // Include user in dependency array for socket listeners
+
+  // Auto-refresh verification status every 60 seconds (only if pending)
+  useEffect(() => {
+    // Only set up auto-refresh if verification is pending
+    if (user?.verificationStatus !== 'pending') {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      // Don't fetch if already loading
+      if (profileLoading || isRefreshingProfile) {
+        console.log('🔄 Skipping profile refresh - already loading');
+        return;
+      }
+      
+      console.log('🔄 Auto-checking verification status...');
+      setIsRefreshingProfile(true);
+      dispatch(fetchProfile()).finally(() => {
+        setIsRefreshingProfile(false);
+      });
+    }, 60000); // Check every 60 seconds
+
+    return () => clearInterval(interval);
+  }, [dispatch, user?.verificationStatus, profileLoading, isRefreshingProfile]);
+
+
+  const hasBidOnShipment = (shipmentId) => {
+    return myBids.some(bid => 
+      bid.shipment._id === shipmentId && 
+      (bid.status === 'pending' || bid.status === 'accepted')
+    );
+  };
+
+  const getBidForShipment = (shipmentId) => {
+    return myBids.find(bid => 
+      bid.shipment._id === shipmentId && 
+      (bid.status === 'pending' || bid.status === 'accepted')
+    );
+  };
 
   const handlePlaceBidClick = (shipmentId) => {
     setSelectedShipmentId(shipmentId);
     setShowBidModal(true);
+  };
+
+  const handleEditBidClick = (shipmentId) => {
+    const existingBid = getBidForShipment(shipmentId);
+    if (existingBid) {
+      setEditingBid(existingBid);
+      setBidPrice(existingBid.price.toString());
+      setBidCurrency(existingBid.currency || 'USD');
+      setBidEta(existingBid.eta);
+      setBidMessage(existingBid.message || '');
+      setSelectedShipmentId(shipmentId);
+      setShowEditBidModal(true);
+    }
   };
 
   const handleBidSubmit = async (e) => {
@@ -73,6 +179,7 @@ const AvailableShipments = () => {
     const bidData = {
       shipmentId: selectedShipmentId,
       price: Number(bidPrice),
+      currency: bidCurrency,
       eta: bidEta,
       message: bidMessage,
     };
@@ -83,16 +190,48 @@ const AvailableShipments = () => {
       setBidPrice('');
       setBidEta('');
       setBidMessage('');
+      setBidCurrency('USD');
       toast.success('Bid submitted successfully!');
     } else if (createBid.rejected.match(result)) {
       // Handle verification error specifically
       if (result.payload && result.payload.includes('verification')) {
         toast.error('Your account is pending verification. Please wait for admin approval before posting bids.');
+      } else if (result.payload && result.payload.includes('already placed a bid')) {
+        toast.error('You have already placed a bid on this shipment. You can edit your existing bid instead.');
       } else {
         toast.error(result.payload || 'Failed to submit bid. Please try again.');
       }
     }
   };
+
+  const handleEditBidSubmit = async (e) => {
+    e.preventDefault();
+    if (!bidPrice || !bidEta || !editingBid) {
+      toast.error('Please fill in price and ETA.');
+      return;
+    }
+
+    const bidData = {
+      price: Number(bidPrice),
+      currency: bidCurrency,
+      eta: bidEta,
+      message: bidMessage,
+    };
+    
+    const result = await dispatch(updateBid({ bidId: editingBid._id, bidData }));
+    if (updateBid.fulfilled.match(result)) {
+      setShowEditBidModal(false);
+      setEditingBid(null);
+      setBidPrice('');
+      setBidEta('');
+      setBidMessage('');
+      setBidCurrency('USD');
+      toast.success('Bid updated successfully!');
+    } else if (updateBid.rejected.match(result)) {
+      toast.error(result.payload || 'Failed to update bid. Please try again.');
+    }
+  };
+
 
   const toggleShipmentDetails = (shipmentId) => {
     setExpandedShipments(prev => {
@@ -129,8 +268,6 @@ const AvailableShipments = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         case 'oldest':
           return new Date(a.createdAt) - new Date(b.createdAt);
-        case 'pickupDate':
-          return new Date(a.preferredPickupDate) - new Date(b.preferredPickupDate);
         case 'deliveryDate':
           return new Date(a.preferredDeliveryDate) - new Date(b.preferredDeliveryDate);
         case 'title':
@@ -185,11 +322,11 @@ const AvailableShipments = () => {
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
                   <Package className="text-white text-3xl" />
                 </div>
                 <div>
@@ -198,17 +335,42 @@ const AvailableShipments = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
                   <span className="text-white font-semibold text-lg">
                     {availableShipments.length} opportunities
                   </span>
                 </div>
                 <button
-                  onClick={() => dispatch(fetchAvailableShipments())}
-                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  onClick={() => {
+                    if (profileLoading || isRefreshingProfile) {
+                      console.log('🔄 Profile refresh already in progress...');
+                      return;
+                    }
+                    console.log('🔄 Manual verification status refresh...');
+                    setIsRefreshingProfile(true);
+                    dispatch(fetchProfile()).finally(() => {
+                      setIsRefreshingProfile(false);
+                    });
+                  }}
+                  disabled={profileLoading || isRefreshingProfile}
+                  className={`px-4 py-2 backdrop-blur-sm text-white rounded-xl transition-all duration-300 flex items-center gap-2 border border-white/20 ${
+                    profileLoading || isRefreshingProfile 
+                      ? 'bg-white/10 cursor-not-allowed opacity-50' 
+                      : 'bg-white/20 hover:bg-white/30'
+                  }`}
+                  title="Refresh verification status"
                 >
-                  <RefreshCw size={16} />
-                  Refresh
+                  <Shield size={16} className="text-white" />
+                  <span className="text-white font-medium">
+                    {profileLoading || isRefreshingProfile ? 'Checking...' : 'Check Status'}
+                  </span>
+                </button>
+                <button
+                  onClick={() => dispatch(fetchAvailableShipments())}
+                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                >
+                  <RefreshCw size={16} className="text-white" />
+                  <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
             </div>
@@ -247,7 +409,6 @@ const AvailableShipments = () => {
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="pickupDate">Pickup Date</option>
                 <option value="deliveryDate">Delivery Date</option>
                 <option value="title">Title A-Z</option>
               </select>
@@ -421,25 +582,41 @@ const AvailableShipments = () => {
                               <p className="text-xs text-gray-500 mt-1 text-right max-w-32">
                                 Wait for admin approval to place bids
                               </p>
+                              <p className="text-xs text-gray-400 mt-2 text-center">
+                                Status will update automatically when verified
+                              </p>
                             </div>
                           ) : (
-                            <button 
-                              onClick={() => handlePlaceBidClick(shipment._id)}
-                              className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                              disabled={bidLoading}
-                            >
-                              {bidLoading && selectedShipmentId === shipment._id ? (
-                                <>
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                  Placing Bid...
-                                </>
-                              ) : (
-                                <>
+                            <div className="flex flex-col items-end">
+                              {hasBidOnShipment(shipment._id) ? (
+                                <button 
+                                  onClick={() => handleEditBidClick(shipment._id)}
+                                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                  disabled={bidLoading}
+                                >
                                   <DollarSign size={16} />
-                                  Place Bid
-                                </>
+                                  Edit Bid
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={() => handlePlaceBidClick(shipment._id)}
+                                  className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                  disabled={bidLoading}
+                                >
+                                  {bidLoading && selectedShipmentId === shipment._id ? (
+                                    <>
+                                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      Placing Bid...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <DollarSign size={16} />
+                                      Place Bid
+                                    </>
+                                  )}
+                                </button>
                               )}
-                            </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -492,8 +669,6 @@ const AvailableShipments = () => {
                             <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.routeSummary}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
-                            <div className="text-sm text-gray-600 mb-1">Pickup Date</div>
-                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Delivery Date</div>
@@ -584,9 +759,6 @@ const AvailableShipments = () => {
                               </p>
                               <p><span className="font-medium text-gray-600">Country:</span> 
                                 <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupCountry}</span>
-                              </p>
-                              <p><span className="font-medium text-gray-600">Date:</span> 
-                                <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</span>
                               </p>
                               <p><span className="font-medium text-gray-600">Contact:</span> 
                                 <span className="ml-2 text-gray-800 dark:text-gray-200">{shipment.pickupContactPerson}</span>
@@ -693,23 +865,34 @@ const AvailableShipments = () => {
                             <span className="font-mono text-xs text-gray-400">Shipment ID: {shipment._id.slice(-8)}</span>
                           </div>
                           <div className="flex gap-3">
-                            <button 
-                              onClick={() => handlePlaceBidClick(shipment._id)}
-                              className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                              disabled={bidLoading}
-                            >
-                              {bidLoading && selectedShipmentId === shipment._id ? (
-                                <>
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                  Placing Bid...
-                                </>
-                              ) : (
-                                <>
-                                  <span>💰</span>
-                                  Place Your Bid
-                                </>
-                              )}
-                            </button>
+                            {hasBidOnShipment(shipment._id) ? (
+                              <button 
+                                onClick={() => handleEditBidClick(shipment._id)}
+                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                disabled={bidLoading}
+                              >
+                                <span>✏️</span>
+                                Edit Your Bid
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handlePlaceBidClick(shipment._id)}
+                                className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                disabled={bidLoading}
+                              >
+                                {bidLoading && selectedShipmentId === shipment._id ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Placing Bid...
+                                  </>
+                                ) : (
+                                  <>
+                                    <span>💰</span>
+                                    Place Your Bid
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -759,22 +942,22 @@ const AvailableShipments = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-8 rounded-t-3xl">
+              <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white p-8 rounded-t-3xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
                       <DollarSign className="text-white text-2xl" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold">Place Your Bid</h3>
+                      <h3 className="text-2xl font-bold text-white">Place Your Bid</h3>
                       <p className="text-indigo-100">Submit your competitive offer for this shipment</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowBidModal(false)}
-                    className="w-10 h-10 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white dark:bg-gray-800/30 transition-all duration-300"
+                    className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
                   >
-                    ×
+                    <span className="text-white text-xl font-bold">×</span>
                   </button>
                 </div>
               </div>
@@ -826,10 +1009,6 @@ const AvailableShipments = () => {
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
                               <Calendar className="text-orange-600" size={16} />
-                            </div>
-                            <div>
-                              <div className="text-sm text-gray-500 font-medium">Pickup</div>
-                              <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -910,23 +1089,58 @@ const AvailableShipments = () => {
 
                 {/* Bid Form */}
                 <form onSubmit={handleBidSubmit} className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2">
                       <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="bidPrice">
                         <DollarSign className="text-green-600" size={16} />
-                        Your Bid Price ($)
+                        Your Bid Price ({getCurrencySymbol(bidCurrency)})
                       </label>
-                      <input
-                        type="number"
-                        id="bidPrice"
-                        min="0"
-                        step="0.01"
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-lg font-semibold">
+                            {getCurrencySymbol(bidCurrency)}
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          id="bidPrice"
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
+                          value={bidPrice}
+                          onChange={(e) => setBidPrice(e.target.value)}
+                          placeholder="Enter your bid amount"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="bidCurrency">
+                        <Globe className="text-purple-600" size={16} />
+                        Currency
+                      </label>
+                      <select
+                        id="bidCurrency"
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
-                        value={bidPrice}
-                        onChange={(e) => setBidPrice(e.target.value)}
-                        placeholder="Enter your bid amount"
+                        value={bidCurrency}
+                        onChange={(e) => setBidCurrency(e.target.value)}
                         required
-                      />
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="CHF">CHF - Swiss Franc</option>
+                        <option value="CNY">CNY - Chinese Yuan</option>
+                        <option value="INR">INR - Indian Rupee</option>
+                        <option value="BRL">BRL - Brazilian Real</option>
+                        <option value="MXN">MXN - Mexican Peso</option>
+                        <option value="ZAR">ZAR - South African Rand</option>
+                        <option value="NGN">NGN - Nigerian Naira</option>
+                      </select>
                     </div>
                     
                     <div>
@@ -996,6 +1210,36 @@ const AvailableShipments = () => {
                     </div>
                   </div>
 
+                  {/* Bid Summary */}
+                  {bidPrice && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <CheckCircle className="text-green-600" size={20} />
+                        Bid Summary
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-lg p-4 border border-green-100">
+                          <div className="text-sm text-gray-600 mb-1">Bid Amount</div>
+                          <div className="text-2xl font-bold text-green-700">
+                            {getCurrencySymbol(bidCurrency)}{bidPrice}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-green-100">
+                          <div className="text-sm text-gray-600 mb-1">Currency</div>
+                          <div className="text-lg font-semibold text-gray-800">
+                            {bidCurrency}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-green-100">
+                          <div className="text-sm text-gray-600 mb-1">ETA</div>
+                          <div className="text-lg font-semibold text-gray-800">
+                            {bidEta || 'Not specified'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <button
@@ -1019,6 +1263,172 @@ const AvailableShipments = () => {
                         <>
                           <DollarSign size={16} />
                           Submit Bid
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Bid Modal */}
+        {showEditBidModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white p-8 rounded-t-3xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
+                      <DollarSign className="text-white text-2xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Edit Your Bid</h3>
+                      <p className="text-indigo-100">Update your offer for this shipment</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowEditBidModal(false)}
+                    className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <span className="text-white text-xl font-bold">×</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-8">
+                {/* Shipment Summary */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
+                  <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <Package className="text-blue-600" size={20} />
+                    Shipment Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Title</div>
+                      <div className="font-semibold text-gray-800">{selectedShipment?.shipmentTitle}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Route</div>
+                      <div className="font-semibold text-gray-800">{selectedShipment?.routeSummary}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Edit Bid Form */}
+                <form onSubmit={handleEditBidSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidPrice">
+                        <DollarSign className="text-green-600" size={16} />
+                        Your Bid Price ({getCurrencySymbol(bidCurrency)})
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-lg font-semibold">
+                            {getCurrencySymbol(bidCurrency)}
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          id="editBidPrice"
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
+                          value={bidPrice}
+                          onChange={(e) => setBidPrice(e.target.value)}
+                          placeholder="Enter your bid amount"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidCurrency">
+                        <Globe className="text-purple-600" size={16} />
+                        Currency
+                      </label>
+                      <select
+                        id="editBidCurrency"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
+                        value={bidCurrency}
+                        onChange={(e) => setBidCurrency(e.target.value)}
+                        required
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="CHF">CHF - Swiss Franc</option>
+                        <option value="CNY">CNY - Chinese Yuan</option>
+                        <option value="INR">INR - Indian Rupee</option>
+                        <option value="BRL">BRL - Brazilian Real</option>
+                        <option value="MXN">MXN - Mexican Peso</option>
+                        <option value="ZAR">ZAR - South African Rand</option>
+                        <option value="NGN">NGN - Nigerian Naira</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidEta">
+                        <Clock className="text-blue-600" size={16} />
+                        Estimated Time of Arrival
+                      </label>
+                      <input
+                        type="text"
+                        id="editBidEta"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                        value={bidEta}
+                        onChange={(e) => setBidEta(e.target.value)}
+                        placeholder="e.g., 3 days, 24 hours"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidMessage">
+                      <MessageSquare className="text-purple-600" size={16} />
+                      Additional Message (Optional)
+                    </label>
+                    <textarea
+                      id="editBidMessage"
+                      rows="4"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 resize-none"
+                      value={bidMessage}
+                      onChange={(e) => setBidMessage(e.target.value)}
+                      placeholder="Add any additional information about your bid..."
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditBidModal(false)}
+                      className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                      disabled={bidLoading}
+                    >
+                      {bidLoading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign size={16} />
+                          Update Bid
                         </>
                       )}
                     </button>

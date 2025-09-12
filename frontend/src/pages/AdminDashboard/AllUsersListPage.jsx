@@ -167,16 +167,16 @@ const AllUsersListPage = () => {
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
-                    <Users className="text-white text-3xl" />
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                    <Users className="text-white text-2xl" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">All Registered Users</h1>
-                    <p className="text-indigo-100 text-lg">Manage and monitor all platform users</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">All Registered Users</h1>
+                    <p className="text-indigo-100 text-base">Manage and monitor all platform users</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white">{users.length}</div>
+                  <div className="text-3xl font-bold text-white">{users.length}</div>
                   <div className="text-indigo-100 text-sm">Total Users</div>
                 </div>
               </div>

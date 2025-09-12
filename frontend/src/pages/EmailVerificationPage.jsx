@@ -33,7 +33,7 @@ const EmailVerificationPage = () => {
   }, [dispatch, token, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen text-center px-4 py-6">
       {status === 'loading' && (
         <>
           <h2 className="text-xl font-semibold mb-2">Verifying email...</h2>

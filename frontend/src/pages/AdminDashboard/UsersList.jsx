@@ -13,7 +13,7 @@ const UsersList = () => {
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">👥 Registered Users</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-800">👥 Registered Users</h2>
       {loading && <p>Loading...</p>}
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-lg overflow-hidden">

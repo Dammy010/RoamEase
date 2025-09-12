@@ -129,18 +129,7 @@ export const fetchShipmentDetailsById = createAsyncThunk(
   }
 );
 
-export const markShipmentAsDeliveredAndRate = createAsyncThunk(
-  'shipment/markAsDeliveredAndRate',
-  async ({ id, rating, feedback }, { rejectWithValue }) => {
-    try {
-      const res = await api.put(`/shipments/${id}/deliver`, { rating, feedback });
-      return res.data.shipment;
-    } catch (err) {
-      const message = err.response?.data?.message || 'Failed to mark shipment as delivered.';
-      return rejectWithValue(message);
-    }
-  }
-);
+// Removed: markShipmentAsDeliveredAndRate (replaced with separate rate and deliver actions)
 
 // New: Mark shipment as delivered by logistics company
 export const markShipmentAsDeliveredByLogistics = createAsyncThunk(
@@ -156,15 +145,45 @@ export const markShipmentAsDeliveredByLogistics = createAsyncThunk(
   }
 );
 
-// New: Mark shipment as received by user
-export const markShipmentAsReceivedByUser = createAsyncThunk(
-  'shipment/markAsReceivedByUser',
+// New: Mark shipment as delivered by user
+export const markShipmentAsDeliveredByUser = createAsyncThunk(
+  'shipment/markAsDeliveredByUser',
   async (id, { rejectWithValue }) => {
     try {
-      const res = await api.put(`/shipments/${id}/mark-received-by-user`);
+      const res = await api.put(`/shipments/${id}/mark-delivered-by-user`);
       return res.data.shipment;
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to mark shipment as received.';
+      const message = err.response?.data?.message || 'Failed to mark shipment as delivered.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// Rate a completed shipment
+export const rateCompletedShipment = createAsyncThunk(
+  'shipment/rateCompleted',
+  async ({ id, rating, feedback }, { rejectWithValue }) => {
+    try {
+      const res = await api.put(`/shipments/${id}/rate`, { rating, feedback });
+      toast.success('Rating submitted successfully!');
+      return res.data.shipment;
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to submit rating.';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// Fetch delivered shipments (completed shipments that can be rated)
+export const fetchDeliveredShipments = createAsyncThunk(
+  'shipment/fetchDelivered',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get('/shipments/delivered');
+      return res.data.shipments || [];
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to fetch delivered shipments.';
       return rejectWithValue(message);
     }
   }
@@ -192,6 +211,7 @@ const shipmentSlice = createSlice({
   initialState: {
     shipments: [], // For user's own shipments
     history: [],
+    deliveredShipments: [], // For completed shipments that can be rated
     currentShipment: null,
     availableShipments: [], // For shipments available for carriers to bid on
     loading: false,
@@ -409,31 +429,7 @@ const shipmentSlice = createSlice({
         state.currentShipment = null;
       })
 
-      // --- Mark Shipment As Delivered And Rate ---
-      .addCase(markShipmentAsDeliveredAndRate.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.success = false;
-      })
-      .addCase(markShipmentAsDeliveredAndRate.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.success = true;
-        state.currentShipment = payload || null; // The updated shipment
-        // Update in user's shipments
-        const index = state.shipments.findIndex(s => s._id === payload._id);
-        if (index !== -1) {
-          state.shipments[index] = payload;
-        }
-        // Also add to history if status is now 'delivered' and not already there
-        if (payload.status === 'delivered' && !state.history.some(s => s._id === payload._id)) {
-          state.history.unshift(payload);
-        }
-      })
-      .addCase(markShipmentAsDeliveredAndRate.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload;
-        state.success = false;
-      })
+      // Removed: markShipmentAsDeliveredAndRate reducer cases (replaced with separate actions)
 
       // --- Mark Shipment As Delivered By Logistics ---
       .addCase(markShipmentAsDeliveredByLogistics.pending, (state) => {
@@ -460,13 +456,13 @@ const shipmentSlice = createSlice({
         state.success = false;
       })
 
-      // --- Mark Shipment As Received By User ---
-      .addCase(markShipmentAsReceivedByUser.pending, (state) => {
+      // --- Mark Shipment As Delivered By User ---
+      .addCase(markShipmentAsDeliveredByUser.pending, (state) => {
         state.loading = true;
         state.error = null;
         state.success = false;
       })
-      .addCase(markShipmentAsReceivedByUser.fulfilled, (state, { payload }) => {
+      .addCase(markShipmentAsDeliveredByUser.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.success = true;
         // Update in user's shipments
@@ -484,10 +480,56 @@ const shipmentSlice = createSlice({
           state.currentShipment = payload;
         }
       })
-      .addCase(markShipmentAsReceivedByUser.rejected, (state, { payload }) => {
+      .addCase(markShipmentAsDeliveredByUser.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
         state.success = false;
+      })
+
+      // --- Rate Completed Shipment ---
+      .addCase(rateCompletedShipment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(rateCompletedShipment.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.success = true;
+        // Update in user's shipments
+        const index = state.shipments.findIndex(s => s._id === payload._id);
+        if (index !== -1) {
+          state.shipments[index] = payload;
+        }
+        // Update in history
+        const historyIndex = state.history.findIndex(s => s._id === payload._id);
+        if (historyIndex !== -1) {
+          state.history[historyIndex] = payload;
+        }
+        // Update in current shipment if it's the one being viewed
+        if (state.currentShipment && state.currentShipment._id === payload._id) {
+          state.currentShipment = payload;
+        }
+      })
+      .addCase(rateCompletedShipment.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+        state.success = false;
+      })
+
+      // --- Fetch Delivered Shipments ---
+      .addCase(fetchDeliveredShipments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchDeliveredShipments.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.deliveredShipments = payload;
+        state.error = null;
+      })
+      .addCase(fetchDeliveredShipments.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+        state.deliveredShipments = [];
       })
       // --- Delete Shipment ---
       .addCase(deleteShipment.pending, (state) => {

@@ -136,7 +136,7 @@ const PendingLogisticsList = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Clock className="text-white text-2xl" />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Pending Logistics</h3>
@@ -172,19 +172,19 @@ const PendingLogisticsList = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-orange-500 via-red-600 to-pink-600 p-8">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center">
-                    <Clock className="text-white text-3xl" />
+                  <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                    <Clock className="text-white text-2xl" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Pending Logistics Companies</h1>
-                    <p className="text-orange-100 text-lg">Review and verify logistics applications</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">Pending Logistics Companies</h1>
+                    <p className="text-orange-100 text-base">Review and verify logistics applications</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-white">{logisticsPending.length}</div>
+                  <div className="text-3xl font-bold text-white">{logisticsPending.length}</div>
                   <div className="text-orange-100 text-sm">Pending Applications</div>
                 </div>
               </div>
@@ -347,7 +347,7 @@ const PendingLogisticsList = () => {
                     <tr key={company._id} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white font-semibold">
+                          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-semibold">
                             {(company.companyName || company.name || 'C').charAt(0).toUpperCase()}
                           </div>
                           <div>

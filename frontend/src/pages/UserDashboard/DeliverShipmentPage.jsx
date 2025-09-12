@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { fetchShipmentDetailsById, markShipmentAsDeliveredAndRate } from '../../redux/slices/shipmentSlice';
+import { fetchShipmentDetailsById, markShipmentAsDeliveredByUser, rateCompletedShipment } from '../../redux/slices/shipmentSlice';
 import { Star } from 'lucide-react';
 
 const DeliverShipmentPage = () => {
@@ -34,7 +34,12 @@ const DeliverShipmentPage = () => {
     }
 
     try {
-      await dispatch(markShipmentAsDeliveredAndRate({ id: shipmentId, rating, feedback })).unwrap();
+      // First mark as delivered
+      await dispatch(markShipmentAsDeliveredByUser(shipmentId)).unwrap();
+      
+      // Then rate the shipment
+      await dispatch(rateCompletedShipment({ id: shipmentId, rating, feedback })).unwrap();
+      
       toast.success("Shipment marked as delivered and rated successfully!");
       navigate('/user/my-shipments'); // Redirect to My Shipments after submission
     } catch (err) {
@@ -69,17 +74,17 @@ const DeliverShipmentPage = () => {
   return (
     <div className="min-h-screen p-6 font-sans">
       <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 p-8">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-6 text-center">Deliver Shipment & Rate</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Deliver Shipment & Rate</h1>
         
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h2 className="text-xl font-bold text-blue-800 mb-2">Shipment: {currentShipment.shipmentTitle}</h2>
+          <h2 className="text-lg font-bold text-blue-800 mb-2">Shipment: {currentShipment.shipmentTitle}</h2>
           <p className="text-gray-700">From: {currentShipment.pickupCity} to {currentShipment.deliveryCity}</p>
           <p className="text-gray-600">Status: <span className="font-semibold capitalize">{currentShipment.status}</span></p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="rating" className="block text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Rate your experience:</label>
+            <label htmlFor="rating" className="block text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Rate your experience:</label>
             <div className="flex items-center space-x-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
@@ -96,7 +101,7 @@ const DeliverShipmentPage = () => {
           </div>
 
           <div>
-            <label htmlFor="feedback" className="block text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Feedback (Optional):</label>
+            <label htmlFor="feedback" className="block text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Feedback (Optional):</label>
             <textarea
               id="feedback"
               name="feedback"

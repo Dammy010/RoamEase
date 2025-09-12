@@ -5,8 +5,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 const ProtectedRoute = ({ allowedRoles }) => {
   const { user } = useSelector((state) => state.auth);
 
-  console.log('ProtectedRoute - User:', user);
-  console.log('ProtectedRoute - Allowed Roles:', allowedRoles);
+  console.log('🔍 ProtectedRoute - User:', user);
+  console.log('🔍 ProtectedRoute - Allowed Roles:', allowedRoles);
+  console.log('🔍 ProtectedRoute - Auth State:', useSelector((state) => state.auth));
 
   if (!user) {
     // User not authenticated, redirect to login

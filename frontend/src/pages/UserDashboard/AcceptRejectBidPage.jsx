@@ -20,6 +20,26 @@ const AcceptRejectBidPage = () => {
   const { bids, loading: bidsLoading, error: bidsError } = useSelector(state => state.bid);
   const { user } = useSelector((state) => state.auth);
 
+  // Currency symbol helper function
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'AUD': 'A$',
+      'JPY': '¥',
+      'CHF': 'CHF',
+      'CNY': '¥',
+      'INR': '₹',
+      'BRL': 'R$',
+      'MXN': '$',
+      'ZAR': 'R',
+      'NGN': '#'
+    };
+    return symbols[currency] || '$';
+  };
+
   // Debug logging
   console.log("AcceptRejectBidPage Debug:");
   console.log("currentShipment:", currentShipment);
@@ -32,6 +52,9 @@ const AcceptRejectBidPage = () => {
   const [selectedBid, setSelectedBid] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPriceNegotiationModal, setShowPriceNegotiationModal] = useState(false);
+  const [requestedPrice, setRequestedPrice] = useState('');
+  const [priceRequestLoading, setPriceRequestLoading] = useState(false);
 
   // Filter bids based on selected status and search term
   const filteredBids = useMemo(() => {
@@ -80,6 +103,61 @@ const AcceptRejectBidPage = () => {
       }
     } catch (err) {
       toast.error(err.message || 'Failed to accept bid');
+    }
+  };
+
+  const handlePriceNegotiation = (bid) => {
+    setSelectedBid(bid);
+    setRequestedPrice(bid.bidAmount.toString());
+    setShowPriceNegotiationModal(true);
+  };
+
+  const handleAcceptAtCurrentPrice = async () => {
+    if (!selectedBid) return;
+    try {
+      const result = await dispatch(acceptBid(selectedBid._id)).unwrap();
+      toast.success('Bid accepted at current price!');
+      setShowPriceNegotiationModal(false);
+      if (result.conversationId) {
+        navigate(`/user/chat/${result.conversationId}`);
+      } else {
+        navigate(`/user/my-shipments`);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to accept bid');
+    }
+  };
+
+  const handleRequestPriceUpdate = async () => {
+    if (!selectedBid || !requestedPrice) {
+      toast.error('Please enter a requested price');
+      return;
+    }
+
+    const requestedAmount = parseFloat(requestedPrice);
+    if (isNaN(requestedAmount) || requestedAmount <= 0) {
+      toast.error('Please enter a valid price');
+      return;
+    }
+
+    setPriceRequestLoading(true);
+    try {
+      const response = await api.post(`/bids/${selectedBid._id}/request-price-update`, {
+        requestedPrice: requestedAmount,
+        currency: selectedBid.currency || 'USD'
+      });
+      
+      toast.success(`Price update request sent to ${selectedBid.logisticsCompany?.companyName || 'logistics company'}!`);
+      setShowPriceNegotiationModal(false);
+      setRequestedPrice('');
+      
+      // Refresh bids to show updated status
+      dispatch(fetchBidsForShipment(shipmentId));
+    } catch (error) {
+      console.error('Error requesting price update:', error);
+      toast.error(error.response?.data?.message || 'Failed to send price update request');
+    } finally {
+      setPriceRequestLoading(false);
     }
   };
 
@@ -216,13 +294,13 @@ const AcceptRejectBidPage = () => {
           </button>
           
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
                   <Package className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Manage Bids</h1>
+                  <h1 className="text-xl font-bold text-white">Manage Bids</h1>
                   <p className="text-indigo-100">Review and manage bids for your shipment</p>
                 </div>
               </div>
@@ -253,7 +331,7 @@ const AcceptRejectBidPage = () => {
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <DollarSign size={16} />
-                      <span>Budget: ${currentShipment.budget || 'N/A'}</span>
+                      <span>Budget: {getCurrencySymbol(currentShipment.budgetCurrency || 'USD')}{currentShipment.budget || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -286,8 +364,8 @@ const AcceptRejectBidPage = () => {
                   <div className="space-y-6">
                     {/* Bid Price */}
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                        ${selectedBid.price?.toFixed(2) || 'N/A'}
+                      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                        {getCurrencySymbol(selectedBid.currency || 'USD')}{selectedBid.price?.toFixed(2) || 'N/A'}
                       </div>
                       <div className="text-lg text-gray-600">Bid Amount</div>
                     </div>
@@ -302,15 +380,6 @@ const AcceptRejectBidPage = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                        <Calendar className="text-green-500" size={20} />
-                        <div>
-                          <div className="font-medium text-gray-800 dark:text-gray-200">Pickup Date</div>
-                          <div className="text-gray-600">
-                            N/A
-                          </div>
-                        </div>
-                      </div>
 
                       {selectedBid.message && (
                         <div className="p-4 bg-blue-50 rounded-xl">
@@ -358,15 +427,15 @@ const AcceptRejectBidPage = () => {
                     {selectedBid.status === 'pending' && (
                       <div className="grid grid-cols-2 gap-3">
                         <button
-                          onClick={() => handleAcceptBid(selectedBid._id)}
-                          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                          onClick={() => handlePriceNegotiation(selectedBid)}
+                          className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
                         >
                           <CheckCircle size={18} />
                           Accept Bid
                         </button>
                         <button
                           onClick={() => handleRejectBid(selectedBid._id)}
-                          className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
                         >
                           <XCircle size={18} />
                           Reject Bid
@@ -460,7 +529,8 @@ const AcceptRejectBidPage = () => {
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                            ${bid.price?.toFixed(2) || 'N/A'}
+                            {getCurrencySymbol(bid.currency || 'USD')}{bid.price?.toFixed(2) || 'N/A'}
+                            {bid.currency && <span className="text-sm text-gray-500 ml-1">({bid.currency})</span>}
                           </div>
                           <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(bid.status)}`}>
                             {getStatusIcon(bid.status)}
@@ -502,6 +572,118 @@ const AcceptRejectBidPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Accept Bid Confirmation Modal */}
+      {showPriceNegotiationModal && selectedBid && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Accept Bid
+                </h3>
+                <button
+                  onClick={() => setShowPriceNegotiationModal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Bid Details
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Company:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {selectedBid.logisticsCompany?.companyName || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Price:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {getCurrencySymbol(selectedBid.currency || 'USD')}{selectedBid.bidAmount?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">ETA:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {selectedBid.eta || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center mb-4">
+                  <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Do you accept the requested price?
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    You can either accept this bid or request a price update from the logistics company.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Your Preferred Price ({selectedBid.currency || 'USD'})
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        {getCurrencySymbol(selectedBid.currency || 'USD')}
+                      </span>
+                      <input
+                        type="number"
+                        value={requestedPrice}
+                        onChange={(e) => setRequestedPrice(e.target.value)}
+                        placeholder="Enter your preferred price"
+                        className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleAcceptAtCurrentPrice}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                >
+                  <CheckCircle size={18} />
+                  Accept at Current Price
+                </button>
+                
+                <button
+                  onClick={handleRequestPriceUpdate}
+                  disabled={priceRequestLoading || !requestedPrice}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {priceRequestLoading ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Sending Request...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare size={18} />
+                      Request Price Update
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
+                The logistics company will be notified of your decision.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

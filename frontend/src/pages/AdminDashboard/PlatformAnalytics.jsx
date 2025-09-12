@@ -165,8 +165,7 @@ const PlatformAnalytics = () => {
         { label: "Open Shipments", value: analytics.shipments?.open || 0, icon: Clock },
         { label: "Accepted Shipments", value: analytics.shipments?.accepted || 0, icon: CheckCircle },
         { label: "Completed Shipments", value: analytics.shipments?.completed || 0, icon: CheckCircle },
-        { label: "Delivered Shipments", value: analytics.shipments?.delivered || 0, icon: Package },
-        { label: "Received Shipments", value: analytics.shipments?.received || 0, icon: CheckCircle }
+        { label: "Delivered Shipments", value: analytics.shipments?.delivered || 0, icon: CheckCircle }
       ]
     },
     {
@@ -189,7 +188,7 @@ const PlatformAnalytics = () => {
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Platform Analytics
                 </h1>
                 <p className="text-gray-500">
@@ -330,8 +329,8 @@ const PlatformAnalytics = () => {
                 description: "Delivered, awaiting confirmation"
               },
               { 
-                status: "Received", 
-                count: analytics.shipments?.statusBreakdown?.received || 0, 
+                status: "Delivered", 
+                count: analytics.shipments?.statusBreakdown?.delivered || 0, 
                 color: "bg-emerald-100 text-emerald-800",
                 icon: CheckCircle,
                 description: "User confirmed receipt"
@@ -358,16 +357,16 @@ const PlatformAnalytics = () => {
                 <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Shipment Completion Rate</h4>
                 <p className="text-sm text-gray-600">
                   {analytics.shipments?.total > 0 
-                    ? `${Math.round(((analytics.shipments?.statusBreakdown?.received || 0) / analytics.shipments.total) * 100)}%`
+                    ? `${Math.round(((analytics.shipments?.statusBreakdown?.delivered || 0) / analytics.shipments.total) * 100)}%`
                     : '0%'
-                  } of shipments successfully received by users
+                  } of shipments successfully delivered to users
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-green-600">
-                  {analytics.shipments?.statusBreakdown?.received || 0}
+                  {analytics.shipments?.statusBreakdown?.delivered || 0}
                 </div>
-                <div className="text-sm text-gray-500">Received</div>
+                <div className="text-sm text-gray-500">Delivered</div>
               </div>
             </div>
           </div>

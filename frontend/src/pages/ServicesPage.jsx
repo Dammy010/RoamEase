@@ -3,32 +3,32 @@ import { Truck, Ship, Plane, Warehouse, MapPin, Package } from "lucide-react";
 
 const services = [
   {
-    icon: <Truck className="w-10 h-10 text-blue-600" />,
+    icon: <Truck className="w-8 h-8 text-blue-600" />,
     title: "Trucking",
     description: "Reliable long-haul and local road transport solutions for all shipment sizes.",
   },
   {
-    icon: <Ship className="w-10 h-10 text-blue-600" />,
+    icon: <Ship className="w-8 h-8 text-blue-600" />,
     title: "Shipping",
     description: "International and domestic sea freight with door-to-port or door-to-door options.",
   },
   {
-    icon: <Plane className="w-10 h-10 text-blue-600" />,
+    icon: <Plane className="w-8 h-8 text-blue-600" />,
     title: "Air Freight",
     description: "Fast, secure air cargo transport for urgent and high-value shipments.",
   },
   {
-    icon: <Warehouse className="w-10 h-10 text-blue-600" />,
+    icon: <Warehouse className="w-8 h-8 text-blue-600" />,
     title: "Warehousing",
     description: "Secure storage facilities with inventory management and distribution services.",
   },
   {
-    icon: <MapPin className="w-10 h-10 text-blue-600" />,
+    icon: <MapPin className="w-8 h-8 text-blue-600" />,
     title: "Last-Mile Delivery",
     description: "Efficient delivery to final destinations with tracking and proof of delivery.",
   },
   {
-    icon: <Package className="w-10 h-10 text-blue-600" />,
+    icon: <Package className="w-8 h-8 text-blue-600" />,
     title: "Logistics Planning",
     description: "Tailored supply chain strategies to optimize cost and delivery time.",
   },
@@ -39,11 +39,11 @@ const ServicesPage = () => {
     <div className="bg-gradient-to-b from-white to-blue-50">
 
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-6 py-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+      <section className="max-w-6xl mx-auto px-6 py-12 text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
           Our Logistics Services
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-base text-gray-600 max-w-2xl mx-auto">
           At RoamEase, we connect shippers and logistics providers with reliable, secure, and fast transport services worldwide.
         </p>
       </section>

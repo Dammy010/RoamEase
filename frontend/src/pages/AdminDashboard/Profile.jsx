@@ -19,8 +19,8 @@ const Profile = () => {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">My Admin Profile</h1>
+    <div className="p-6">
+      <h1 className="text-xl font-bold mb-6">My Admin Profile</h1>
       {user ? <ProfileForm user={user} /> : <p>No profile data found.</p>}
     </div>
   );

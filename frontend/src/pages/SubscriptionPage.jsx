@@ -173,29 +173,29 @@ const SubscriptionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen py-6 bg-gray-50 dark:bg-gray-900">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 py-20">
           <div className="text-center">
-            <h1 className="text-5xl font-bold mb-6">
+            <h1 className="text-3xl font-bold mb-6">
               Scale Your Logistics Business
             </h1>
-            <p className="text-xl mb-8 max-w-3xl mx-auto opacity-90">
+            <p className="text-base mb-8 max-w-3xl mx-auto opacity-90">
               Join thousands of logistics companies using our platform to streamline operations, 
               increase efficiency, and grow their business.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+                className="px-6 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 text-sm"
               >
                 <span>View Plans</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
               <button
                 onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+                className="px-6 py-3 border-2 border-white text-white rounded-xl font-semibold hover:bg-white hover:text-blue-600 transition-colors text-sm"
               >
                 Learn More
               </button>
@@ -266,7 +266,7 @@ const SubscriptionPage = () => {
                 >
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                      <span className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
                         <Star className="w-4 h-4" />
                         <span>Most Popular</span>
                       </span>
@@ -342,7 +342,7 @@ const SubscriptionPage = () => {
                       disabled={paymentLoading}
                       className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
                         plan.popular
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl'
+                          ? 'bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl'
                           : 'bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white'
                       }`}
                     >

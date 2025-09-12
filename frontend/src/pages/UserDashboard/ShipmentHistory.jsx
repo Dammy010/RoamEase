@@ -21,7 +21,7 @@ const ShipmentHistory = () => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="text-green-500" size={20} />;
-      case 'received':
+      case 'delivered':
         return <Package className="text-blue-500" size={20} />;
       case 'delivered':
         return <Truck className="text-orange-500" size={20} />;
@@ -34,7 +34,7 @@ const ShipmentHistory = () => {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'received':
+      case 'delivered':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'delivered':
         return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -68,36 +68,36 @@ const ShipmentHistory = () => {
     <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate("/user/dashboard")}
-                  className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white dark:bg-gray-800/30 transition-all duration-300"
+                  className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
                 >
-                  <ArrowRight className="rotate-180" size={20} />
+                  <ArrowRight className="rotate-180 text-white" size={20} />
                 </button>
-                <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <Package className="text-white text-3xl" />
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
+                  <Package className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Shipment History</h1>
+                  <h1 className="text-xl font-bold text-white">Shipment History</h1>
                   <p className="text-indigo-100 text-lg">Track all your completed deliveries and shipments</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
                   <span className="text-white font-semibold text-lg">
                     {history?.length || 0} shipments
                   </span>
                 </div>
                 <button
                   onClick={() => dispatch(fetchShipmentHistory())}
-                  className="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm text-white rounded-xl hover:bg-white dark:bg-gray-800/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                 >
-                  <RefreshCw size={16} />
-                  Refresh
+                  <RefreshCw size={16} className="text-white" />
+                  <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
             </div>
@@ -127,7 +127,6 @@ const ShipmentHistory = () => {
               >
                 <option value="all">All Status</option>
                 <option value="completed">Completed</option>
-                <option value="received">Received</option>
                 <option value="delivered">Delivered</option>
               </select>
               <select
@@ -169,7 +168,7 @@ const ShipmentHistory = () => {
           ) : filteredAndSortedHistory.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">📦</span>
+                <span className="text-3xl">📦</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">No Shipment History Found</h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">

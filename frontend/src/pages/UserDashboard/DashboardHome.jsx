@@ -41,7 +41,17 @@ const UserDashboardHome = () => {
           // Ideally you'd dispatch an action to update chat unread count
         });
 
-        return () => socket.disconnect();
+        // Listen for notification refresh events
+        socket.on('notification-refresh', (data) => {
+          console.log('🔔 Notification refresh received on dashboard:', data);
+          // You could dispatch actions to refresh notification counts here
+        });
+
+        return () => {
+          socket.off("new-message");
+          socket.off('notification-refresh');
+          socket.disconnect();
+        };
       }
     }
   }, [user]);
@@ -49,7 +59,10 @@ const UserDashboardHome = () => {
   if (!user) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white dark:bg-gray-900">
-        <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -112,22 +125,22 @@ const UserDashboardHome = () => {
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl shadow-2xl mb-8">
+        <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl shadow-lg mb-6">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
           
-          <div className="relative p-8 md:p-12">
+          <div className="relative p-6 md:p-8">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
               {/* Left Content */}
               <div className="flex-1 text-white">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <Package className="text-white text-xl" />
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <Package className="text-white w-5 h-5" />
                   </div>
                   <div>
-                    <h1 className="text-3xl md:text-4xl font-bold">
+                    <h1 className="text-xl md:text-2xl font-bold">
                       Welcome back, {userProfile.name}
                     </h1>
                     <div className="flex items-center gap-2 mt-1">
@@ -141,23 +154,23 @@ const UserDashboardHome = () => {
                   </div>
                 </div>
                 
-                <p className="text-blue-100 text-lg mb-6 max-w-2xl leading-relaxed">
+                <p className="text-blue-100 text-sm mb-4 max-w-2xl leading-relaxed">
                   Manage your shipments efficiently. Track deliveries, place orders, and monitor your logistics operations with our comprehensive platform.
                 </p>
                 
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => navigate('/user/post-shipment')}
-                    className="px-6 py-3 bg-white text-indigo-700 rounded-xl hover:bg-blue-50 transition-all duration-300 font-semibold shadow-lg flex items-center gap-2"
+                    className="px-4 py-2 bg-white text-indigo-700 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium shadow-md flex items-center gap-2 text-sm"
                   >
-                    <PlusCircle size={18} />
+                    <PlusCircle className="w-4 h-4" />
                     Post New Shipment
                   </button>
                   <button
                     onClick={() => navigate('/user/my-shipments')}
-                    className="px-4 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm"
                   >
-                    <Eye size={18} />
+                    <Eye className="w-4 h-4" />
                     View All Shipments
                   </button>
                 </div>
@@ -170,7 +183,7 @@ const UserDashboardHome = () => {
                     <img
                       src={userProfile.avatar}
                       alt="User Avatar"
-                      className="w-24 h-24 rounded-2xl border-4 border-white/30 object-cover cursor-pointer shadow-2xl hover:scale-105 transition-transform duration-300"
+                      className="w-20 h-20 rounded-xl border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
                       onClick={() => setShowProfilePicModal(true)}
                       onError={(e) => {
                         console.error("Profile picture failed to load:", e.target.src);
@@ -182,7 +195,7 @@ const UserDashboardHome = () => {
                   
                   {/* Fallback avatar */}
                   <div 
-                    className={`w-24 h-24 rounded-2xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-3xl font-bold shadow-2xl ${userProfile.avatar ? 'hidden' : 'flex'}`}
+                    className={`w-20 h-20 rounded-xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold shadow-lg ${userProfile.avatar ? 'hidden' : 'flex'}`}
                     style={{ display: userProfile.avatar ? 'none' : 'flex' }}
                     onClick={() => setShowProfilePicModal(true)}
                   >
@@ -203,56 +216,86 @@ const UserDashboardHome = () => {
         <section className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Total Shipments Card */}
-            <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <Package size={24} />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold text-gray-800 dark:text-white">{shipments.length + history.length}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+            <div className="group relative cursor-pointer p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 hover:shadow-lg hover:border-indigo-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+              {/* Count Badge */}
+              {(shipments.length + history.length) > 0 && (
+                <div className="absolute top-4 right-4 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  {shipments.length + history.length}
+                </div>
+              )}
+              
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Package size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                    Total Shipments
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    All your posted shipments
+                  </p>
+                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                    <span>View All</span>
+                    <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Total Shipments</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">All your posted shipments</p>
               </div>
             </div>
 
             {/* Active Shipments Card */}
-            <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <Truck size={24} />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold text-gray-800 dark:text-white">{shipments.length}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+            <div className="group relative cursor-pointer p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 hover:shadow-lg hover:border-indigo-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+              {/* Count Badge */}
+              {shipments.length > 0 && (
+                <div className="absolute top-4 right-4 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  {shipments.length}
+                </div>
+              )}
+              
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Truck size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                    Active Shipments
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    Currently in progress
+                  </p>
+                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                    <span>View All</span>
+                    <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Active Shipments</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Currently in progress</p>
               </div>
             </div>
 
             {/* History Card */}
-            <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <Clock size={24} />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold text-gray-800 dark:text-white">{history.length}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+            <div className="group relative cursor-pointer p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 hover:shadow-lg hover:border-indigo-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+              {/* Count Badge */}
+              {history.length > 0 && (
+                <div className="absolute top-4 right-4 w-8 h-8 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  {history.length}
+                </div>
+              )}
+              
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Clock size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                    Shipment History
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    Delivered shipments
+                  </p>
+                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                    <span>View All</span>
+                    <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Shipment History</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Delivered shipments</p>
               </div>
             </div>
           </div>
@@ -392,7 +435,7 @@ const UserDashboardHome = () => {
                   {history.length > 0 && (
                     <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
                       {/* Header */}
-                      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+                      <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
@@ -429,7 +472,7 @@ const UserDashboardHome = () => {
                               switch (status) {
                                 case 'completed':
                                   return <Package className="text-green-500" size={20} />;
-                                case 'received':
+                                case 'delivered':
                                   return <Package className="text-blue-500" size={20} />;
                                 case 'delivered':
                                   return <Truck className="text-orange-500" size={20} />;
@@ -442,7 +485,7 @@ const UserDashboardHome = () => {
                               switch (status) {
                                 case 'completed':
                                   return 'bg-green-100 text-green-800 border-green-200';
-                                case 'received':
+                                case 'delivered':
                                   return 'bg-blue-100 text-blue-800 border-blue-200';
                                 case 'delivered':
                                   return 'bg-orange-100 text-orange-800 border-orange-200';

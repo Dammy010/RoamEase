@@ -19,10 +19,10 @@ const LandingPage = () => {
   const { isDark } = useTheme();
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 py-6">
 
       {/* Hero Section */}
-      <section className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-gradient-to-br from-blue-800 via-indigo-700 to-blue-600 text-white px-6 lg:px-16 gap-10">
+      <section className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white px-6 lg:px-16 gap-10">
   {/* Left Content */}
   <div className="flex-1 text-center lg:text-left">
     <h1 className="text-5xl sm:text-6xl font-extrabold mb-6 leading-tight drop-shadow-lg">

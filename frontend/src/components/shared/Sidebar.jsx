@@ -19,8 +19,6 @@ const Sidebar = ({ role }) => {
 
   const userLinks = [
     { to: "/user/dashboard", label: "Dashboard Home" },
-    { to: "/user/post-shipment", label: "Post Shipment" },
-    { to: "/user/my-shipments", label: "My Shipments" },
     { to: "/user/manage-bids", label: "Manage Bids" }, // Updated: Link to consolidated bid management page
     { to: "/user/chat", label: "Chat with Logistics" },
     { to: "/user/delivered-shipments", label: "Delivered Shipments" }, // New: Link to delivered shipments page
@@ -34,10 +32,8 @@ const Sidebar = ({ role }) => {
   const logisticsLinks = [
     { to: "/logistics/dashboard", label: "Dashboard Home" },
     { to: "/logistics/subscriptions", label: "Subscriptions" },
-    { to: "/logistics/upload-documents", label: "Upload Documents" },
-    { to: "/logistics/available-shipments", label: "Available Shipments" },
-    { to: "/logistics/active-shipments", label: "Active Shipments" },
-    { to: "/logistics/my-bids", label: "My Bids" },
+    { to: "/logistics/history", label: "Delivery History" },
+    { to: "/logistics/ratings", label: "Customer Ratings" },
     { to: "/logistics/chat", label: "Chat with Users" },
     { to: "/notifications", label: "Notifications", icon: Bell },
     { to: "/profile", label: "Profile" },
@@ -46,8 +42,6 @@ const Sidebar = ({ role }) => {
 
   const adminLinks = [
     { to: "/admin/dashboard", label: "Dashboard Home" },
-    { to: "/admin/logistics-list", label: "Verified Logistics" },
-    { to: "/admin/verify-logistics", label: "Pending Logistics" },
     { to: "/admin/shipments-list", label: "All Shipments" },
     { to: "/admin/bids-list", label: "All Bids" },
     { to: "/admin/chat", label: "Chat Management" },

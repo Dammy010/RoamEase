@@ -6,17 +6,17 @@ const AboutPage = () => {
     <div className="flex flex-col min-h-screen">
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
+      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
         <div className="max-w-5xl mx-auto px-6 text-center">
-          <h1 className="text-4xl font-bold mb-4">About RoamEase</h1>
-          <p className="text-lg max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-4">About RoamEase</h1>
+          <p className="text-base max-w-3xl mx-auto">
             Connecting cargo owners with trusted logistics partners for seamless delivery across Nigeria.
           </p>
         </div>
       </section>
 
       {/* Main Content */}
-      <main className="flex-grow max-w-5xl mx-auto px-6 py-12">
+      <main className="flex-grow max-w-5xl mx-auto px-6 py-8">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left Side - Image */}
           <div className="rounded-lg overflow-hidden shadow-lg">
@@ -29,14 +29,14 @@ const AboutPage = () => {
 
           {/* Right Side - Text */}
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Who We Are</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Who We Are</h2>
             <p className="text-gray-700 leading-relaxed mb-6">
               RoamEase is a logistics coordination platform designed to streamline shipment delivery across Nigeria. 
               We connect cargo owners with licensed logistics partners, enabling seamless communication, bidding, 
               and real-time delivery tracking.
             </p>
 
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Our Mission</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Our Mission</h2>
             <p className="text-gray-700 leading-relaxed mb-6">
               Whether you're an individual sending packages or a business managing bulk freight services, RoamEase 
               helps you find trusted partners, negotiate competitive rates, and manage all your shipments in one 

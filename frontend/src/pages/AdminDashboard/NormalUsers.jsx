@@ -45,7 +45,7 @@ const NormalUsers = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Normal Users (Shipment Posters)</h2>
+      <h2 className="text-xl font-bold mb-4">Normal Users (Shipment Posters)</h2>
 
       {normalUsers.length === 0 ? (
         <p className="text-gray-500">No normal users registered yet.</p>

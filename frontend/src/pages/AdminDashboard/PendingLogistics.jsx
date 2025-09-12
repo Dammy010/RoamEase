@@ -18,7 +18,7 @@ const PendingLogistics = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Pending Logistics Companies</h2>
+      <h2 className="text-xl font-bold mb-4">Pending Logistics Companies</h2>
 
       {logisticsPending.length === 0 ? (
         <p className="text-gray-500">No pending logistics applications.</p>

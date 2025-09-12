@@ -175,10 +175,14 @@ export const checkVerificationStatus = createAsyncThunk("auth/checkVerificationS
 // Fetch Profile
 export const fetchProfile = createAsyncThunk("auth/fetchProfile", async (_, thunkAPI) => {
   try {
+    console.log('🔍 fetchProfile: Fetching user profile...');
     const res = await api.get("/auth/profile");
+    console.log('🔍 fetchProfile: Profile response:', res.data);
+    console.log('🔍 fetchProfile: Verification status:', res.data.verificationStatus);
     return res.data;
   } catch (err) {
     const message = err.response?.data?.message || "Failed to load profile";
+    console.error('❌ fetchProfile: Error:', err);
     toast.error(message);
     return thunkAPI.rejectWithValue({ message });
   }
@@ -287,9 +291,12 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchProfile.fulfilled, (state, { payload }) => {
+        console.log('🔍 fetchProfile.fulfilled: Updating user state with:', payload);
+        console.log('🔍 fetchProfile.fulfilled: Verification status:', payload.verificationStatus);
         state.loading = false;
         state.user = payload;
         state.role = payload.role;
+        console.log('🔍 fetchProfile.fulfilled: Updated state.user:', state.user);
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;

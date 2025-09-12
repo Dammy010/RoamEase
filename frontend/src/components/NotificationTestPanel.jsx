@@ -91,7 +91,6 @@ const NotificationTestPanel = () => {
         return <MessageSquare className="w-5 h-5 text-blue-500" />;
       case 'shipment_created':
       case 'shipment_delivered':
-      case 'shipment_received':
         return <Package className="w-5 h-5 text-green-500" />;
       case 'payment_received':
       case 'payment_failed':

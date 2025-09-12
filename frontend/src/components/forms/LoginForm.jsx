@@ -90,14 +90,14 @@ const LoginForm = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
-            <Lock className="h-6 w-6 text-white" />
+          <div className="mx-auto h-10 w-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+            <Lock className="h-5 w-5 text-white" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
             Welcome back
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -106,7 +106,7 @@ const LoginForm = () => {
         </div>
 
         {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-4">
             {/* Email Field */}
             <div>
@@ -117,14 +117,14 @@ const LoginForm = () => {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
-                <input
+      <input
                   id="email"
                   name="email"
-                  type="email"
+        type="email"
                   autoComplete="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+        value={formData.email}
+        onChange={handleChange}
+                  className={`block w-full pl-10 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
                     errors.email
                       ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                       : "border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
@@ -150,13 +150,13 @@ const LoginForm = () => {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="password"
-                  name="password"
+        id="password"
+        name="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`block w-full pl-10 pr-12 py-3 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+        value={formData.password}
+        onChange={handleChange}
+                  className={`block w-full pl-10 pr-12 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
                     errors.password
                       ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                       : "border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
@@ -200,12 +200,12 @@ const LoginForm = () => {
 
           {/* Submit Button */}
           <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-200 ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
+      <button
+        type="submit"
+        disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-200 ${
+          loading
+            ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg hover:shadow-xl"
               }`}
             >
@@ -220,7 +220,7 @@ const LoginForm = () => {
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               )}
-            </button>
+      </button>
           </div>
 
           {/* Forgot Password & Sign Up Links */}
@@ -239,16 +239,16 @@ const LoginForm = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link
-                  to="/signup"
+        <Link
+          to="/signup"
                   className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
-                >
+        >
                   Sign up here
-                </Link>
-              </p>
+        </Link>
+      </p>
             </div>
           </div>
-        </form>
+    </form>
       </div>
     </div>
   );

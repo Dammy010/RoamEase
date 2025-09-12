@@ -33,7 +33,7 @@ const LogisticsHistory = () => {
         return <FaCheckCircle className="text-green-500" size={16} />;
       case 'delivered':
         return <FaTruck className="text-orange-500" size={16} />;
-      case 'received':
+      case 'delivered':
         return <FaBox className="text-blue-500" size={16} />;
       default:
         return <FaClock className="text-gray-500" size={16} />;
@@ -46,7 +46,7 @@ const LogisticsHistory = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'delivered':
         return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'received':
+      case 'delivered':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
@@ -151,7 +151,6 @@ const LogisticsHistory = () => {
                 <option value="all">All Statuses</option>
                 <option value="completed">Completed</option>
                 <option value="delivered">Delivered</option>
-                <option value="received">Received</option>
               </select>
             </div>
 
