@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProfile } from "../../redux/slices/authSlice";
 import ProfileForm from "../../components/forms/ProfileForm";
+import { User, Settings, Shield, Crown } from "lucide-react";
 
 const Profile = () => {
   const dispatch = useDispatch();

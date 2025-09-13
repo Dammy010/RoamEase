@@ -16,7 +16,9 @@ class NotificationService {
         recipient: notificationData.recipient,
         type: notificationData.type,
         title: notificationData.title,
-        message: notificationData.message
+        message: notificationData.message,
+        priority: notificationData.priority,
+        metadata: notificationData.metadata
       });
 
       const notification = new Notification(notificationData);
@@ -51,7 +53,13 @@ class NotificationService {
         console.log(`📡 Emitting notification to room: ${roomName}`);
         console.log(`📋 Notification payload:`, notificationPayload);
         
+        // Check if the room exists and has users
+        const room = io.sockets.adapter.rooms.get(roomName);
+        console.log(`👥 Users in room ${roomName}:`, room ? room.size : 0);
+        console.log(`📡 Available rooms:`, Array.from(io.sockets.adapter.rooms.keys()));
+        
         // Emit to specific user room
+        console.log(`📤 Emitting notification to room: ${roomName}`);
         io.to(roomName).emit('new-notification', notificationPayload);
         
         // Also emit to admin rooms if it's a system notification
@@ -291,9 +299,16 @@ class NotificationService {
       recipient: logisticsUser._id,
       type: 'bid_accepted',
       title: 'Bid Accepted!',
-      message: `Your bid of $${bid.bidAmount} has been accepted. The shipment is now assigned to you.`,
+      message: `Your bid of ${bid.currency} ${bid.price} has been accepted. The shipment is now assigned to you.`,
       relatedEntity: { type: 'bid', id: bid._id },
       priority: 'high',
+      metadata: {
+        bidId: bid._id,
+        shipmentId: bid.shipment,
+        price: bid.price,
+        currency: bid.currency,
+        eta: bid.eta
+      },
       actions: [
         { label: 'View Shipment', action: 'view', url: `/shipments/${bid.shipment}` }
       ]
@@ -305,9 +320,16 @@ class NotificationService {
       recipient: logisticsUser._id,
       type: 'bid_rejected',
       title: 'Bid Not Selected',
-      message: `Your bid of $${bid.bidAmount} was not selected for this shipment.`,
+      message: `Your bid of ${bid.currency} ${bid.price} was not selected for this shipment.`,
       relatedEntity: { type: 'bid', id: bid._id },
-      priority: 'low'
+      priority: 'low',
+      metadata: {
+        bidId: bid._id,
+        shipmentId: bid.shipment,
+        price: bid.price,
+        currency: bid.currency,
+        eta: bid.eta
+      }
     });
   }
 

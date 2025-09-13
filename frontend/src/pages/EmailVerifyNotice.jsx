@@ -1,4 +1,8 @@
 import React from 'react';
+import { 
+  Mail, CheckCircle, Clock, Shield, ArrowRight, 
+  RefreshCw, AlertCircle, Send
+} from 'lucide-react';
 
 const EmailVerifyNotice = () => {
   return (

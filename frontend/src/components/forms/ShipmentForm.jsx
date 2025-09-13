@@ -717,28 +717,60 @@ const ShipmentForm = () => {
       content: (
         <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
-            <Select
-              label="Type of Goods"
-              id="typeOfGoods"
-              name="typeOfGoods"
-              value={formData.typeOfGoods}
-              onChange={handleChange}
-              options={[
-                "Electronics",
-                "Furniture",
-                "Clothing",
-                "Food & Beverages",
-                "Machinery & Equipment",
-                "Documents",
-                "Art & Antiques",
-                "Automotive Parts",
-                "Medical Supplies",
-                "Other",
-              ]}
-              icon={Package}
-              required
-              error={errors.typeOfGoods}
-            />
+            <div className="mb-6">
+              <label
+                htmlFor="typeOfGoods"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Type of Goods
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Package className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="typeOfGoods"
+                  name="typeOfGoods"
+                  value={formData.typeOfGoods}
+                  onChange={handleChange}
+                  placeholder="Enter type of goods (e.g., Electronics, Furniture, Documents, etc.)"
+                  className={`w-full px-4 py-3 pl-10 border rounded-xl shadow-sm focus:ring-2 focus:border-indigo-500 outline-none transition-all duration-200 ${
+                    errors.typeOfGoods 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 focus:ring-indigo-500 hover:border-gray-400'
+                  }`}
+                  required
+                  list="goods-suggestions"
+                />
+                <datalist id="goods-suggestions">
+                  <option value="Electronics" />
+                  <option value="Furniture" />
+                  <option value="Clothing" />
+                  <option value="Food & Beverages" />
+                  <option value="Machinery & Equipment" />
+                  <option value="Documents" />
+                  <option value="Art & Antiques" />
+                  <option value="Automotive Parts" />
+                  <option value="Medical Supplies" />
+                  <option value="Books & Media" />
+                  <option value="Sports Equipment" />
+                  <option value="Jewelry" />
+                  <option value="Textiles" />
+                  <option value="Chemicals" />
+                  <option value="Agricultural Products" />
+                  <option value="Construction Materials" />
+                  <option value="Other" />
+                </datalist>
+              </div>
+              {errors.typeOfGoods && (
+                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle size={14} />
+                  {errors.typeOfGoods}
+                </p>
+              )}
+            </div>
             <Input
               label="Weight (kg)"
               id="weight"
@@ -1062,7 +1094,7 @@ const ShipmentForm = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-            <Package className="text-white text-3xl" />
+            <Package className="text-white" size={32} />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-4">Post a Shipment</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -1118,7 +1150,7 @@ const ShipmentForm = () => {
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                {React.createElement(steps[step].icon, { className: "text-white text-2xl" })}
+                {React.createElement(steps[step].icon, { className: "text-indigo-600", size: 24 })}
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">{steps[step].title}</h2>

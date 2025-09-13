@@ -3,6 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import ShipmentForm from "../../components/forms/ShipmentForm";
+import { Package, Plus, ArrowLeft, Settings } from "lucide-react";
 
 const PostShipment = () => {
   const navigate = useNavigate();

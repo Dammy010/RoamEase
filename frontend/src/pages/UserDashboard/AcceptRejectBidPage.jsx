@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { fetchShipmentDetailsById } from '../../redux/slices/shipmentSlice';
 import { fetchBidsForShipment, acceptBid, rejectBid } from '../../redux/slices/bidSlice';
 import { toast } from 'react-toastify';
@@ -8,7 +9,7 @@ import {
   CheckCircle, XCircle, MessageCircle, Package, MapPin, Calendar, 
   Clock, Truck, User, Phone, Mail, Star, Filter, Search, 
   ArrowLeft, RefreshCw, AlertCircle, Globe, FileText, 
-  TrendingUp, Award, Shield, Zap, DollarSign, MessageSquare
+  TrendingUp, Award, Shield, Zap, Wallet, MessageSquare
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -16,29 +17,11 @@ const AcceptRejectBidPage = () => {
   const { shipmentId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { getCurrencySymbol } = useCurrency();
   const { currentShipment, loading: shipmentLoading, error: shipmentError } = useSelector(state => state.shipment);
   const { bids, loading: bidsLoading, error: bidsError } = useSelector(state => state.bid);
   const { user } = useSelector((state) => state.auth);
 
-  // Currency symbol helper function
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'CAD': 'C$',
-      'AUD': 'A$',
-      'JPY': '¥',
-      'CHF': 'CHF',
-      'CNY': '¥',
-      'INR': '₹',
-      'BRL': 'R$',
-      'MXN': '$',
-      'ZAR': 'R',
-      'NGN': '#'
-    };
-    return symbols[currency] || '$';
-  };
 
   // Debug logging
   console.log("AcceptRejectBidPage Debug:");
@@ -211,7 +194,7 @@ const AcceptRejectBidPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Package className="text-white text-2xl" />
+            <Package className="text-white" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Bids</h3>
           <p className="text-gray-500">Please wait while we fetch the bid details...</p>
@@ -297,7 +280,7 @@ const AcceptRejectBidPage = () => {
             <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
-                  <Package className="text-white text-2xl" />
+                  <Package className="text-white" size={24} />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Manage Bids</h1>
@@ -330,7 +313,7 @@ const AcceptRejectBidPage = () => {
                       <span>Weight: {currentShipment.weight || 'N/A'} kg</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
-                      <DollarSign size={16} />
+                      <Wallet size={16} />
                       <span>Budget: {getCurrencySymbol(currentShipment.budgetCurrency || 'USD')}{currentShipment.budget || 'N/A'}</span>
                     </div>
                   </div>

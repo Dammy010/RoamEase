@@ -132,8 +132,14 @@ const bidSlice = createSlice({
     myBids: [],
     loading: false,
     error: null,
+    bidsViewed: false, // Track if user has viewed the bids page
   },
   reducers: {
+    // Mark bids as viewed when user visits manage bids page
+    markBidsAsViewed: (state) => {
+      console.log('🧹 Marking bids as viewed');
+      state.bidsViewed = true;
+    },
     // Can add local reducers if needed for real-time updates or local state management
   },
   extraReducers: (builder) => {
@@ -237,6 +243,8 @@ const bidSlice = createSlice({
       .addCase(fetchBidsOnMyShipments.fulfilled, (state, action) => {
         state.loading = false;
         state.bids = action.payload; // Store in bids array
+        // Reset viewed flag when new bids are fetched
+        state.bidsViewed = false;
       })
       .addCase(fetchBidsOnMyShipments.rejected, (state, action) => {
         state.loading = false;
@@ -285,4 +293,5 @@ const bidSlice = createSlice({
   },
 });
 
+export const { markBidsAsViewed } = bidSlice.actions;
 export default bidSlice.reducer;

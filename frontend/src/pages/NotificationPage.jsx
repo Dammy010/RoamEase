@@ -36,7 +36,7 @@ import {
   X,
   User,
   Package,
-  DollarSign,
+  Wallet,
   AlertTriangle,
   Shield,
   Building2,
@@ -206,6 +206,23 @@ const NotificationPage = () => {
         socket = socketFunction();
         
         if (socket) {
+          // Listen for new notification events
+          socket.on('new-notification', (notification) => {
+            console.log('🔔 New notification received via socket:', notification);
+            console.log('🔔 Notification type:', notification.type);
+            console.log('🔔 Notification title:', notification.title);
+            console.log('🔔 Notification message:', notification.message);
+            // Add the new notification to the list
+            dispatch(addNotification(notification));
+            // Update unread count
+            dispatch(getUnreadCount());
+            
+            // Play notification sound
+            if (notificationSoundRef.current) {
+              notificationSoundRef.current.play().catch(console.error);
+            }
+          });
+
           // Listen for notification refresh events
           socket.on('notification-refresh', (data) => {
             console.log('🔔 Socket notification refresh received:', data);
@@ -228,6 +245,7 @@ const NotificationPage = () => {
 
     return () => {
       if (socket) {
+        socket.off('new-notification');
         socket.off('notification-refresh');
       }
     };
@@ -328,12 +346,12 @@ const NotificationPage = () => {
       shipment_posted: Package,
       bid_accepted: CheckCircle,
       bid_rejected: X,
-      payment_received: DollarSign,
+      payment_received: Wallet,
       shipment_delivered: CheckCircle,
       shipment_cancelled: X,
       
       // Logistics notifications
-      new_bid: DollarSign,
+      new_bid: Wallet,
       bid_won: CheckCircle,
       bid_lost: X,
       shipment_assigned: Package,
@@ -347,6 +365,9 @@ const NotificationPage = () => {
       
       // Communication
       message_received: MessageSquare,
+      new_message: MessageSquare,
+      conversation_started: MessageSquare,
+      conversation_updated: MessageSquare,
       chat_reminder: MessageSquare,
       
       // Documents
@@ -388,6 +409,10 @@ const NotificationPage = () => {
       maintenance: 'text-orange-600 bg-orange-100',
       feature_announcement: 'text-purple-600 bg-purple-100',
       message_received: 'text-blue-600 bg-blue-100',
+      new_message: 'text-indigo-600 bg-indigo-100',
+      conversation_started: 'text-purple-600 bg-purple-100',
+      conversation_updated: 'text-blue-600 bg-blue-100',
+      chat_reminder: 'text-cyan-600 bg-cyan-100',
       document_uploaded: 'text-gray-600 bg-gray-100',
       document_approved: 'text-green-600 bg-green-100',
       document_rejected: 'text-red-600 bg-red-100',
@@ -425,7 +450,12 @@ const NotificationPage = () => {
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          notification.message.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    
+    const matchesStatus = !filters.status || filters.status === 'all' || notification.status === filters.status;
+    const matchesType = !filters.type || filters.type === 'all' || notification.type === filters.type;
+    const matchesPriority = !filters.priority || filters.priority === 'all' || notification.priority === filters.priority;
+    
+    return matchesSearch && matchesStatus && matchesType && matchesPriority;
   });
 
   const sortedNotifications = [...filteredNotifications].sort((a, b) => {
@@ -611,6 +641,7 @@ const NotificationPage = () => {
             <span>Filters</span>
           </button>
           
+          
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode('list')}
@@ -657,6 +688,65 @@ const NotificationPage = () => {
             </select>
           </div>
         </div>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="mb-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Status
+                </label>
+                <select
+                  value={filters.status || 'all'}
+                  onChange={(e) => handleFilterChange({ status: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Notifications</option>
+                  <option value="unread">Unread Only</option>
+                  <option value="read">Read Only</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Type
+                </label>
+                <select
+                  value={filters.type || 'all'}
+                  onChange={(e) => handleFilterChange({ type: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Types</option>
+                  <option value="new_message">Chat Messages</option>
+                  <option value="conversation_started">New Conversations</option>
+                  <option value="bid_accepted">Bid Accepted</option>
+                  <option value="bid_rejected">Bid Rejected</option>
+                  <option value="shipment_posted">New Shipments</option>
+                  <option value="payment_received">Payments</option>
+                  <option value="system_update">System Updates</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Priority
+                </label>
+                <select
+                  value={filters.priority || 'all'}
+                  onChange={(e) => handleFilterChange({ priority: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Notifications List */}
         {sortedNotifications.length === 0 ? (
@@ -741,7 +831,10 @@ const NotificationPage = () => {
                       </div>
                       
                       <p className={`mt-1 line-clamp-2 ${isUnread ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>
-                            {notification.message}
+                            {notification.type === 'new_message' && notification.metadata?.senderName ? 
+                              `From ${notification.metadata.senderName}: ${notification.message}` :
+                              notification.message
+                            }
                           </p>
                           
                           {/* Metadata */}
@@ -754,6 +847,24 @@ const NotificationPage = () => {
                               {notification.type.replace(/_/g, ' ')}
                             </span>
                           </div>
+                          
+                          {/* Chat Action Button */}
+                          {(notification.type === 'new_message' || notification.type === 'conversation_started') && (
+                            <div className="mt-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (notification.metadata?.conversationId) {
+                                    window.location.href = `/chat?conversation=${notification.metadata.conversationId}`;
+                                  }
+                                }}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center gap-2"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                                View Chat
+                              </button>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Actions */}
@@ -804,26 +915,6 @@ const NotificationPage = () => {
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && sortedNotifications.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Bell className="w-12 h-12 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Notifications</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {searchQuery ? 'No notifications match your search criteria.' : 'You don\'t have any notifications yet.'}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Clear Search
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Bulk Actions */}
         {selectedNotifications.length > 0 && (

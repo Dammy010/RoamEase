@@ -9,7 +9,7 @@ import {
   CheckCircle, AlertCircle, Award, Shield, Zap, RefreshCw, Search, 
   Filter, SortAsc, Eye, MoreVertical, Globe, FileText, 
   Image, TrendingUp, Building2, MessageSquare, ThumbsUp, ThumbsDown,
-  Trash2, Edit, Download, ExternalLink, Star, DollarSign, Weight,
+  Trash2, Edit, Download, ExternalLink, Star, Wallet, Weight,
   Ruler, ShieldCheck, HandHeart, Navigation, PhoneCall, Mail as MailIcon,
   Calendar as CalendarIcon, Clock as ClockIcon, AlertTriangle, Info
 } from 'lucide-react';
@@ -122,7 +122,7 @@ const ShipmentDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Package className="text-white text-2xl" />
+            <Package className="text-white" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Loading Shipment Details</h3>
           <p className="text-gray-500 dark:text-gray-400">Please wait while we fetch the shipment information...</p>
@@ -205,7 +205,7 @@ const ShipmentDetail = () => {
               
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
-                  <Package className="text-white text-2xl" />
+                  <Package className="text-white" size={24} />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white mb-2">{currentShipment.shipmentTitle}</h1>
@@ -462,7 +462,7 @@ const ShipmentDetail = () => {
                         </div>
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-xl flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <ExternalLink className="text-white text-2xl" />
+                            <ExternalLink className="text-white" size={24} />
                           </div>
                         </div>
                       </div>
@@ -528,10 +528,10 @@ const ShipmentDetail = () => {
               <div className="p-6 space-y-4">
                 {/* Manage Bids Button */}
                 <button
-                  onClick={() => navigate(`/user/manage-bids/${id}`)}
+                  onClick={() => navigate('/user/manage-bids')}
                   className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
-                  <DollarSign size={18} />
+                  <Wallet size={18} />
                   Manage Bids
                 </button>
                 

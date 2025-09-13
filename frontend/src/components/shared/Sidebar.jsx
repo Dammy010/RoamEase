@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogOut, Bell } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { 
+  Menu, X, LogOut, Bell, Home, MessageSquare, Package, 
+  History, Star, User, Settings, CreditCard, Truck, 
+  BarChart3, Users, FileText, Shield, TrendingUp
+} from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice"; // adjust path if needed
+import { markBidsAsViewed } from "../../redux/slices/bidSlice";
+import { clearDeliveredShipmentsCount } from "../../redux/slices/shipmentSlice";
 import NotificationBell from "../NotificationBell";
 
 const Sidebar = ({ role }) => {
@@ -11,45 +17,76 @@ const Sidebar = ({ role }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // Get chat unread count from Redux store
+  const { unreadCount: chatUnreadCount, conversations } = useSelector((state) => state.chat);
+  
+  // Get bids count from Redux store (bids on user's shipments)
+  const { bids: bidsOnMyShipments, bidsViewed } = useSelector((state) => state.bid);
+  
+  // Get delivered shipments count from Redux store
+  const { deliveredShipments } = useSelector((state) => state.shipment);
+  
+  // Calculate counts - only show if not viewed
+  const bidsCount = (!bidsViewed && bidsOnMyShipments?.length) || 0;
+  const deliveredCount = deliveredShipments?.length || 0;
+  
+  // Debug logging
+  console.log('Sidebar - Chat unread count:', chatUnreadCount);
+  console.log('Sidebar - Bids count:', bidsCount);
+  console.log('Sidebar - Bids viewed:', bidsViewed);
+  console.log('Sidebar - Bids array length:', bidsOnMyShipments?.length);
+  console.log('Sidebar - Delivered shipments count:', deliveredCount);
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
 
+  const handleManageBidsClick = () => {
+    // Mark bids as viewed when user clicks on Manage Bids
+    console.log('🖱️ Manage Bids clicked - marking as viewed');
+    dispatch(markBidsAsViewed());
+  };
+
+  const handleDeliveredShipmentsClick = () => {
+    // Clear the delivered shipments count when user clicks on Delivered Shipments
+    dispatch(clearDeliveredShipmentsCount());
+  };
+
   const userLinks = [
-    { to: "/user/dashboard", label: "Dashboard Home" },
-    { to: "/user/manage-bids", label: "Manage Bids" }, // Updated: Link to consolidated bid management page
-    { to: "/user/chat", label: "Chat with Logistics" },
-    { to: "/user/delivered-shipments", label: "Delivered Shipments" }, // New: Link to delivered shipments page
-    { to: "/user/shipment-history", label: "Shipment History" },
-    { to: "/user/rate-shipment", label: "Rate Shipment" },
+    { to: "/user/dashboard", label: "Dashboard Home", icon: Home },
+    { to: "/user/manage-bids", label: "Manage Bids", icon: MessageSquare },
+    { to: "/user/chat", label: "Chat with Logistics", icon: MessageSquare },
+    { to: "/user/delivered-shipments", label: "Delivered Shipments", icon: Package },
+    { to: "/user/shipment-history", label: "Shipment History", icon: History },
+    { to: "/user/rate-shipment", label: "Rate Shipment", icon: Star },
     { to: "/notifications", label: "Notifications", icon: Bell },
-    { to: "/profile", label: "Profile" },
-    { to: "/settings", label: "Settings" },
+    { to: "/profile", label: "Profile", icon: User },
+    { to: "/settings", label: "Settings", icon: Settings },
   ];
 
   const logisticsLinks = [
-    { to: "/logistics/dashboard", label: "Dashboard Home" },
-    { to: "/logistics/subscriptions", label: "Subscriptions" },
-    { to: "/logistics/history", label: "Delivery History" },
-    { to: "/logistics/ratings", label: "Customer Ratings" },
-    { to: "/logistics/chat", label: "Chat with Users" },
+    { to: "/logistics/dashboard", label: "Dashboard Home", icon: Home },
+    { to: "/logistics/subscriptions", label: "Subscriptions", icon: CreditCard },
+    { to: "/logistics/history", label: "Delivery History", icon: History },
+    { to: "/logistics/ratings", label: "Customer Ratings", icon: Star },
+    { to: "/logistics/chat", label: "Chat with Users", icon: MessageSquare },
     { to: "/notifications", label: "Notifications", icon: Bell },
-    { to: "/profile", label: "Profile" },
-    { to: "/settings", label: "Settings" },
+    { to: "/profile", label: "Profile", icon: User },
+    { to: "/settings", label: "Settings", icon: Settings },
   ];
 
   const adminLinks = [
-    { to: "/admin/dashboard", label: "Dashboard Home" },
-    { to: "/admin/shipments-list", label: "All Shipments" },
-    { to: "/admin/bids-list", label: "All Bids" },
-    { to: "/admin/chat", label: "Chat Management" },
-    { to: "/admin/reports-disputes", label: "Reports & Disputes" },
-    { to: "/admin/platform-analytics", label: "Platform Analytics" },
+    { to: "/admin/dashboard", label: "Dashboard Home", icon: Home },
+    { to: "/admin/shipments-list", label: "All Shipments", icon: Package },
+    { to: "/admin/bids-list", label: "All Bids", icon: MessageSquare },
+    { to: "/admin/chat", label: "Chat Management", icon: MessageSquare },
+    { to: "/admin/reports-disputes", label: "Reports & Disputes", icon: FileText },
+    { to: "/admin/platform-analytics", label: "Platform Analytics", icon: BarChart3 },
     { to: "/notifications", label: "Notifications", icon: Bell },
-    { to: "/profile", label: "Profile" },
-    { to: "/settings", label: "Settings" },
+    { to: "/profile", label: "Profile", icon: User },
+    { to: "/settings", label: "Settings", icon: Settings },
   ];
 
   const links =
@@ -82,17 +119,45 @@ const Sidebar = ({ role }) => {
         <nav className="flex-1 space-y-1">
           {links.map((link) => {
             const isActive = location.pathname === link.to;
+            const IconComponent = link.icon;
+            const isChatLink = link.to.includes('/chat');
+            const isManageBidsLink = link.to.includes('/manage-bids');
+            const isDeliveredShipmentsLink = link.to.includes('/delivered-shipments');
+            
+            // Determine which count to show
+            let showCount = false;
+            let countValue = 0;
+            
+            if (isChatLink && chatUnreadCount > 0) {
+              showCount = true;
+              countValue = chatUnreadCount;
+              countColor = 'bg-red-500';
+            } else if (isManageBidsLink && bidsCount > 0) {
+              showCount = true;
+              countValue = bidsCount;
+            } else if (isDeliveredShipmentsLink && deliveredCount > 0) {
+              showCount = true;
+              countValue = deliveredCount;
+            }
+            
             return (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                onClick={isManageBidsLink ? handleManageBidsClick : isDeliveredShipmentsLink ? handleDeliveredShipmentsClick : undefined}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 relative ${
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 }`}
               >
+                {IconComponent && <IconComponent size={16} />}
                 {link.label}
+                {showCount && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                    {countValue}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -114,18 +179,52 @@ const Sidebar = ({ role }) => {
         <nav className="space-y-2">
           {links.map((link) => {
             const isActive = location.pathname === link.to;
+            const IconComponent = link.icon;
+            const isChatLink = link.to.includes('/chat');
+            const isManageBidsLink = link.to.includes('/manage-bids');
+            const isDeliveredShipmentsLink = link.to.includes('/delivered-shipments');
+            
+            // Determine which count to show
+            let showCount = false;
+            let countValue = 0;
+            
+            if (isChatLink && chatUnreadCount > 0) {
+              showCount = true;
+              countValue = chatUnreadCount;
+              countColor = 'bg-red-500';
+            } else if (isManageBidsLink && bidsCount > 0) {
+              showCount = true;
+              countValue = bidsCount;
+            } else if (isDeliveredShipmentsLink && deliveredCount > 0) {
+              showCount = true;
+              countValue = deliveredCount;
+            }
+            
             return (
               <Link
                 key={link.to}
                 to={link.to}
-                onClick={() => setIsOpen(false)}
-                className={`block px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                onClick={() => {
+                  setIsOpen(false);
+                  if (isManageBidsLink) {
+                    handleManageBidsClick();
+                  } else if (isDeliveredShipmentsLink) {
+                    handleDeliveredShipmentsClick();
+                  }
+                }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 relative ${
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 }`}
               >
+                {IconComponent && <IconComponent size={16} />}
                 {link.label}
+                {showCount && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                    {countValue}
+                  </span>
+                )}
               </Link>
             );
           })}

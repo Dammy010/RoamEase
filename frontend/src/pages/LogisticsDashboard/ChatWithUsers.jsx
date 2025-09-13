@@ -2,6 +2,7 @@ import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import ChatList from "../../components/chat/ChatList";
 import ChatBox from "../../components/chat/ChatBox";
+import { MessageSquare, Users, Settings, ArrowLeft } from "lucide-react";
 
 const ChatWithUsers = () => {
   const { isDark } = useTheme();

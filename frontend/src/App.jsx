@@ -5,6 +5,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import React, { useEffect } from 'react';
 import { initSocket, getSocket, initializeSocketAfterLogin } from './services/socket';
 import { initializeSettings } from './redux/slices/settingsSlice';
+import { fetchConversations } from './redux/slices/chatSlice';
+import { fetchBidsOnMyShipments } from './redux/slices/bidSlice';
+import { fetchDeliveredShipments } from './redux/slices/shipmentSlice';
 import { useTheme } from './contexts/ThemeContext';
 
 // Context Providers are now in main.jsx
@@ -88,6 +91,15 @@ function App() {
     // Initialize settings (currency, etc.) - theme is now handled by ThemeProvider
     dispatch(initializeSettings());
   }, [dispatch]);
+
+  useEffect(() => {
+    // Fetch data when user is authenticated to get counts for sidebar
+    if (user) {
+      dispatch(fetchConversations());
+      dispatch(fetchBidsOnMyShipments());
+      dispatch(fetchDeliveredShipments());
+    }
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (user) {

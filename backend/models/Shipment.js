@@ -11,8 +11,9 @@ const shipmentSchema = new mongoose.Schema(
     // Goods Specifications
     typeOfGoods: { 
       type: String, 
-      enum: ['Electronics', 'Furniture', 'Clothing', 'Food', 'Machinery', 'Other'], 
-      default: 'Other' 
+      required: true,
+      trim: true,
+      maxlength: 100
     },
     weight: { type: Number, min: 0 },
     length: { type: Number, min: 0 },

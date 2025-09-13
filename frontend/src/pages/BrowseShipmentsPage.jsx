@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { fetchPublicOpenShipments } from '../redux/slices/shipmentSlice';
 import { 
   Package, Search, Filter, SortAsc, RefreshCw, MapPin, Calendar, Clock, 
   Truck, Weight, Ruler, Shield, Eye, ChevronDown, ChevronUp, 
-  DollarSign, MessageSquare, User, Phone, FileText, Image, 
+  Wallet, MessageSquare, User, Phone, FileText, Image, 
   AlertCircle, CheckCircle, Star, TrendingUp, Globe, ArrowLeft,
   ExternalLink, LogIn, UserPlus
 } from 'lucide-react';
@@ -13,6 +14,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const BrowseShipmentsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const { availableShipments, loading, error } = useSelector((state) => state.shipment);
   const { user } = useSelector((state) => state.auth);
 
@@ -335,7 +337,7 @@ const BrowseShipmentsPage = () => {
                       {shipment.budget && (
                         <div className="text-right">
                           <p className="text-sm text-gray-600">Budget</p>
-                          <p className="text-2xl font-bold text-green-600">${shipment.budget}</p>
+                          <p className="text-2xl font-bold text-green-600">{formatCurrency(shipment.budget)}</p>
                         </div>
                       )}
                       
@@ -415,7 +417,7 @@ const BrowseShipmentsPage = () => {
                           to="/logistics-dashboard/available-shipments"
                           className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         >
-                          <DollarSign className="w-4 h-4" />
+                          <Wallet className="w-4 h-4" />
                           BID NOW
                         </Link>
                       ) : user.role === 'user' ? (

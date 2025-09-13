@@ -137,7 +137,7 @@ const PendingLogisticsList = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Clock className="text-white text-2xl" />
+            <Clock className="text-orange-600" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Pending Logistics</h3>
           <p className="text-gray-500">Please wait while we fetch pending logistics applications...</p>
@@ -176,7 +176,7 @@ const PendingLogisticsList = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                    <Clock className="text-white text-2xl" />
+                    <Clock className="text-orange-600" size={24} />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-white mb-2">Pending Logistics Companies</h1>

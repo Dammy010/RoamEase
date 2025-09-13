@@ -107,19 +107,25 @@ const sendMessage = async (req, res) => {
 
     // Create notification for the new message
     try {
-      console.log('Creating message notification for conversation:', conversation._id);
-      console.log('Message details:', {
+      console.log('🔔 Creating message notification for conversation:', conversation._id);
+      console.log('📝 Message details:', {
         id: message._id,
         sender: message.sender,
         text: message.text,
         conversationId: conversation._id
       });
-      console.log('Conversation participants:', conversation.participants);
+      console.log('👥 Conversation participants:', conversation.participants);
+      console.log('👤 Current user (sender):', req.user._id);
       
-      await ChatNotificationService.createMessageNotification(message, conversation);
-      console.log('Message notification created successfully');
+      const notification = await ChatNotificationService.createMessageNotification(message, conversation);
+      if (notification) {
+        console.log('✅ Message notification created successfully:', notification._id);
+      } else {
+        console.log('⚠️ No notification created (returned null)');
+      }
     } catch (notificationError) {
-      console.error('Error creating message notification:', notificationError);
+      console.error('❌ Error creating message notification:', notificationError);
+      console.error('❌ Error stack:', notificationError.stack);
       // Don't fail the message sending if notification creation fails
     }
 

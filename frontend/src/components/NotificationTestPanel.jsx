@@ -21,7 +21,7 @@ import {
   Clock,
   MessageSquare,
   Package,
-  DollarSign,
+  Wallet,
   Shield,
   Settings
 } from 'lucide-react';
@@ -94,7 +94,7 @@ const NotificationTestPanel = () => {
         return <Package className="w-5 h-5 text-green-500" />;
       case 'payment_received':
       case 'payment_failed':
-        return <DollarSign className="w-5 h-5 text-yellow-500" />;
+        return <Wallet className="w-5 h-5 text-yellow-500" />;
       case 'verification_approved':
       case 'verification_rejected':
         return <Shield className="w-5 h-5 text-purple-500" />;

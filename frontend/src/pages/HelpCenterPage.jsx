@@ -1,4 +1,9 @@
 import React from 'react';
+import { 
+  HelpCircle, Search, BookOpen, MessageSquare, 
+  Phone, Mail, Clock, CheckCircle, ArrowRight,
+  Users, Settings, Shield, Globe, FileText
+} from 'lucide-react';
 
 const HelpCenterPage = () => {
   return (

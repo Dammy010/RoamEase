@@ -12,7 +12,7 @@ import {
   Headphones, 
   Settings, 
   Calendar,
-  DollarSign,
+  Wallet,
   Crown,
   Sparkles,
   ArrowRight,

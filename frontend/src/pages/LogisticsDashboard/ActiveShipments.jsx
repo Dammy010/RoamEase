@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { markShipmentAsDeliveredByLogistics } from '../../redux/slices/shipmentSlice';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
@@ -8,16 +9,35 @@ import {
   Truck, Package, MapPin, Calendar, Clock, User, Phone, 
   Eye, ChevronDown, ChevronUp, CheckCircle, AlertCircle, 
   Weight, Ruler, Shield, FileText, Image, RefreshCw,
-  DollarSign, MessageSquare, Globe, ArrowRight
+  Wallet, MessageSquare, Globe, ArrowRight
 } from 'lucide-react';
 
 const ActiveShipments = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const { formatCurrency, currency } = useCurrency();
   const { user } = useSelector((state) => state.auth);
   const [activeShipments, setActiveShipments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedShipments, setExpandedShipments] = useState(new Set());
+  const [actionLoading, setActionLoading] = useState({});
+  const [showDeliverModal, setShowDeliverModal] = useState(false);
+  const [shipmentToDeliver, setShipmentToDeliver] = useState(null);
+
+  // Helper function to get safe value
+  const getSafeValue = (value, fallback = 'Not specified') => {
+    return value || fallback;
+  };
+
+  // Helper function to get display name safely
+  const getDisplayName = (user) => {
+    if (!user) return 'Unknown User';
+    if (user.companyName) return user.companyName;
+    if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
+    if (user.name) return user.name;
+    if (user.email) return user.email;
+    return 'Unknown User';
+  };
 
   const toggleExpanded = (shipmentId) => {
     const newExpanded = new Set(expandedShipments);
@@ -77,7 +97,18 @@ const ActiveShipments = () => {
     fetchActiveShipments();
   }, [user]);
 
-  const handleMarkAsDelivered = async (shipmentId) => {
+  const handleMarkAsDeliveredClick = (shipment) => {
+    setShipmentToDeliver(shipment);
+    setShowDeliverModal(true);
+  };
+
+  const handleConfirmDeliver = async () => {
+    if (!shipmentToDeliver) return;
+    
+    const shipmentId = shipmentToDeliver._id;
+    setActionLoading(prev => ({ ...prev, [shipmentId]: true }));
+    setShowDeliverModal(false);
+    
     try {
       const result = await dispatch(markShipmentAsDeliveredByLogistics(shipmentId));
       
@@ -99,7 +130,15 @@ const ActiveShipments = () => {
     } catch (error) {
       toast.error('Error marking shipment as delivered');
       console.error('Error:', error);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [shipmentId]: false }));
+      setShipmentToDeliver(null);
     }
+  };
+
+  const handleCancelDeliver = () => {
+    setShowDeliverModal(false);
+    setShipmentToDeliver(null);
   };
 
   if (loading) {
@@ -127,7 +166,7 @@ const ActiveShipments = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Truck className="text-white text-2xl" />
+                  <Truck className="text-white" size={24} />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">Active Shipments</h1>
@@ -244,11 +283,11 @@ const ActiveShipments = () => {
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
                           <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                            <DollarSign className="text-green-600" size={16} />
+                            <Wallet className="text-green-600" size={16} />
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 font-medium">Bid Price</div>
-                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">${shipment.acceptedBid?.price}</div>
+                            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(shipment.acceptedBid?.price, shipment.acceptedBid?.currency || 'USD', currency)}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
@@ -289,11 +328,20 @@ const ActiveShipments = () => {
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleMarkAsDelivered(shipment._id)}
-                          className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleMarkAsDeliveredClick(shipment);
+                          }}
+                          disabled={actionLoading[shipment._id]}
+                          className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <CheckCircle size={16} />
-                          Mark as Delivered
+                          {actionLoading[shipment._id] ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <CheckCircle size={16} />
+                          )}
+                          {actionLoading[shipment._id] ? 'Processing...' : 'Mark as Delivered'}
                         </button>
                       )}
                     </div>
@@ -313,7 +361,9 @@ const ActiveShipments = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Route</div>
-                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCity} → {shipment.deliveryCity}</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">
+                              {getSafeValue(shipment.pickupCity)} → {getSafeValue(shipment.deliveryCity)}
+                            </div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-100">
                             <div className="text-sm text-gray-600 mb-1">Delivery Date</div>
@@ -342,7 +392,7 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Type</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.typeOfGoods}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.typeOfGoods)}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -351,7 +401,7 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Quantity</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.quantitySummary}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.quantitySummary)}</div>
                                 </div>
                               </div>
                               {shipment.weight && (
@@ -361,7 +411,7 @@ const ActiveShipments = () => {
                                   </div>
                                   <div>
                                     <div className="text-sm text-gray-500 font-medium">Weight</div>
-                                    <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.weightSummary}</div>
+                                    <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.weightSummary)}</div>
                                   </div>
                                 </div>
                               )}
@@ -372,13 +422,13 @@ const ActiveShipments = () => {
                                   </div>
                                   <div>
                                     <div className="text-sm text-gray-500 font-medium">Dimensions</div>
-                                    <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.dimensions}</div>
+                                    <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.dimensions)}</div>
                                   </div>
                                 </div>
                               )}
                               <div className="mt-4 p-3 bg-gray-50 rounded-xl">
                                 <div className="text-sm text-gray-500 font-medium mb-1">Description</div>
-                                <div className="text-sm text-gray-800 dark:text-gray-200">{shipment.descriptionOfGoods}</div>
+                                <div className="text-sm text-gray-800 dark:text-gray-200">{getSafeValue(shipment.descriptionOfGoods, 'No description provided')}</div>
                               </div>
                             </div>
                           </div>
@@ -396,7 +446,7 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Mode</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.modeOfTransport}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.modeOfTransport)}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -405,13 +455,13 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Insurance</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.insuranceRequired}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.insuranceRequired)}</div>
                                 </div>
                               </div>
                               {shipment.handlingInstructions && (
                                 <div className="mt-4 p-3 bg-gray-50 rounded-xl">
                                   <div className="text-sm text-gray-500 font-medium mb-1">Handling Instructions</div>
-                                  <div className="text-sm text-gray-800 dark:text-gray-200">{shipment.handlingInstructions}</div>
+                                  <div className="text-sm text-gray-800 dark:text-gray-200">{getSafeValue(shipment.handlingInstructions, 'No special instructions')}</div>
                                 </div>
                               )}
                             </div>
@@ -433,27 +483,27 @@ const ActiveShipments = () => {
                                 </div>
                                 <div className="flex-1">
                                   <div className="text-sm text-gray-500 font-medium">Address</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupAddress}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.pickupAddress)}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">City</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCity}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.pickupCity)}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Country</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupCountry}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.pickupCountry)}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Contact Person</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupContactPerson}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.pickupContactPerson)}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Phone</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.pickupPhoneNumber}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.pickupPhoneNumber)}</div>
                                 </div>
                               </div>
                             </div>
@@ -472,17 +522,17 @@ const ActiveShipments = () => {
                                 </div>
                                 <div className="flex-1">
                                   <div className="text-sm text-gray-500 font-medium">Address</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryAddress}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.deliveryAddress)}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">City</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryCity}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.deliveryCity)}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Country</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryCountry}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.deliveryCountry)}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -491,17 +541,17 @@ const ActiveShipments = () => {
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Delivery Date</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedDeliveryDate}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.formattedDeliveryDate)}</div>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Contact Person</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryContactPerson}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.deliveryContactPerson)}</div>
                                 </div>
                                 <div>
                                   <div className="text-sm text-gray-500 font-medium">Phone</div>
-                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.deliveryPhoneNumber}</div>
+                                  <div className="font-semibold text-gray-800 dark:text-gray-200">{getSafeValue(shipment.deliveryPhoneNumber)}</div>
                                 </div>
                               </div>
                             </div>
@@ -584,11 +634,20 @@ const ActiveShipments = () => {
                               </div>
                             ) : (
                               <button
-                                onClick={() => handleMarkAsDelivered(shipment._id)}
-                                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleMarkAsDeliveredClick(shipment);
+                                }}
+                                disabled={actionLoading[shipment._id]}
+                                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <CheckCircle size={16} />
-                                Mark as Delivered
+                                {actionLoading[shipment._id] ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <CheckCircle size={16} />
+                                )}
+                                {actionLoading[shipment._id] ? 'Processing...' : 'Mark as Delivered'}
                               </button>
                             )}
                           </div>
@@ -602,6 +661,73 @@ const ActiveShipments = () => {
           </div>
         )}
       </div>
+
+      {/* Delivery Confirmation Modal */}
+      {showDeliverModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-xl flex items-center justify-center">
+                  <AlertCircle className="text-orange-600 dark:text-orange-400" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Confirm Delivery
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="mb-6">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  Are you sure you want to mark this shipment as delivered?
+                </p>
+                
+                {shipmentToDeliver && (
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Package className="text-blue-600" size={16} />
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {getSafeValue(shipmentToDeliver.shipmentTitle)}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="text-gray-400" size={14} />
+                        <span>
+                          {getSafeValue(shipmentToDeliver.pickupCity)} → {getSafeValue(shipmentToDeliver.deliveryCity)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelDeliver}
+                  className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDeliver}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  <CheckCircle size={16} />
+                  Confirm Delivery
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

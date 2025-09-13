@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTheme } from '../../contexts/ThemeContext';
-import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, DollarSign, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, Wallet, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { fetchDashboardData, fetchTotalUsers, fetchNormalUsersCount } from '../../redux/slices/adminSlice';
 import isEqual from 'lodash.isequal';
 import { ProfilePictureModal } from '../../components/forms/ProfileForm';

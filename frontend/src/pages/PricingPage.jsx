@@ -1,4 +1,14 @@
+import React from 'react';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { 
+  CheckCircle, Star, Crown, Zap, Shield, Users, 
+  BarChart3, Headphones, Settings, Calendar, Wallet,
+  Sparkles, ArrowRight, Loader2, AlertCircle, X, Check
+} from 'lucide-react';
+
 const PricingPage = () => {
+  const { formatCurrency } = useCurrency();
+  
   return (
     <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -15,7 +25,7 @@ const PricingPage = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Basic</h2>
               <p className="text-sm text-gray-500">Ideal for small businesses and occasional shippers.</p>
               <p className="mt-6 flex items-baseline">
-                <span className="text-4xl font-extrabold text-gray-900">$29</span>
+                <span className="text-4xl font-extrabold text-gray-900">{formatCurrency(29)}</span>
                 <span className="ml-1 text-lg font-medium text-gray-500">/month</span>
               </p>
               <ul className="mt-6 space-y-4 text-gray-600">
@@ -46,7 +56,7 @@ const PricingPage = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Pro</h2>
               <p className="text-sm text-gray-500">Perfect for growing businesses with moderate shipping needs.</p>
               <p className="mt-6 flex items-baseline">
-                <span className="text-4xl font-extrabold text-gray-900">$79</span>
+                <span className="text-4xl font-extrabold text-gray-900">{formatCurrency(79)}</span>
                 <span className="ml-1 text-lg font-medium text-gray-500">/month</span>
               </p>
               <ul className="mt-6 space-y-4 text-gray-600">
@@ -81,7 +91,7 @@ const PricingPage = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Enterprise</h2>
               <p className="text-sm text-gray-500">For large-scale operations requiring comprehensive solutions.</p>
               <p className="mt-6 flex items-baseline">
-                <span className="text-4xl font-extrabold text-gray-900">$199</span>
+                <span className="text-4xl font-extrabold text-gray-900">{formatCurrency(199)}</span>
                 <span className="ml-1 text-lg font-medium text-gray-500">/month</span>
               </p>
               <ul className="mt-6 space-y-4 text-gray-600">

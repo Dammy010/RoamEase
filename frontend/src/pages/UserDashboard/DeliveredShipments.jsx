@@ -18,6 +18,8 @@ const DeliveredShipments = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [shipmentToConfirm, setShipmentToConfirm] = useState(null);
 
   // Fetch delivered shipments that need user confirmation
   useEffect(() => {
@@ -76,16 +78,23 @@ const DeliveredShipments = () => {
     };
   }, [user]);
 
-  const handleMarkAsDelivered = async (shipmentId) => {
+  const handleMarkAsDelivered = (shipment) => {
+    setShipmentToConfirm(shipment);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelivery = async () => {
+    if (!shipmentToConfirm) return;
+    
     try {
-      const result = await dispatch(markShipmentAsDeliveredByUser(shipmentId));
+      const result = await dispatch(markShipmentAsDeliveredByUser(shipmentToConfirm._id));
       
       if (markShipmentAsDeliveredByUser.fulfilled.match(result)) {
         toast.success('Delivery confirmed successfully! You can now rate the delivery service.');
         
         // Update local state
         setDeliveredShipments(prev => 
-          prev.filter(shipment => shipment._id !== shipmentId)
+          prev.filter(shipment => shipment._id !== shipmentToConfirm._id)
         );
       } else {
         const errorMessage = result.payload || 'Failed to confirm delivery';
@@ -94,7 +103,15 @@ const DeliveredShipments = () => {
     } catch (error) {
       toast.error('Error confirming delivery');
       console.error('Error:', error);
+    } finally {
+      setShowConfirmModal(false);
+      setShipmentToConfirm(null);
     }
+  };
+
+  const cancelDelivery = () => {
+    setShowConfirmModal(false);
+    setShipmentToConfirm(null);
   };
 
   // Filter and sort shipments
@@ -123,7 +140,7 @@ const DeliveredShipments = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Package className="text-white text-2xl" />
+            <Package className="text-white" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Deliveries</h3>
           <p className="text-gray-500">Please wait while we fetch your delivered shipments...</p>
@@ -141,7 +158,7 @@ const DeliveredShipments = () => {
             <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
-                  <Package className="text-white text-2xl" />
+                  <Package className="text-white" size={24} />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Delivered Shipments</h1>
@@ -238,7 +255,7 @@ const DeliveredShipments = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
-                        <Truck className="text-white text-2xl" />
+                        <Truck className="text-white" size={24} />
                       </div>
                       <div>
                         <h3 className="text-xl font-bold text-white">{shipment.shipmentTitle}</h3>
@@ -331,7 +348,7 @@ const DeliveredShipments = () => {
                       </div>
 
                       <button
-                        onClick={() => handleMarkAsDelivered(shipment._id)}
+                        onClick={() => handleMarkAsDelivered(shipment)}
                         className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
                       >
                         <CheckCircle size={20} />
@@ -356,6 +373,69 @@ const DeliveredShipments = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Package className="text-white" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Confirm Delivery</h3>
+                  <p className="text-indigo-100 text-sm">Are you sure you want to confirm this delivery?</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="text-green-600 text-3xl" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                  Confirm Receipt of Shipment
+                </h4>
+                <p className="text-gray-600 text-sm mb-4">
+                  This will confirm that you have received the shipment "{shipmentToConfirm?.shipmentTitle}" and complete the delivery process.
+                </p>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="text-blue-500 mt-0.5" size={16} />
+                    <div className="text-left">
+                      <div className="font-medium text-blue-800 dark:text-blue-200 mb-1">Important</div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        After confirming, you can rate the delivery service and provide feedback.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelDelivery}
+                  className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelivery}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                >
+                  <CheckCircle size={16} />
+                  Confirm Delivery
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,8 @@
 import React from 'react';
+import { 
+  FileText, CheckCircle, AlertCircle, Shield, 
+  Users, Settings, Globe, Clock, Lock
+} from 'lucide-react';
 
 const TermsOfServicePage = () => {
   return (

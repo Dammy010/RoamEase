@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { fetchBidsOnMyShipments, acceptBid, rejectBid } from '../../redux/slices/bidSlice';
 import { toast } from 'react-toastify';
 import { 
   CheckCircle, XCircle, MessageCircle, Package, MapPin, Calendar, 
   Clock, Truck, User, Phone, Mail, Star, Filter, Search, 
   RefreshCw, AlertCircle, Globe, FileText, 
-  TrendingUp, Award, Shield, Zap, DollarSign, MessageSquare,
+  TrendingUp, Award, Shield, Zap, Wallet, MessageSquare,
   Eye, MoreVertical, Building2
 } from 'lucide-react';
 import api from '../../services/api';
@@ -15,28 +16,10 @@ import api from '../../services/api';
 const UserManageBidsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { getCurrencySymbol } = useCurrency();
   const { bids, loading, error } = useSelector(state => state.bid);
   const { user } = useSelector((state) => state.auth);
 
-  // Currency symbol helper function
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'CAD': 'C$',
-      'AUD': 'A$',
-      'JPY': '¥',
-      'CHF': 'CHF',
-      'CNY': '¥',
-      'INR': '₹',
-      'BRL': 'R$',
-      'MXN': '$',
-      'ZAR': 'R',
-      'NGN': '#'
-    };
-    return symbols[currency] || '$';
-  };
 
   const [selectedBid, setSelectedBid] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -172,7 +155,7 @@ const UserManageBidsPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <TrendingUp className="text-white text-2xl" />
+            <TrendingUp className="text-white" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Bids</h3>
           <p className="text-gray-500">Please wait while we fetch your bids...</p>
@@ -211,7 +194,7 @@ const UserManageBidsPage = () => {
             <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 p-8">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="text-white text-2xl" />
+                  <TrendingUp className="text-white" size={24} />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">Manage Bids</h1>
@@ -291,7 +274,7 @@ const UserManageBidsPage = () => {
                         )}
                         {selectedBid.shipment?.budget && (
                           <div className="text-sm text-gray-600 flex items-center gap-2">
-                            <DollarSign size={14} />
+                            <Wallet size={14} />
                             Budget: {getCurrencySymbol(selectedBid.shipment.budgetCurrency || 'USD')}{selectedBid.shipment.budget}
                             {selectedBid.shipment.budgetCurrency && ` (${selectedBid.shipment.budgetCurrency})`}
                           </div>

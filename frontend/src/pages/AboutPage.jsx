@@ -1,5 +1,9 @@
 import React from 'react';
 import Footer from '../components/shared/Footer';
+import { 
+  Truck, Package, Globe, Shield, Users, Award, Star, 
+  CheckCircle, ArrowRight, Heart, Target, Zap
+} from 'lucide-react';
 
 const AboutPage = () => {
   return (

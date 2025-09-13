@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useCurrency } from "../../contexts/CurrencyContext";
 import { fetchAllShipments } from "../../redux/slices/adminSlice";
 import { 
   Package, MapPin, Truck, Calendar, UserCircle, Search, Filter, SortAsc, 
   Eye, AlertCircle, CheckCircle, Clock, RefreshCw, ArrowLeft, ArrowRight,
-  Award, Star, Globe, FileText, Users, TrendingUp, Activity, DollarSign,
+  Award, Star, Globe, FileText, Users, TrendingUp, Activity, Wallet,
   Weight, Ruler, Navigation, Shield, Building2, Mail, Phone, ExternalLink,
   MoreVertical, Edit, Trash2, UserCheck, UserX, AlertTriangle
 } from "lucide-react";
 
 const ShipmentsList = () => {
   const dispatch = useDispatch();
+  const { formatCurrency } = useCurrency();
   const { allShipments, loading, error } = useSelector((state) => state.admin);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -118,7 +120,7 @@ const ShipmentsList = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Package className="text-white text-2xl" />
+            <Package className="text-purple-600" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Shipments</h3>
           <p className="text-gray-500">Please wait while we fetch all shipments...</p>
@@ -157,7 +159,7 @@ const ShipmentsList = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                    <Package className="text-white text-2xl" />
+                    <Package className="text-purple-600" size={24} />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-white mb-2">All Shipments</h1>
@@ -419,8 +421,8 @@ const ShipmentsList = () => {
                         )}
                         {shipment.budget && (
                           <div className="flex items-center gap-2 text-gray-600">
-                            <DollarSign size={14} />
-                            <span>${shipment.budget}</span>
+                            <Wallet size={14} />
+                            <span>{formatCurrency(shipment.budget)}</span>
                           </div>
                         )}
                       </div>

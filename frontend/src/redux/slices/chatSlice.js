@@ -182,6 +182,8 @@ const chatSlice = createSlice({
         unreadCount: c.unreadCount || 0,
       }));
       state.unreadCount = calculateTotalUnread(state.conversations);
+      console.log('Chat slice - Conversations fetched:', state.conversations);
+      console.log('Chat slice - Total unread count:', state.unreadCount);
     });
     builder.addCase(fetchConversations.rejected, (state, action) => {
       state.loadingConversations = false;

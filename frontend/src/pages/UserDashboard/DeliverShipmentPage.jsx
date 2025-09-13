@@ -3,7 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { fetchShipmentDetailsById, markShipmentAsDeliveredByUser, rateCompletedShipment } from '../../redux/slices/shipmentSlice';
-import { Star } from 'lucide-react';
+import { 
+  Star, Package, MapPin, Calendar, Clock, Truck, User, Phone, Mail, 
+  CheckCircle, AlertCircle, Award, Shield, Zap, RefreshCw, Search, 
+  Filter, SortAsc, Eye, MoreVertical, ArrowLeft, Globe, FileText, 
+  Image, TrendingUp, Building2, MessageSquare, Send
+} from 'lucide-react';
 
 const DeliverShipmentPage = () => {
   const { shipmentId } = useParams();

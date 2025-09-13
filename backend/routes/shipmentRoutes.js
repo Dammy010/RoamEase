@@ -47,6 +47,12 @@ router.get('/logistics-history', protect, allowRoles('logistics'), getLogisticsH
 // New: Route for users to get delivered shipments awaiting confirmation
 router.get('/delivered', protect, allowRoles('user'), getDeliveredShipments);
 
+// New: Route for logistics companies to get their ratings (MUST come before /:id)
+router.get('/my-ratings', protect, allowRoles('logistics'), (req, res, next) => {
+  console.log('🔍 Ratings route hit - User:', req.user?.email, 'Role:', req.user?.role);
+  next();
+}, getLogisticsRatings);
+
 router.get('/:id', protect, getShipmentById);
 router.put('/:id/status', protect, updateShipmentStatus);
 router.delete('/:id', protect, deleteShipment); // New: Route to delete shipment
@@ -54,8 +60,5 @@ router.delete('/:id', protect, deleteShipment); // New: Route to delete shipment
 router.put('/:id/mark-delivered-by-logistics', protect, allowRoles('logistics'), markAsDeliveredByLogistics); // New: Route for logistics to mark as delivered
 router.put('/:id/mark-delivered-by-user', protect, allowRoles('user'), markAsDeliveredByUser); // New: Route for users to mark as delivered
 router.put('/:id/rate', protect, allowRoles('user'), rateCompletedShipment); // New: Route for users to rate completed shipments
-
-// New: Route for logistics companies to get their ratings
-router.get('/my-ratings', protect, allowRoles('logistics'), getLogisticsRatings);
 
 module.exports = router;

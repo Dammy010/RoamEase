@@ -333,8 +333,7 @@ const debugRecentNotifications = async (req, res) => {
  */
 const testChatNotification = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { recipientId, message } = req.body;
+    const { recipientId, senderName, message } = req.body;
     
     if (!recipientId || !message) {
       return res.status(400).json({
@@ -347,7 +346,7 @@ const testChatNotification = async (req, res) => {
     const notificationData = {
       recipient: recipientId,
       type: 'new_message',
-      title: `Test message from ${req.user.name}`,
+      title: `Test message from ${senderName || 'Test Sender'}`,
       message: message,
       priority: 'medium',
       relatedEntity: {
@@ -356,8 +355,8 @@ const testChatNotification = async (req, res) => {
       },
       metadata: {
         conversationId: 'test-conversation',
-        senderId: userId,
-        senderName: req.user.name,
+        senderId: 'test-sender-id',
+        senderName: senderName || 'Test Sender',
         messageId: 'test-message',
         hasAttachments: false
       }

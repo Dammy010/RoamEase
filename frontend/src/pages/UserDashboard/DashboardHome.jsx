@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 // Removed: import Sidebar from "../../components/shared/Sidebar";
-import { PlusCircle, Package, MessageSquare, Clock, UserCircle, Truck, MapPin, Calendar, DollarSign, TrendingUp, RefreshCw, Eye, ArrowRight } from "lucide-react";
+import { PlusCircle, Package, MessageSquare, Clock, UserCircle, Truck, MapPin, Calendar, Wallet, TrendingUp, RefreshCw, Eye, ArrowRight } from "lucide-react";
 import { initializeSocketAfterLogin } from "../../services/socket";
 import { fetchUserShipments, fetchShipmentHistory } from "../../redux/slices/shipmentSlice";
 import { fetchProfile } from "../../redux/slices/authSlice";
@@ -439,7 +439,7 @@ const UserDashboardHome = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                              <Package className="text-white text-2xl" />
+                              <Package className="text-white" size={24} />
                             </div>
                             <div>
                               <h3 className="text-2xl font-bold text-white">Shipment History</h3>

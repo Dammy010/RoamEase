@@ -79,7 +79,7 @@ const ShipmentHistory = () => {
                   <ArrowRight className="rotate-180 text-white" size={20} />
                 </button>
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                  <Package className="text-white text-2xl" />
+                  <Package className="text-white" size={24} />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">Shipment History</h1>

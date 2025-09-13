@@ -152,7 +152,7 @@ const VerifiedLogisticsList = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                    <Truck className="text-white text-2xl" />
+                    <Truck className="text-indigo-600" size={24} />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-white mb-2">Verified Logistics Companies</h1>

@@ -9,7 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { 
   User, Bell, Shield, CreditCard, Globe, Moon, Sun, 
-  Palette, DollarSign, Smartphone, Mail, MapPin, 
+  Palette, Wallet, Smartphone, Mail, MapPin, 
   Save, Edit3, Camera, LogOut, Trash2, AlertTriangle,
   CheckCircle, Settings as SettingsIcon, ChevronRight,
   Eye, EyeOff, Lock, Key, Smartphone as PhoneIcon,
@@ -733,11 +733,12 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      {/* Currency */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+      {/* Currency - Only for Logistics Companies */}
+      {user?.role === 'logistics' && (
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <DollarSign className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white">Currency</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -810,6 +811,7 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 

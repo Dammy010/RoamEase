@@ -1,4 +1,8 @@
 import React from 'react';
+import { 
+  Shield, Lock, Eye, FileText, CheckCircle, 
+  AlertCircle, Users, Settings, Globe, Clock
+} from 'lucide-react';
 
 const PrivacyPolicyPage = () => {
   return (

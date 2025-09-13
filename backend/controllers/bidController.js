@@ -256,6 +256,15 @@ const acceptBid = async (req, res) => {
     const populatedShipment = await shipment.populate('user', 'name email companyName country');
     io.emit('shipment-updated', populatedShipment);
 
+    // Create notification for the logistics company whose bid was accepted
+    try {
+      const NotificationService = require('../services/notificationService');
+      await NotificationService.notifyBidAccepted(populatedBid, populatedBid.carrier);
+      console.log('✅ Bid acceptance notification sent to logistics company:', populatedBid.carrier._id);
+    } catch (notificationError) {
+      console.error('❌ Error sending bid acceptance notification:', notificationError);
+      // Don't fail the bid acceptance if notification fails
+    }
 
     res.json(populatedBid);
   } catch (err) {
@@ -274,9 +283,10 @@ const getMyBids = async (req, res) => {
     const bids = await Bid.find({ carrier: req.user._id })
       .populate({
         path: 'shipment',
+        select: 'shipmentTitle status pickupAddress pickupCity pickupCountry deliveryAddress deliveryCity deliveryCountry preferredPickupDate preferredDeliveryDate typeOfGoods weight descriptionOfGoods quantity modeOfTransport user createdAt',
         populate: {
           path: 'user',
-          select: 'name email companyName country phoneNumber'
+          select: 'name email companyName country phoneNumber firstName lastName phone contactPhone'
         }
       })
       .sort({ createdAt: -1 });
@@ -317,6 +327,16 @@ const rejectBid = async (req, res) => {
     // Emit socket event
     const io = getIO();
     io.emit('bid-updated', populatedBid);
+
+    // Create notification for the logistics company whose bid was rejected
+    try {
+      const NotificationService = require('../services/notificationService');
+      await NotificationService.notifyBidRejected(populatedBid, populatedBid.carrier);
+      console.log('✅ Bid rejection notification sent to logistics company:', populatedBid.carrier._id);
+    } catch (notificationError) {
+      console.error('❌ Error sending bid rejection notification:', notificationError);
+      // Don't fail the bid rejection if notification fails
+    }
 
     res.json(populatedBid);
   } catch (err) {

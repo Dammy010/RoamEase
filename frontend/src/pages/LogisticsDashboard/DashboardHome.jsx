@@ -11,12 +11,14 @@ import { fetchProfile } from "../../redux/slices/authSlice";
 import { fetchLogisticsDashboardData, fetchLogisticsHistory } from "../../redux/slices/logisticsSlice";
 import { getProfilePictureUrl } from "../../utils/imageUtils";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 
 const LogisticsDashboardHome = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const { formatCurrency, currency } = useCurrency();
   const { user } = useSelector((state) => state.auth);
   const { dashboardData, loading: countsLoading, history, historyLoading, historyError } = useSelector((state) => state.logistics);
   
@@ -404,7 +406,11 @@ const LogisticsDashboardHome = () => {
                       <div className="flex items-center gap-6">
                         <div className="text-right">
                           <div className="text-2xl font-bold text-green-600 mb-1">
-                            ${shipment.bid?.price || 'N/A'}
+                            {formatCurrency(
+                              shipment.bid?.price || 0, 
+                              shipment.bid?.currency || 'USD', 
+                              currency
+                            )}
                           </div>
                           <div className="text-xs text-gray-500 font-medium">Your Bid</div>
                         </div>

@@ -129,7 +129,7 @@ const AllUsersListPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Users className="text-white text-2xl" />
+            <Users className="text-blue-600" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Users</h3>
           <p className="text-gray-500">Please wait while we fetch all registered users...</p>
@@ -168,7 +168,7 @@ const AllUsersListPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                    <Users className="text-white text-2xl" />
+                    <Users className="text-blue-600" size={24} />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-white mb-2">All Registered Users</h1>

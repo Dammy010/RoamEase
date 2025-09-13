@@ -3,12 +3,14 @@ const mongoose = require("mongoose");
 const connectDB = async () => {
   try {
     const options = {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000, // Increased from 5000 to 30000
       socketTimeoutMS: 45000,
       maxPoolSize: 10,
       minPoolSize: 5,
       maxIdleTimeMS: 30000,
-      connectTimeoutMS: 10000,
+      connectTimeoutMS: 30000, // Increased from 10000 to 30000
+      retryWrites: true,
+      w: 'majority'
     };
 
     // Use .env MONGO_URI (fallback to localhost if not set)
@@ -29,13 +31,9 @@ const connectDB = async () => {
       connectDB.hasLoggedError = true;
     }
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log("🔄 Retrying MongoDB connection in 10 seconds (development mode)...");
-      setTimeout(connectDB, 10000);
-    } else {
-      console.error("❌ MongoDB connection failed in production. Exiting...");
-      process.exit(1);
-    }
+    // Always retry connection, regardless of environment
+    console.log("🔄 Retrying MongoDB connection in 10 seconds...");
+    setTimeout(connectDB, 10000);
   }
 };
 

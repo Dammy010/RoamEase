@@ -11,53 +11,61 @@ const NotificationBell = () => {
   const { unreadCount } = useSelector((state) => state.notifications);
 
   useEffect(() => {
-    // Load initial unread count
-    dispatch(getUnreadCount());
-    
-    // Set up real-time notifications via Socket.io
-    const setupSocket = () => {
-      const socket = getSocket();
-      if (socket) {
-        console.log('🔔 Setting up notification listener on socket:', socket.id);
-        
-        // Handle new notifications
-        socket.on('new-notification', (notification) => {
-          console.log('🔔 Received new notification:', notification);
-          dispatch(addNotification(notification));
+    // Only load unread count and setup socket if user is authenticated
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Load initial unread count
+      dispatch(getUnreadCount()).catch((error) => {
+        console.log('🔔 Failed to load unread count (user may not be authenticated):', error);
+      });
+      
+      // Set up real-time notifications via Socket.io
+      const setupSocket = () => {
+        const socket = getSocket();
+        if (socket) {
+          console.log('🔔 Setting up notification listener on socket:', socket.id);
           
-          // Show browser notification if permission granted
-          if (Notification.permission === 'granted') {
-            new Notification(notification.title, {
-              body: notification.message,
-              icon: '/favicon.ico',
-              tag: notification._id
-            });
-          }
-        });
-        
-        // Handle socket connection events
-        socket.on('connect', () => {
-          console.log('🔔 Socket connected for notifications');
-          // Refresh unread count when reconnected
-          dispatch(getUnreadCount());
-        });
-        
-        socket.on('disconnect', (reason) => {
-          console.log('🔔 Socket disconnected for notifications:', reason);
-        });
-        
-        socket.on('connect_error', (error) => {
-          console.error('🔔 Socket connection error:', error);
-        });
-        
-        return socket;
-      } else {
-        console.log('⚠️ No socket available for notifications');
-        return null;
-      }
-    };
+          // Handle new notifications
+          socket.on('new-notification', (notification) => {
+            console.log('🔔 Received new notification:', notification);
+            dispatch(addNotification(notification));
+            
+            // Show browser notification if permission granted
+            if (Notification.permission === 'granted') {
+              new Notification(notification.title, {
+                body: notification.message,
+                icon: '/favicon.ico',
+                tag: notification._id
+              });
+            }
+          });
+          
+          // Handle socket connection events
+          socket.on('connect', () => {
+            console.log('🔔 Socket connected for notifications');
+            // Refresh unread count when reconnected
+            dispatch(getUnreadCount());
+          });
+          
+          socket.on('disconnect', (reason) => {
+            console.log('🔔 Socket disconnected for notifications:', reason);
+          });
+          
+          socket.on('connect_error', (error) => {
+            console.error('🔔 Socket connection error:', error);
+          });
+          
+          return socket;
+        } else {
+          console.log('⚠️ No socket available for notifications');
+          return null;
+        }
+      };
 
-    const socket = setupSocket();
+      const socket = setupSocket();
+    } else {
+      console.log('🔔 No authentication token, skipping notification setup');
+    }
 
     // Request notification permission
     if (Notification.permission === 'default') {
@@ -65,6 +73,7 @@ const NotificationBell = () => {
     }
 
     return () => {
+      const socket = getSocket();
       if (socket) {
         socket.off('new-notification');
         socket.off('connect');

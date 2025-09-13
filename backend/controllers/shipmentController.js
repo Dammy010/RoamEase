@@ -511,8 +511,8 @@ const rateCompletedShipment = async (req, res) => {
     const { rating, feedback } = req.body;
 
     // Basic validation
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ success: false, message: "Rating is required and must be between 1 and 5." });
+    if (!rating || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+      return res.status(400).json({ success: false, message: "Rating is required and must be an integer between 1 and 5." });
     }
 
     const shipment = await Shipment.findOne({ _id: id, user: req.user._id });
@@ -538,11 +538,13 @@ const rateCompletedShipment = async (req, res) => {
     }
 
     // Update shipment with rating and feedback
-    shipment.rating = rating;
+    shipment.rating = parseInt(rating);
     shipment.feedback = feedback || '';
     shipment.ratedAt = new Date();
 
     await shipment.save();
+    
+    console.log(`✅ Shipment ${shipment._id} rated ${rating} stars by user ${req.user._id}`);
 
     // Notify logistics company about the rating
     try {
@@ -981,7 +983,7 @@ const getActiveShipmentsForLogistics = async (req, res) => {
     const activeShipments = await Shipment.find({
       _id: { $in: shipmentIds },
       status: 'accepted'
-    }).populate('user', 'name email companyName country');
+    }).populate('user', 'name email companyName country phoneNumber firstName lastName phone contactPhone');
     
     console.log("DEBUG: Found active shipments:", activeShipments.length);
     
@@ -990,24 +992,83 @@ const getActiveShipmentsForLogistics = async (req, res) => {
       // Find the corresponding bid for this shipment
       const bid = acceptedBids.find(b => b.shipment._id.toString() === shipment._id.toString());
       
+      // Add formatted dates
+      const formattedPickupDate = shipment.preferredPickupDate 
+        ? new Date(shipment.preferredPickupDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'Not specified';
+      
+      const formattedDeliveryDate = shipment.preferredDeliveryDate
+        ? new Date(shipment.preferredDeliveryDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'Not specified';
+      
+      // Add dimensions summary
+      let dimensions = null;
+      if (shipment.length && shipment.width && shipment.height) {
+        dimensions = `${shipment.length}L × ${shipment.width}W × ${shipment.height}H`;
+      }
+
+      // Add weight summary
+      let weightSummary = null;
+      if (shipment.weight) {
+        weightSummary = `${shipment.weight} kg`;
+      }
+
+      // Add quantity summary
+      const quantitySummary = shipment.quantity > 1 ? `${shipment.quantity} items` : '1 item';
+      
       return {
         _id: shipment._id,
         shipmentTitle: shipment.shipmentTitle,
         status: shipment.status,
+        // Pickup details
+        pickupAddress: shipment.pickupAddress,
         pickupCity: shipment.pickupCity,
-        deliveryCity: shipment.deliveryCity,
         pickupCountry: shipment.pickupCountry,
+        pickupContactPerson: shipment.pickupContactPerson,
+        pickupPhoneNumber: shipment.pickupPhoneNumber,
+        // Delivery details
+        deliveryAddress: shipment.deliveryAddress,
+        deliveryCity: shipment.deliveryCity,
         deliveryCountry: shipment.deliveryCountry,
+        deliveryContactPerson: shipment.deliveryContactPerson,
+        deliveryPhoneNumber: shipment.deliveryPhoneNumber,
+        // Goods details
         typeOfGoods: shipment.typeOfGoods,
+        descriptionOfGoods: shipment.descriptionOfGoods,
         weight: shipment.weight,
+        weightSummary: weightSummary,
+        length: shipment.length,
+        width: shipment.width,
+        height: shipment.height,
+        dimensions: dimensions,
         quantity: shipment.quantity,
+        quantitySummary: quantitySummary,
+        // Transport details
         modeOfTransport: shipment.modeOfTransport,
+        insuranceRequired: shipment.insuranceRequired,
+        handlingInstructions: shipment.handlingInstructions,
+        // Dates
         preferredPickupDate: shipment.preferredPickupDate,
         preferredDeliveryDate: shipment.preferredDeliveryDate,
+        formattedPickupDate: formattedPickupDate,
+        formattedDeliveryDate: formattedDeliveryDate,
+        // Attachments
+        photos: shipment.photos || [],
+        documents: shipment.documents || [],
+        // User details
         user: shipment.user,
         // Use actual bid information
         acceptedBid: {
           price: bid ? bid.price : 0,
+          currency: bid ? bid.currency : 'USD',
           eta: bid ? bid.eta : 'N/A',
           message: bid ? bid.message : ''
         }
@@ -1112,6 +1173,7 @@ const getLogisticsHistory = async (req, res) => {
         bid: bid ? {
           _id: bid._id,
           price: bid.price,
+          currency: bid.currency,
           eta: bid.eta,
           pickupDate: bid.pickupDate,
           message: bid.message,
@@ -1140,6 +1202,21 @@ const getLogisticsRatings = async (req, res) => {
   try {
     const logisticsCompanyId = req.user._id;
     
+    console.log(`🔍 Fetching ratings for logistics company: ${logisticsCompanyId}`);
+    
+    // First, let's check if there are any shipments delivered by this logistics company
+    const allDeliveredShipments = await Shipment.find({
+      deliveredByLogistics: logisticsCompanyId
+    });
+    console.log(`📦 Total shipments delivered by this logistics company: ${allDeliveredShipments.length}`);
+    
+    // Check if any of them have ratings
+    const shipmentsWithRatings = await Shipment.find({
+      deliveredByLogistics: logisticsCompanyId,
+      rating: { $exists: true, $ne: null }
+    });
+    console.log(`⭐ Shipments with ratings: ${shipmentsWithRatings.length}`);
+    
     // Find all shipments delivered by this logistics company that have been rated
     const ratedShipments = await Shipment.find({
       deliveredByLogistics: logisticsCompanyId,
@@ -1147,6 +1224,8 @@ const getLogisticsRatings = async (req, res) => {
     })
     .populate('user', 'name email companyName country phoneNumber')
     .sort({ ratedAt: -1 });
+    
+    console.log(`📊 Found ${ratedShipments.length} rated shipments after population`);
 
     // Format the response
     const formattedRatings = ratedShipments.map(shipment => ({
@@ -1171,13 +1250,20 @@ const getLogisticsRatings = async (req, res) => {
       deliveredAt: shipment.deliveredAt
     }));
 
+    console.log(`✅ Successfully formatted ${formattedRatings.length} ratings`);
+    
     res.json({
       success: true,
       ratings: formattedRatings,
       total: formattedRatings.length
     });
   } catch (err) {
-    console.error("ERROR: getLogisticsRatings - Error fetching ratings:", err);
+    console.error("❌ ERROR: getLogisticsRatings - Error fetching ratings:", err);
+    console.error("❌ Error details:", {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
     res.status(500).json({
       success: false,
       message: "Error fetching ratings",

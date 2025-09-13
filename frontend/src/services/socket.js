@@ -29,6 +29,26 @@ export const initSocket = () => {
   socket.on('connect', () => {
     console.log('✅ Socket.io connected successfully');
     console.log('🔗 Socket ID:', socket.id);
+    console.log('🔗 Socket connected to:', socket.io.uri);
+    
+    // Send user-online event to join the user to their specific room
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        const userId = user._id;
+        if (userId) {
+          console.log('👤 Sending user-online event for user:', userId);
+          socket.emit('user-online', userId);
+        } else {
+          console.log('⚠️ No _id found in user object');
+        }
+      } catch (error) {
+        console.log('⚠️ Error parsing user from localStorage:', error);
+      }
+    } else {
+      console.log('⚠️ No user found in localStorage, cannot join user room');
+    }
   });
 
   socket.on('connect_error', (error) => {
@@ -80,6 +100,11 @@ export const initSocket = () => {
 
 export const getSocket = () => {
   if (!socket) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.log("No token found, returning null socket");
+      return null;
+    }
     const newSocket = initSocket();
     return newSocket;
   }

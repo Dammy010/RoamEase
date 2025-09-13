@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { fetchAvailableShipments, addShipmentRealtime, updateShipmentRealtime } from '../../redux/slices/shipmentSlice';
 import { createBid, updateBid, fetchMyBids } from '../../redux/slices/bidSlice';
 import { fetchProfile } from '../../redux/slices/authSlice';
@@ -10,13 +11,14 @@ import { getLogisticsDisplayName } from '../../utils/logisticsUtils';
 import { 
   Package, Search, Filter, SortAsc, RefreshCw, MapPin, Calendar, Clock, 
   Truck, Weight, Ruler, Shield, Eye, ChevronDown, ChevronUp, 
-  DollarSign, MessageSquare, User, Phone, FileText, Image, 
+  Wallet, MessageSquare, User, Phone, FileText, Image, 
   AlertCircle, CheckCircle, Star, TrendingUp, Globe
 } from 'lucide-react';
 
 const AvailableShipments = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const { currency, formatCurrency, getCurrencySymbol, parseCurrency } = useCurrency();
   const { availableShipments, loading, error } = useSelector((state) => state.shipment);
   const { loading: bidLoading, myBids } = useSelector((state) => state.bid);
   const { user, loading: profileLoading } = useSelector((state) => state.auth); // New: Get user info for context in real-time updates
@@ -26,28 +28,19 @@ const AvailableShipments = () => {
   console.log('🔍 AvailableShipments: User verification status:', {
     userId: user?._id,
     verificationStatus: user?.verificationStatus,
+    isVerified: user?.isVerified,
     user: user
   });
 
-  // Currency symbol helper function
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'CAD': 'C$',
-      'AUD': 'A$',
-      'JPY': '¥',
-      'CHF': 'CHF',
-      'CNY': '¥',
-      'INR': '₹',
-      'BRL': 'R$',
-      'MXN': '$',
-      'ZAR': 'R',
-      'NGN': '#'
-    };
-    return symbols[currency] || currency;
-  };
+  // Debug: Log component state
+  console.log('🔍 AvailableShipments: Component state:', {
+    loading,
+    error,
+    availableShipments: availableShipments?.length || 0,
+    profileLoading,
+    isRefreshingProfile
+  });
+
   
 
 
@@ -55,7 +48,6 @@ const AvailableShipments = () => {
   const [bidPrice, setBidPrice] = useState('');
   const [bidEta, setBidEta] = useState('');
   const [bidMessage, setBidMessage] = useState('');
-  const [bidCurrency, setBidCurrency] = useState('USD');
   const [showBidModal, setShowBidModal] = useState(false);
   const [expandedShipments, setExpandedShipments] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,8 +92,9 @@ const AvailableShipments = () => {
     // Listen for verification status updates
     socket.on('verification-updated', (userData) => {
         if (userData._id === user?._id) {
+            console.log('🔄 Verification status updated via socket:', userData);
             dispatch(fetchProfile());
-            toast.success('Your verification status has been updated!');
+            toast.success('Your verification status has been updated! You can now place bids.');
         }
     });
 
@@ -112,10 +105,25 @@ const AvailableShipments = () => {
     };
   }, [dispatch, user]); // Include user in dependency array for socket listeners
 
-  // Auto-refresh verification status every 60 seconds (only if pending)
+  // Check if user is verified and can place bids
+  const isUserVerified = useCallback(() => {
+    // Check both verificationStatus and isVerified fields for better compatibility
+    const verificationStatus = user?.verificationStatus;
+    const isVerified = user?.isVerified;
+    
+    console.log('🔍 Verification check:', {
+      verificationStatus,
+      isVerified,
+      isVerifiedResult: verificationStatus === 'verified' || isVerified === true
+    });
+    
+    return verificationStatus === 'verified' || isVerified === true;
+  }, [user?.verificationStatus, user?.isVerified]);
+
+  // Auto-refresh verification status every 30 seconds (only if not verified)
   useEffect(() => {
-    // Only set up auto-refresh if verification is pending
-    if (user?.verificationStatus !== 'pending') {
+    // Only set up auto-refresh if user is not verified
+    if (isUserVerified()) {
       return;
     }
 
@@ -131,11 +139,10 @@ const AvailableShipments = () => {
       dispatch(fetchProfile()).finally(() => {
         setIsRefreshingProfile(false);
       });
-    }, 60000); // Check every 60 seconds
+    }, 30000); // Check every 30 seconds for faster updates
 
     return () => clearInterval(interval);
-  }, [dispatch, user?.verificationStatus, profileLoading, isRefreshingProfile]);
-
+  }, [dispatch, isUserVerified, profileLoading, isRefreshingProfile]);
 
   const hasBidOnShipment = (shipmentId) => {
     return myBids.some(bid => 
@@ -161,7 +168,6 @@ const AvailableShipments = () => {
     if (existingBid) {
       setEditingBid(existingBid);
       setBidPrice(existingBid.price.toString());
-      setBidCurrency(existingBid.currency || 'USD');
       setBidEta(existingBid.eta);
       setBidMessage(existingBid.message || '');
       setSelectedShipmentId(shipmentId);
@@ -178,8 +184,8 @@ const AvailableShipments = () => {
 
     const bidData = {
       shipmentId: selectedShipmentId,
-      price: Number(bidPrice),
-      currency: bidCurrency,
+      price: parseCurrency(bidPrice, currency),
+      currency: currency,
       eta: bidEta,
       message: bidMessage,
     };
@@ -190,7 +196,6 @@ const AvailableShipments = () => {
       setBidPrice('');
       setBidEta('');
       setBidMessage('');
-      setBidCurrency('USD');
       toast.success('Bid submitted successfully!');
     } else if (createBid.rejected.match(result)) {
       // Handle verification error specifically
@@ -212,8 +217,8 @@ const AvailableShipments = () => {
     }
 
     const bidData = {
-      price: Number(bidPrice),
-      currency: bidCurrency,
+      price: parseCurrency(bidPrice, currency),
+      currency: currency,
       eta: bidEta,
       message: bidMessage,
     };
@@ -225,7 +230,6 @@ const AvailableShipments = () => {
       setBidPrice('');
       setBidEta('');
       setBidMessage('');
-      setBidCurrency('USD');
       toast.success('Bid updated successfully!');
     } else if (updateBid.rejected.match(result)) {
       toast.error(result.payload || 'Failed to update bid. Please try again.');
@@ -277,7 +281,18 @@ const AvailableShipments = () => {
       }
     });
 
+  // Debug: Log render state
+  console.log('🔍 AvailableShipments: Render state check:', {
+    loading,
+    error,
+    hasAvailableShipments: availableShipments && availableShipments.length > 0,
+    willShowLoading: loading,
+    willShowError: error
+  });
+
+
   if (loading) {
+    console.log('🔍 AvailableShipments: Showing loading state');
     return (
       <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
@@ -294,6 +309,7 @@ const AvailableShipments = () => {
   }
 
   if (error) {
+    console.log('🔍 AvailableShipments: Showing error state:', error);
     return (
       <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
@@ -318,6 +334,8 @@ const AvailableShipments = () => {
     );
   }
 
+  console.log('🔍 AvailableShipments: About to render main component');
+  
   return (
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
@@ -335,6 +353,34 @@ const AvailableShipments = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                {/* Verification Status Indicator */}
+                {!isUserVerified() ? (
+                  <div className={`backdrop-blur-sm rounded-xl px-4 py-2 border ${
+                    user?.verificationStatus === 'rejected' 
+                      ? 'bg-red-500/20 border-red-300/30' 
+                      : 'bg-orange-500/20 border-orange-300/30'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-white" />
+                      <span className="text-white font-semibold text-sm">
+                        {user?.verificationStatus === 'rejected' 
+                          ? 'Verification Rejected' 
+                          : 'Verification Pending'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-green-500/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-300/30">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={16} className="text-white" />
+                      <span className="text-white font-semibold text-sm">
+                        Verified
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
                   <span className="text-white font-semibold text-lg">
                     {availableShipments.length} opportunities
@@ -570,20 +616,33 @@ const AvailableShipments = () => {
                               </>
                             )}
                           </button>
-                          {user?.verificationStatus === 'pending' ? (
+                          {!isUserVerified() ? (
                             <div className="flex flex-col items-end">
                               <button 
                                 disabled
-                                className="px-6 py-3 bg-gray-400 text-white rounded-xl cursor-not-allowed font-semibold shadow-lg flex items-center gap-2"
+                                className={`px-6 py-3 text-white rounded-xl cursor-not-allowed font-semibold shadow-lg flex items-center gap-2 ${
+                                  user?.verificationStatus === 'rejected' 
+                                    ? 'bg-red-500' 
+                                    : 'bg-orange-500'
+                                }`}
                               >
                                 <AlertCircle size={16} />
-                                Verification Pending
+                                {user?.verificationStatus === 'rejected' 
+                                  ? 'Verification Rejected' 
+                                  : 'Verification Pending'
+                                }
                               </button>
                               <p className="text-xs text-gray-500 mt-1 text-right max-w-32">
-                                Wait for admin approval to place bids
+                                {user?.verificationStatus === 'rejected' 
+                                  ? 'Contact admin for assistance' 
+                                  : 'Wait for admin approval to place bids'
+                                }
                               </p>
                               <p className="text-xs text-gray-400 mt-2 text-center">
-                                Status will update automatically when verified
+                                {user?.verificationStatus === 'rejected' 
+                                  ? 'Please resolve verification issues' 
+                                  : 'Status will update automatically when verified'
+                                }
                               </p>
                             </div>
                           ) : (
@@ -594,7 +653,7 @@ const AvailableShipments = () => {
                                   className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
                                   disabled={bidLoading}
                                 >
-                                  <DollarSign size={16} />
+                                  <Wallet size={16} />
                                   Edit Bid
                                 </button>
                               ) : (
@@ -610,7 +669,7 @@ const AvailableShipments = () => {
                                     </>
                                   ) : (
                                     <>
-                                      <DollarSign size={16} />
+                                      <Wallet size={16} />
                                       Place Bid
                                     </>
                                   )}
@@ -669,6 +728,8 @@ const AvailableShipments = () => {
                             <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.routeSummary}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
+                            <div className="text-sm text-gray-600 mb-1">Pickup Date</div>
+                            <div className="font-semibold text-gray-800 dark:text-gray-200">{shipment.formattedPickupDate}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-100">
                             <div className="text-sm text-gray-600 mb-1">Delivery Date</div>
@@ -946,7 +1007,7 @@ const AvailableShipments = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                      <DollarSign className="text-white text-2xl" />
+                      <Wallet className="text-white" size={24} />
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white">Place Your Bid</h3>
@@ -1092,56 +1153,28 @@ const AvailableShipments = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2">
                       <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="bidPrice">
-                        <DollarSign className="text-green-600" size={16} />
-                        Your Bid Price ({getCurrencySymbol(bidCurrency)})
+                        <Wallet className="text-green-600" size={16} />
+                        Your Bid Price
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 text-lg font-semibold">
-                            {getCurrencySymbol(bidCurrency)}
-                          </span>
-                        </div>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg font-semibold">
+                          {getCurrencySymbol()}
+                        </span>
                         <input
-                          type="number"
+                          type="text"
                           id="bidPrice"
-                          min="0"
-                          step="0.01"
                           className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
                           value={bidPrice}
-                          onChange={(e) => setBidPrice(e.target.value)}
+                          onChange={(e) => {
+                            const cleanValue = e.target.value.replace(/[^\d.,]/g, '');
+                            setBidPrice(cleanValue);
+                          }}
                           placeholder="Enter your bid amount"
                           required
                         />
                       </div>
                     </div>
                     
-                    <div>
-                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="bidCurrency">
-                        <Globe className="text-purple-600" size={16} />
-                        Currency
-                      </label>
-                      <select
-                        id="bidCurrency"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
-                        value={bidCurrency}
-                        onChange={(e) => setBidCurrency(e.target.value)}
-                        required
-                      >
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="GBP">GBP - British Pound</option>
-                        <option value="CAD">CAD - Canadian Dollar</option>
-                        <option value="AUD">AUD - Australian Dollar</option>
-                        <option value="JPY">JPY - Japanese Yen</option>
-                        <option value="CHF">CHF - Swiss Franc</option>
-                        <option value="CNY">CNY - Chinese Yuan</option>
-                        <option value="INR">INR - Indian Rupee</option>
-                        <option value="BRL">BRL - Brazilian Real</option>
-                        <option value="MXN">MXN - Mexican Peso</option>
-                        <option value="ZAR">ZAR - South African Rand</option>
-                        <option value="NGN">NGN - Nigerian Naira</option>
-                      </select>
-                    </div>
                     
                     <div>
                       <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="bidEta">
@@ -1221,13 +1254,13 @@ const AvailableShipments = () => {
                         <div className="bg-white rounded-lg p-4 border border-green-100">
                           <div className="text-sm text-gray-600 mb-1">Bid Amount</div>
                           <div className="text-2xl font-bold text-green-700">
-                            {getCurrencySymbol(bidCurrency)}{bidPrice}
+                            {bidPrice}
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-4 border border-green-100">
                           <div className="text-sm text-gray-600 mb-1">Currency</div>
                           <div className="text-lg font-semibold text-gray-800">
-                            {bidCurrency}
+                            {currency}
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-4 border border-green-100">
@@ -1261,7 +1294,7 @@ const AvailableShipments = () => {
                         </>
                       ) : (
                         <>
-                          <DollarSign size={16} />
+                          <Wallet size={16} />
                           Submit Bid
                         </>
                       )}
@@ -1282,7 +1315,7 @@ const AvailableShipments = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                      <DollarSign className="text-white text-2xl" />
+                      <Wallet className="text-white" size={24} />
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white">Edit Your Bid</h3>
@@ -1323,56 +1356,28 @@ const AvailableShipments = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2">
                       <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidPrice">
-                        <DollarSign className="text-green-600" size={16} />
-                        Your Bid Price ({getCurrencySymbol(bidCurrency)})
+                        <Wallet className="text-green-600" size={16} />
+                        Your Bid Price
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 text-lg font-semibold">
-                            {getCurrencySymbol(bidCurrency)}
-                          </span>
-                        </div>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg font-semibold">
+                          {getCurrencySymbol()}
+                        </span>
                         <input
-                          type="number"
+                          type="text"
                           id="editBidPrice"
-                          min="0"
-                          step="0.01"
                           className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
                           value={bidPrice}
-                          onChange={(e) => setBidPrice(e.target.value)}
+                          onChange={(e) => {
+                            const cleanValue = e.target.value.replace(/[^\d.,]/g, '');
+                            setBidPrice(cleanValue);
+                          }}
                           placeholder="Enter your bid amount"
                           required
                         />
                       </div>
                     </div>
                     
-                    <div>
-                      <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidCurrency">
-                        <Globe className="text-purple-600" size={16} />
-                        Currency
-                      </label>
-                      <select
-                        id="editBidCurrency"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg font-semibold"
-                        value={bidCurrency}
-                        onChange={(e) => setBidCurrency(e.target.value)}
-                        required
-                      >
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="GBP">GBP - British Pound</option>
-                        <option value="CAD">CAD - Canadian Dollar</option>
-                        <option value="AUD">AUD - Australian Dollar</option>
-                        <option value="JPY">JPY - Japanese Yen</option>
-                        <option value="CHF">CHF - Swiss Franc</option>
-                        <option value="CNY">CNY - Chinese Yuan</option>
-                        <option value="INR">INR - Indian Rupee</option>
-                        <option value="BRL">BRL - Brazilian Real</option>
-                        <option value="MXN">MXN - Mexican Peso</option>
-                        <option value="ZAR">ZAR - South African Rand</option>
-                        <option value="NGN">NGN - Nigerian Naira</option>
-                      </select>
-                    </div>
                     
                     <div>
                       <label className="block text-gray-700 text-sm font-semibold mb-3 flex items-center gap-2" htmlFor="editBidEta">
@@ -1427,7 +1432,7 @@ const AvailableShipments = () => {
                         </>
                       ) : (
                         <>
-                          <DollarSign size={16} />
+                          <Wallet size={16} />
                           Update Bid
                         </>
                       )}

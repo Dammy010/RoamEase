@@ -6,6 +6,12 @@ import { fetchAvailableShipments } from '../../redux/slices/shipmentSlice';
 import { createBid } from '../../redux/slices/bidSlice';
 import { toast } from 'react-toastify';
 import BidModal from '../../components/modals/BidModal';
+import { 
+  Package, Search, Filter, SortAsc, RefreshCw, MapPin, Calendar, Clock, 
+  Truck, Weight, Ruler, Shield, Eye, ChevronDown, ChevronUp, 
+  Wallet, MessageSquare, User, Phone, FileText, Image, 
+  AlertCircle, CheckCircle, Star, TrendingUp, Globe, Plus
+} from 'lucide-react';
 
 const AvailableShipmentsPage = () => {
   const dispatch = useDispatch();

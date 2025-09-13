@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { 
   Star, Package, MapPin, Calendar, Clock, User, Phone, 
   Eye, ChevronDown, ChevronUp, CheckCircle, AlertCircle, 
   Weight, Ruler, Shield, FileText, Image, RefreshCw,
-  DollarSign, MessageSquare, Globe, ArrowRight, TrendingUp,
-  Award, ThumbsUp, ThumbsDown, Filter, Search, Truck
+  Wallet, MessageSquare, Globe, ArrowRight, TrendingUp,
+  Award, ThumbsUp, ThumbsDown, Filter, Search, Truck, Building2
 } from 'lucide-react';
 
 const Ratings = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
   const { user } = useSelector((state) => state.auth);
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,25 +24,7 @@ const Ratings = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [filterBy, setFilterBy] = useState('all');
 
-  // Currency symbol helper function
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'CAD': 'C$',
-      'AUD': 'A$',
-      'JPY': '¥',
-      'CHF': 'CHF',
-      'CNY': '¥',
-      'INR': '₹',
-      'BRL': 'R$',
-      'MXN': '$',
-      'ZAR': 'R',
-      'NGN': '#'
-    };
-    return symbols[currency] || currency || '$';
-  };
+  console.log('🔍 Ratings component rendered - User:', user?.email, 'Role:', user?.role);
 
   const toggleExpanded = (ratingId) => {
     const newExpanded = new Set(expandedRatings);
@@ -57,11 +41,19 @@ const Ratings = () => {
     const fetchRatings = async () => {
       setLoading(true);
       
-      if (!user || user.role !== 'logistics') {
+      if (!user) {
+        toast.error('You must be logged in to view ratings');
+        setLoading(false);
+        return;
+      }
+      
+      if (user.role !== 'logistics') {
         toast.error('You must be logged in as a logistics company to view ratings');
         setLoading(false);
         return;
       }
+      
+      console.log('🔍 User authenticated as logistics company:', user.email, user.role);
       
       try {
         const response = await api.get('/shipments/my-ratings');
@@ -69,11 +61,18 @@ const Ratings = () => {
         setRatings(response.data.ratings || []);
       } catch (error) {
         console.error('Error fetching ratings:', error);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
         
         if (error.response?.status === 401) {
           toast.error('Authentication failed. Please log in again.');
+        } else if (error.response?.status === 403) {
+          toast.error('Access denied. You must be logged in as a logistics company to view ratings.');
         } else if (error.response?.status === 404) {
           toast.info('No ratings found yet.');
+        } else if (error.response?.status === 500) {
+          toast.error('Server error. Please try again later.');
+          console.error('Server error details:', error.response?.data);
         } else {
           toast.error('Failed to fetch ratings. Please try again.');
         }
@@ -96,7 +95,8 @@ const Ratings = () => {
       3: ratings.filter(r => r.rating === 3).length,
       2: ratings.filter(r => r.rating === 2).length,
       1: ratings.filter(r => r.rating === 1).length,
-    }
+    },
+    satisfactionRate: ratings.length > 0 ? Math.round(((ratings.filter(r => r.rating >= 4).length / ratings.length) * 100)) : 0
   };
 
   // Filter and sort ratings
@@ -138,7 +138,7 @@ const Ratings = () => {
         size={size}
         className={`${
           star <= rating
-            ? 'text-yellow-400 fill-current'
+            ? 'text-yellow-400 fill-current drop-shadow-sm'
             : 'text-gray-300'
         }`}
       />
@@ -162,12 +162,15 @@ const Ratings = () => {
     }
   };
 
+  console.log('🔍 Ratings component state - Loading:', loading, 'User:', !!user, 'Ratings count:', ratings.length);
+
   if (loading) {
+    console.log('🔍 Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Star className="text-white text-2xl" />
+            <Star className="text-white" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Ratings</h3>
           <p className="text-gray-500">Please wait while we fetch your ratings...</p>
@@ -176,6 +179,39 @@ const Ratings = () => {
     );
   }
 
+  // If no user, show authentication required message
+  if (!user) {
+    console.log('🔍 No user found, showing auth required message');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Star className="text-red-500 text-2xl" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">Authentication Required</h3>
+          <p className="text-gray-500">Please log in to view your ratings.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not logistics, show role error
+  if (user.role !== 'logistics') {
+    console.log('🔍 User role is not logistics:', user.role);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Star className="text-yellow-500 text-2xl" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">Access Denied</h3>
+          <p className="text-gray-500">You must be logged in as a logistics company to view ratings.</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('🔍 Rendering main ratings content');
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -249,7 +285,7 @@ const Ratings = () => {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Satisfaction Rate</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {ratingStats.total > 0 ? Math.round(((ratingStats.distribution[5] + ratingStats.distribution[4]) / ratingStats.total) * 100) : 0}%
+                  {ratingStats.satisfactionRate}%
                 </p>
               </div>
             </div>
@@ -332,7 +368,7 @@ const Ratings = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               {searchTerm || filterBy !== 'all' 
                 ? 'No ratings match your current filters.' 
-                : 'Complete some deliveries to start receiving customer ratings.'}
+                : 'Complete some deliveries and wait for customers to rate them. Ratings will appear here once customers submit them.'}
             </p>
             {(searchTerm || filterBy !== 'all') && (
               <button
@@ -434,9 +470,9 @@ const Ratings = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <DollarSign size={16} className="text-gray-500" />
+                            <Wallet size={16} className="text-gray-500" />
                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {getCurrencySymbol(rating.currency || 'USD')}{rating.budget || rating.estimatedCost || 'N/A'}
+                              {formatCurrency(rating.budget || rating.estimatedCost || 0, rating.currency || 'USD')}
                             </span>
                           </div>
                         </div>

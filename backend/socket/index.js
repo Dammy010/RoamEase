@@ -43,6 +43,7 @@ const initSocket = (server) => {
 
       socket.userId = user._id.toString();
       socket.user = user;
+      socket.userRole = user.role;
       next();
     } catch (error) {
       console.log("Socket connection rejected:", error.message);
@@ -58,6 +59,11 @@ const initSocket = (server) => {
       try {
         // Use the authenticated user ID from socket instead of the parameter
         const authenticatedUserId = socket.userId;
+        console.log("👤 User-online event received:", { 
+          sentUserId: userId, 
+          authenticatedUserId: authenticatedUserId,
+          socketId: socket.id 
+        });
         io.onlineUsers[authenticatedUserId] = socket.id;
         
         // Check if database is connected before attempting operations

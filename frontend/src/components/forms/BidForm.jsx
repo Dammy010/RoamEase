@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { DollarSign, Clock, MessageSquare, Send } from 'lucide-react';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { Wallet, Clock, MessageSquare, Send } from 'lucide-react';
 
 const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
+  const { formatCurrency, parseCurrency, getCurrencySymbol } = useCurrency();
   const [formData, setFormData] = useState({
     price: '',
     eta: '',
@@ -14,7 +16,14 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'price') {
+      // Allow only numbers, decimal point, and currency symbols
+      const cleanValue = value.replace(/[^\d.,]/g, '');
+      setFormData(prev => ({ ...prev, [name]: cleanValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -25,7 +34,10 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
       return;
     }
 
-    if (parseFloat(formData.price) <= 0) {
+    // Parse the currency value to get the numeric amount
+    const numericPrice = parseCurrency(formData.price);
+    
+    if (numericPrice <= 0) {
       toast.error('Bid amount must be greater than 0');
       return;
     }
@@ -35,7 +47,7 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
     try {
       await onSubmit({
         shipmentId,
-        price: parseFloat(formData.price),
+        price: numericPrice,
         eta: formData.eta,
         message: formData.message,
         specialConditions: formData.specialConditions
@@ -60,7 +72,7 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200">
       <div className="flex items-center gap-3 mb-6">
-        <DollarSign className="w-8 h-8 text-green-600" />
+        <Wallet className="w-8 h-8 text-green-600" />
         <h3 className="text-xl font-bold text-gray-800">Place Your Bid</h3>
       </div>
 
@@ -68,19 +80,19 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
         {/* Bid Amount */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bid Amount (USD) <span className="text-red-500">*</span>
+            Bid Amount ({getCurrencySymbol()}) <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Wallet className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
-              type="number"
+              type="text"
               name="price"
               value={formData.price}
               onChange={handleChange}
               step="0.01"
               min="0"
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="0.00"
+              placeholder={`0.00 (${getCurrencySymbol()})`}
               required
             />
           </div>

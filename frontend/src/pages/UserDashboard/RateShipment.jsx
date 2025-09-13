@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { toast } from 'react-toastify';
 import { 
   Star, Package, MapPin, Calendar, Clock, Truck, User, Phone, Mail, 
@@ -12,6 +13,7 @@ import { rateCompletedShipment, fetchShipmentHistory, fetchUserShipments, fetchD
 
 const RateShipment = () => {
   const dispatch = useDispatch();
+  const { getCurrencySymbol } = useCurrency();
   const { user } = useSelector((state) => state.auth);
   const { history, shipments, deliveredShipments, loading, error } = useSelector((state) => state.shipment);
   
@@ -22,32 +24,32 @@ const RateShipment = () => {
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   
-  // Fetch all shipment data when component mounts
+  // Fetch completed shipments that can be rated
   useEffect(() => {
-    const fetchAllShipments = async () => {
+    const fetchRateableShipments = async () => {
       try {
-        await Promise.all([
-          dispatch(fetchShipmentHistory()),
-          dispatch(fetchUserShipments()),
-          dispatch(fetchDeliveredShipments())
-        ]);
+        // Fetch shipment history which includes completed shipments
+        await dispatch(fetchShipmentHistory());
+        // Also fetch user shipments to get any completed ones
+        await dispatch(fetchUserShipments());
       } catch (error) {
-        console.error('Error fetching shipments:', error);
+        console.error('Error fetching rateable shipments:', error);
+        toast.error('Failed to load shipments for rating');
       }
     };
     
-    fetchAllShipments();
+    fetchRateableShipments();
   }, [dispatch]);
   
   // Combine all data sources and remove duplicates
-  const allShipments = [...(history || []), ...(shipments || []), ...(deliveredShipments || [])];
+  const allShipments = [...(history || []), ...(shipments || [])];
   
   // Debug logging
   console.log('RateShipment Debug - Redux State:', {
     history: history?.length || 0,
     shipments: shipments?.length || 0,
-    deliveredShipments: deliveredShipments?.length || 0,
     loading,
     error
   });
@@ -64,7 +66,7 @@ const RateShipment = () => {
     const isCompleted = shipment.status === 'completed';
     const notRated = !shipment.rating;
     
-    // Debug logging for first shipment
+    // Debug logging for first few shipments
     if (uniqueShipments.length > 0 && shipment === uniqueShipments[0]) {
       console.log('RateShipment Debug - First shipment fields:', Object.keys(shipment));
       console.log('RateShipment Debug - Status:', shipment.status);
@@ -118,10 +120,7 @@ const RateShipment = () => {
       return;
     }
 
-    if (!feedback.trim()) {
-      toast.error('Please provide feedback');
-      return;
-    }
+    setIsSubmittingRating(true);
 
     try {
       const result = await dispatch(rateCompletedShipment({
@@ -137,18 +136,22 @@ const RateShipment = () => {
       setRating(0);
       setFeedback('');
       
-      // Refresh all data sources
+      // Refresh data sources
       await Promise.all([
         dispatch(fetchShipmentHistory()),
-        dispatch(fetchUserShipments()),
-        dispatch(fetchDeliveredShipments())
+        dispatch(fetchUserShipments())
       ]);
       
       // Show additional success message
       toast.success(`Rating submitted! The logistics company has been notified of your ${rating}-star rating.`);
     } catch (error) {
       console.error('Rating submission error:', error);
-      // Error is already handled in the Redux action
+      // Show additional error message if needed
+      if (error && typeof error === 'string' && !error.includes('Rating')) {
+        toast.error('Failed to submit rating. Please try again.');
+      }
+    } finally {
+      setIsSubmittingRating(false);
     }
   };
 
@@ -156,8 +159,7 @@ const RateShipment = () => {
     try {
       await Promise.all([
         dispatch(fetchShipmentHistory()),
-        dispatch(fetchUserShipments()),
-        dispatch(fetchDeliveredShipments())
+        dispatch(fetchUserShipments())
       ]);
       toast.success('Data refreshed successfully!');
     } catch (error) {
@@ -176,9 +178,10 @@ const RateShipment = () => {
         onMouseLeave={interactive ? () => setHoveredRating(0) : undefined}
         className={`text-3xl transition-all duration-300 ${
           star <= (hoveredRating || currentRating)
-            ? 'text-yellow-400 scale-110'
+            ? 'text-yellow-400 scale-110 drop-shadow-lg'
             : 'text-gray-300'
-        } ${interactive ? 'cursor-pointer hover:scale-125' : ''}`}
+        } ${interactive ? 'cursor-pointer hover:scale-125 hover:drop-shadow-md' : ''}`}
+        title={`${star} star${star > 1 ? 's' : ''} - ${getRatingText(star)}`}
       >
         <Star className="fill-current" size={32} />
       </button>
@@ -187,41 +190,22 @@ const RateShipment = () => {
 
   const getRatingText = (rating) => {
     switch (rating) {
-      case 1: return 'Poor - Unacceptable service';
-      case 2: return 'Fair - Below expectations';
-      case 3: return 'Good - Met basic expectations';
-      case 4: return 'Very Good - Exceeded expectations';
-      case 5: return 'Excellent - Outstanding service';
-      default: return 'Select a rating';
+      case 1: return 'Poor - Unacceptable service, major issues';
+      case 2: return 'Fair - Below expectations, some problems';
+      case 3: return 'Good - Met basic expectations, satisfactory';
+      case 4: return 'Very Good - Exceeded expectations, pleased';
+      case 5: return 'Excellent - Outstanding service, highly recommended';
+      default: return 'Click a star to rate this delivery';
     }
   };
 
-  // Currency symbol helper function
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'CAD': 'C$',
-      'AUD': 'A$',
-      'JPY': '¥',
-      'CHF': 'CHF',
-      'CNY': '¥',
-      'INR': '₹',
-      'BRL': 'R$',
-      'MXN': '$',
-      'ZAR': 'R',
-      'NGN': '#'
-    };
-    return symbols[currency] || currency || '$';
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Star className="text-white text-2xl" />
+            <Star className="text-white" size={24} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Shipments</h3>
           <p className="text-gray-500">Please wait while we fetch your shipment history...</p>
@@ -260,7 +244,7 @@ const RateShipment = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/20">
-                    <Star className="text-white text-2xl" />
+                    <Star className="text-white" size={24} />
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-white">Rate Your Shipments</h1>
@@ -335,7 +319,38 @@ const RateShipment = () => {
               </div>
               
               <div className="p-6">
-                {filteredAndSortedShipments.length === 0 ? (
+                {loading ? (
+                  <div className="text-center py-16">
+                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <RefreshCw className="text-indigo-500 text-4xl animate-spin" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+                      Loading Shipments...
+                    </h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                      Please wait while we fetch your completed shipments.
+                    </p>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-16">
+                    <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <AlertCircle className="text-red-500 text-4xl" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+                      Error Loading Shipments
+                    </h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                      {error || 'Failed to load shipments. Please try again.'}
+                    </p>
+                    <button
+                      onClick={handleRefresh}
+                      className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
+                    >
+                      <RefreshCw size={16} />
+                      Try Again
+                    </button>
+                  </div>
+                ) : filteredAndSortedShipments.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Star className="text-indigo-500 text-4xl" />
@@ -403,8 +418,8 @@ const RateShipment = () => {
                               <div className="flex items-center gap-2">
                                 <MapPin className="text-blue-500" size={16} />
                                 <span>
-                                  {shipment.pickupCity || shipment.pickupLocation || 'N/A'} → 
-                                  {shipment.deliveryCity || shipment.deliveryLocation || 'N/A'}
+                                  {shipment.pickupCity || shipment.pickupLocation || 'N/A'}, {shipment.pickupCountry || 'N/A'} → 
+                                  {shipment.deliveryCity || shipment.deliveryLocation || 'N/A'}, {shipment.deliveryCountry || 'N/A'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -418,8 +433,8 @@ const RateShipment = () => {
                                 </div>
                               )}
                               <div className="flex items-center gap-2">
-                                <Clock className="text-orange-500" size={16} />
-                                <span>Status: {shipment.status}</span>
+                                <Package className="text-indigo-500" size={16} />
+                                <span>Type: {shipment.typeOfGoods || 'N/A'}</span>
                               </div>
                             </div>
 
@@ -433,19 +448,30 @@ const RateShipment = () => {
                               <div className="flex items-center gap-2">
                                 <TrendingUp className="text-gray-400" size={16} />
                                 <span>
-                                  {getCurrencySymbol(shipment.currency || shipment.bidCurrency || 'USD')}{shipment.budget || shipment.estimatedCost || shipment.bidAmount || 'N/A'}
+                                  {getCurrencySymbol(shipment.acceptedBid?.currency || shipment.currency || 'USD')}{shipment.acceptedBid?.price || shipment.budget || shipment.estimatedCost || 'N/A'}
                                 </span>
                               </div>
+                              {shipment.acceptedBid?.eta && (
+                                <div className="flex items-center gap-2">
+                                  <Clock className="text-gray-400" size={16} />
+                                  <span>ETA: {shipment.acceptedBid.eta}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           
                           <div className="text-right">
                             <div className="text-2xl font-bold text-gray-900 mb-1">
-                              {getCurrencySymbol(shipment.currency || shipment.bidCurrency || 'USD')}{shipment.budget || shipment.estimatedCost || shipment.bidAmount || 'N/A'}
+                              {getCurrencySymbol(shipment.acceptedBid?.currency || shipment.currency || 'USD')}{shipment.acceptedBid?.price || shipment.budget || shipment.estimatedCost || 'N/A'}
                             </div>
                             <div className="text-sm text-gray-500">
                               {shipment.weight ? `${shipment.weight}kg` : 'N/A'}
                             </div>
+                            {shipment.acceptedBid?.eta && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                ETA: {shipment.acceptedBid.eta}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -473,19 +499,35 @@ const RateShipment = () => {
                       {selectedShipment.shipmentTitle || selectedShipment.title || 'N/A'}
                     </h4>
                     <p className="text-sm text-gray-600 mb-2">
-                      #{selectedShipment._id.slice(-6)} • {selectedShipment.pickupCity || selectedShipment.pickupLocation || 'N/A'} → {selectedShipment.deliveryCity || selectedShipment.deliveryLocation || 'N/A'}
+                      #{selectedShipment._id.slice(-6)} • {selectedShipment.pickupCity || selectedShipment.pickupLocation || 'N/A'}, {selectedShipment.pickupCountry || 'N/A'} → {selectedShipment.deliveryCity || selectedShipment.deliveryLocation || 'N/A'}, {selectedShipment.deliveryCountry || 'N/A'}
                     </p>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-4">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
                         <span className="text-gray-600">
-                          <strong>Price:</strong> {getCurrencySymbol(selectedShipment.currency || selectedShipment.bidCurrency || 'USD')}{selectedShipment.budget || selectedShipment.estimatedCost || selectedShipment.bidAmount || 'N/A'}
+                          <strong>Price:</strong> {getCurrencySymbol(selectedShipment.acceptedBid?.currency || selectedShipment.currency || 'USD')}{selectedShipment.acceptedBid?.price || selectedShipment.budget || selectedShipment.estimatedCost || 'N/A'}
                         </span>
-                        {selectedShipment.deliveredByLogistics && (
+                        <span className="text-gray-600">
+                          <strong>Weight:</strong> {selectedShipment.weight ? `${selectedShipment.weight}kg` : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">
+                          <strong>Type:</strong> {selectedShipment.typeOfGoods || 'N/A'}
+                        </span>
+                        {selectedShipment.acceptedBid?.eta && (
                           <span className="text-gray-600">
-                            <strong>Delivered by:</strong> {selectedShipment.deliveredByLogistics?.companyName || selectedShipment.deliveredByLogistics?.name || 'Logistics Company'}
+                            <strong>ETA:</strong> {selectedShipment.acceptedBid.eta}
                           </span>
                         )}
                       </div>
+                      {selectedShipment.deliveredByLogistics && (
+                        <div className="flex items-center gap-2">
+                          <Truck className="text-green-500" size={16} />
+                          <span className="text-gray-600">
+                            <strong>Delivered by:</strong> {selectedShipment.deliveredByLogistics?.companyName || selectedShipment.deliveredByLogistics?.name || 'Logistics Company'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -506,7 +548,7 @@ const RateShipment = () => {
                     {/* Feedback */}
                     <div>
                       <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-2">
-                        Feedback *
+                        Feedback (Optional)
                       </label>
                       <textarea
                         id="feedback"
@@ -514,19 +556,27 @@ const RateShipment = () => {
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                        placeholder="Share your experience with this shipment delivery..."
-                        required
+                        placeholder="Share your experience with this shipment delivery (optional)..."
                       />
                     </div>
 
                     {/* Submit Button */}
                     <button
                       type="submit"
-                      disabled={rating === 0 || !feedback.trim()}
+                      disabled={rating === 0 || isSubmittingRating}
                       className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      <CheckCircle size={18} />
-                      Submit Rating
+                      {isSubmittingRating ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={18} />
+                          Submit Rating
+                        </>
+                      )}
                     </button>
                   </form>
 

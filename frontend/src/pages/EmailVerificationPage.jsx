@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { verifyEmail } from '../redux/slices/authSlice';
+import { 
+  CheckCircle, XCircle, Clock, Mail, Shield, 
+  ArrowRight, RefreshCw, AlertCircle
+} from 'lucide-react';
 
 const EmailVerificationPage = () => {
   const { token } = useParams();

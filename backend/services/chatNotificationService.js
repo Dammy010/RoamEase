@@ -7,26 +7,40 @@ class ChatNotificationService {
    */
   static async createMessageNotification(message, conversation) {
     try {
+      console.log('🔔 ChatNotificationService: Starting notification creation');
+      console.log('📝 Message object:', {
+        _id: message._id,
+        sender: message.sender,
+        text: message.text,
+        conversation: message.conversation
+      });
+      console.log('💬 Conversation object:', {
+        _id: conversation._id,
+        participants: conversation.participants
+      });
+
       // Get the recipient (the other participant in the conversation)
       const recipient = conversation.participants.find(
         participant => participant.toString() !== message.sender.toString()
       );
 
-      console.log('Conversation participants:', conversation.participants);
-      console.log('Message sender:', message.sender);
-      console.log('Found recipient:', recipient);
+      console.log('👥 Conversation participants:', conversation.participants);
+      console.log('👤 Message sender:', message.sender);
+      console.log('🎯 Found recipient:', recipient);
 
       if (!recipient) {
-        console.log('No recipient found for message notification');
+        console.log('❌ No recipient found for message notification');
         return null;
       }
 
       // Get sender details for the notification
+      console.log('🔍 Looking up sender details for:', message.sender);
       const sender = await User.findById(message.sender).select('name email role');
       if (!sender) {
-        console.log('Sender not found for message notification');
+        console.log('❌ Sender not found for message notification');
         return null;
       }
+      console.log('✅ Sender found:', { name: sender.name, role: sender.role });
 
       // Create notification data
       const notificationData = {
@@ -59,10 +73,11 @@ class ChatNotificationService {
       };
 
       // Create the notification
+      console.log('📋 Creating notification with data:', notificationData);
       const notification = await NotificationService.createNotification(notificationData);
       
-      console.log(`Chat notification created for user ${recipient}:`, notification.title);
-      console.log(`Notification details:`, {
+      console.log(`✅ Chat notification created for user ${recipient}:`, notification.title);
+      console.log(`📋 Notification details:`, {
         id: notification._id,
         type: notification.type,
         title: notification.title,

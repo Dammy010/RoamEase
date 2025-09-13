@@ -164,11 +164,20 @@ export const rateCompletedShipment = createAsyncThunk(
   'shipment/rateCompleted',
   async ({ id, rating, feedback }, { rejectWithValue }) => {
     try {
-      const res = await api.put(`/shipments/${id}/rate`, { rating, feedback });
-      toast.success('Rating submitted successfully!');
+      // Validate rating on frontend
+      if (!rating || rating < 1 || rating > 5) {
+        throw new Error('Rating must be between 1 and 5 stars');
+      }
+      
+      const res = await api.put(`/shipments/${id}/rate`, { 
+        rating: parseInt(rating), 
+        feedback: feedback || '' 
+      });
+      
+      toast.success(`Rating of ${rating} stars submitted successfully!`);
       return res.data.shipment;
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to submit rating.';
+      const message = err.response?.data?.message || err.message || 'Failed to submit rating.';
       toast.error(message);
       return rejectWithValue(message);
     }
@@ -228,6 +237,10 @@ const shipmentSlice = createSlice({
       state.availableShipments = [];
       state.shipments = [];
       state.history = [];
+    },
+    // Clear delivered shipments count when user visits delivered shipments page
+    clearDeliveredShipmentsCount: (state) => {
+      state.deliveredShipments = [];
     },
     // New: Reducers for Socket.io real-time updates
     addShipmentRealtime: (state, { payload }) => {
@@ -559,5 +572,5 @@ const shipmentSlice = createSlice({
 });
 
 // Export all actions and thunks
-export const { resetShipmentState, addShipmentRealtime, updateShipmentRealtime } = shipmentSlice.actions;
+export const { resetShipmentState, addShipmentRealtime, updateShipmentRealtime, clearDeliveredShipmentsCount } = shipmentSlice.actions;
 export default shipmentSlice.reducer;
