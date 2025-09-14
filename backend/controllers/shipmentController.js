@@ -760,38 +760,30 @@ const getDeliveredShipments = async (req, res) => {
   try {
     console.log("DEBUG: getDeliveredShipments - User ID:", req.user._id);
     console.log("DEBUG: getDeliveredShipments - User role:", req.user.role);
-    const query = {
-      user: req.user._id,
-      status: 'delivered',
-      awaitingUserConfirmation: true
-    };
+    
+    let query;
+    
+    if (req.user.role === 'logistics') {
+      // For logistics users, get shipments they delivered
+      query = {
+        deliveredByLogistics: req.user._id,
+        status: 'delivered',
+        awaitingUserConfirmation: true
+      };
+    } else {
+      // For regular users, get their shipments that were delivered
+      query = {
+        user: req.user._id,
+        status: 'delivered',
+        awaitingUserConfirmation: true
+      };
+    }
+    
     console.log("DEBUG: getDeliveredShipments - Query:", query);
-
-    // First, let's check all shipments for this user to see what we have
-    const allUserShipments = await Shipment.find({ user: req.user._id });
-    console.log("DEBUG: getDeliveredShipments - All user shipments:", allUserShipments.map(s => ({
-      id: s._id,
-      title: s.shipmentTitle,
-      status: s.status,
-      awaitingUserConfirmation: s.awaitingUserConfirmation,
-      deliveredAt: s.deliveredAt
-    })));
-
-    // Also check if there are any delivered shipments at all (regardless of awaitingUserConfirmation)
-    const allDeliveredShipments = await Shipment.find({ 
-      user: req.user._id, 
-      status: 'delivered' 
-    });
-    console.log("DEBUG: getDeliveredShipments - All delivered shipments for user:", allDeliveredShipments.map(s => ({
-      id: s._id,
-      title: s.shipmentTitle,
-      status: s.status,
-      awaitingUserConfirmation: s.awaitingUserConfirmation,
-      deliveredAt: s.deliveredAt
-    })));
 
     const shipments = await Shipment.find(query)
       .populate('deliveredByLogistics', 'name email companyName phone')
+      .populate('user', 'name email companyName phone')
       .sort({ deliveredAt: -1 });
     
     console.log("DEBUG: getDeliveredShipments - Shipments found:", shipments.length);

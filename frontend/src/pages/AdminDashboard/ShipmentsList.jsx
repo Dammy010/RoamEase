@@ -155,20 +155,20 @@ const ShipmentsList = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 p-8">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                    <Package className="text-purple-600" size={24} />
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <Package className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-white mb-2">All Shipments</h1>
-                    <p className="text-blue-100 text-base">Monitor and manage all platform shipments</p>
+                    <h1 className="text-3xl font-bold text-white">All Shipments</h1>
+                    <p className="text-indigo-100 mt-1">Monitor and manage all platform shipments</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-white">{allShipments.length}</div>
-                  <div className="text-blue-100 text-sm">Total Shipments</div>
+                  <div className="text-indigo-100 text-sm">Total Shipments</div>
                 </div>
               </div>
             </div>

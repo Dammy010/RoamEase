@@ -13,7 +13,7 @@ import { useTheme } from './contexts/ThemeContext';
 // Context Providers are now in main.jsx
 
 // New: Import Sidebar
-import Sidebar from './components/shared/Sidebar';
+import FloatingDrawer from './components/shared/FloatingDrawer';
 import Navbar from './components/shared/Navbar';
 
 // Public Pages
@@ -73,12 +73,13 @@ import BidsList from './pages/AdminDashboard/BidsList';
 import AdminChatList from './pages/AdminDashboard/AdminChatList';
 import AdminChatWindow from './pages/AdminDashboard/AdminChatWindow';
 import AdminChatDashboard from './pages/AdminDashboard/AdminChatDashboard';
-import ReportsDisputes from './pages/AdminDashboard/ReportsDisputes';
 import PlatformAnalytics from './pages/AdminDashboard/PlatformAnalytics';
 import AdminProfile from './pages/AdminDashboard/Profile';
 import AllUsersListPage from './pages/AdminDashboard/AllUsersListPage';
 import NormalUsers from './pages/AdminDashboard/NormalUsers';
+import ReportManagement from './pages/AdminDashboard/ReportManagement';
 import NotificationPage from './pages/NotificationPage';
+import ReportsPage from './pages/ReportsPage';
 
 function App() {
   const dispatch = useDispatch();
@@ -133,11 +134,11 @@ function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
         <ToastContainer position="top-right" autoClose={3000} />
-        <div className="flex h-screen">
+        <div className="min-h-screen">
         {user ? (
           <>
-            <Sidebar role={user.role} />
-            <div className="flex-1 ml-48 bg-white dark:bg-gray-900">
+            <FloatingDrawer role={user.role} />
+            <div className="bg-white dark:bg-gray-900">
               <Routes>
                 {/* Notifications route - MUST be first to avoid catch-all */}
                 <Route path="/notifications" element={<NotificationPage />} />
@@ -184,7 +185,7 @@ function App() {
                   <Route path="/admin/bids-list" element={<BidsList />} />
                   <Route path="/admin/chat" element={<AdminChatDashboard />} />
                   <Route path="/admin/chat/:conversationId" element={<AdminChatDashboard />} />
-                  <Route path="/admin/reports-disputes" element={<ReportsDisputes />} />
+                  <Route path="/admin/reports" element={<ReportManagement />} />
                   <Route path="/admin/platform-analytics" element={<PlatformAnalytics />} />
                   <Route path="/admin/profile" element={<AdminProfile />} />
                 </Route>
@@ -193,6 +194,7 @@ function App() {
                 <Route element={<ProtectedRoute allowedRoles={['user', 'logistics', 'admin']} />}>
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
                 </Route>
 
                 {/* Catch-all for authenticated users to redirect to their dashboard */}

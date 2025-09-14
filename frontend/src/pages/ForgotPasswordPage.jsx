@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 
 const ForgotPasswordPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [errors, setErrors] = useState({});
 
   const validateEmail = (email) => {
@@ -38,8 +38,14 @@ const ForgotPasswordPage = () => {
       const response = await api.post('/auth/forgot-password', { email });
       
       if (response.data) {
-        setEmailSent(true);
-        toast.success('Password reset link sent to your email!');
+        toast.success('Reset code sent to your email!');
+        // Navigate directly to reset password page with email
+        navigate('/reset-password', { 
+          state: { 
+            email: email,
+            fromForgotPassword: true 
+          } 
+        });
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Something went wrong. Please try again.';
@@ -60,61 +66,6 @@ const ForgotPasswordPage = () => {
     }
   };
 
-  if (emailSent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="mx-auto h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
-              Check Your Email
-            </h2>
-            <p className="text-gray-600 mb-8">
-              We've sent a 6-digit verification code to <strong>{email}</strong>
-            </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                <strong>Next steps:</strong>
-              </p>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                <li>• Check your email inbox for the 6-digit code</li>
-                <li>• Go to the reset password page</li>
-                <li>• Enter the verification code</li>
-                <li>• Create a new password</li>
-                <li>• Sign in with your new password</li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <Link
-                to="/reset-password"
-                className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors text-center block"
-              >
-                Go to Reset Password Page
-              </Link>
-              <p className="text-sm text-gray-500">
-                Didn't receive the email? Check your spam folder or{' '}
-                <button
-                  onClick={() => setEmailSent(false)}
-                  className="text-indigo-600 hover:text-indigo-500 font-medium"
-                >
-                  try again
-                </button>
-              </p>
-              <Link
-                to="/login"
-                className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to login
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
@@ -128,7 +79,7 @@ const ForgotPasswordPage = () => {
             Forgot Password?
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            No worries! Enter your email address and we'll send you a verification code to reset your password.
+            No worries! Enter your email address and we'll send you a 6-digit verification code to reset your password.
           </p>
         </div>
 
@@ -179,10 +130,10 @@ const ForgotPasswordPage = () => {
               {loading ? (
                 <div className="flex items-center">
                   <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                  Sending reset link...
+                  Sending reset code...
                 </div>
               ) : (
-                'Send Reset Link'
+                'Send Reset Code'
               )}
             </button>
           </div>

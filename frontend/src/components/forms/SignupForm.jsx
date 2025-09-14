@@ -55,7 +55,6 @@ const SignupForm = () => {
     // Logistics fields (no name/phoneNumber - using companyName/contactPhone instead)
     companyName: '',
     yearsInOperation: '',
-    registrationNumber: '',
     companySize: '',
     contactName: '',
     contactEmail: '',
@@ -84,6 +83,28 @@ const SignupForm = () => {
     formDataRef.current = formData; // Keep the ref always up-to-date
     console.log('formDataRef updated', formData);
   }, [formData]);
+
+  // Add registrationNumber field only for logistics users
+  useEffect(() => {
+    console.log('🔍 Role changed to:', formData.role);
+    console.log('🔍 Current formData keys:', Object.keys(formData));
+    console.log('🔍 Has registrationNumber?', 'registrationNumber' in formData);
+    
+    if (formData.role === ROLES.LOGISTICS && !('registrationNumber' in formData)) {
+      console.log('🔧 Adding registrationNumber for logistics user');
+      setFormData(prev => ({
+        ...prev,
+        registrationNumber: ''
+      }));
+    } else if (formData.role === ROLES.USER && 'registrationNumber' in formData) {
+      console.log('🔧 Removing registrationNumber for normal user');
+      // Remove registrationNumber for normal users
+      setFormData(prev => {
+        const { registrationNumber, ...rest } = prev;
+        return rest;
+      });
+    }
+  }, [formData.role]);
 
   useEffect(() => {
     if (user?.role) {
@@ -306,7 +327,7 @@ const SignupForm = () => {
     if (formData.role === ROLES.LOGISTICS) {
       const payload = new FormData();
 
-      // Append primitive top-level fields
+      // Append primitive top-level fields (only logistics-specific fields for logistics users)
       const primitiveFields = [
         'companyName',
         'country',
@@ -349,7 +370,42 @@ const SignupForm = () => {
 
         resultAction = await dispatch(signupUser(payload));
     } else {
-        resultAction = await dispatch(signupUser(formData));
+        // For normal users, create a completely clean data object with only required fields
+        const normalUserData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          phoneNumber: formData.phoneNumber,
+          country: formData.country,
+          role: formData.role
+        };
+        
+        // CRITICAL: Explicitly ensure no logistics fields are present
+        const logisticsFields = ['registrationNumber', 'companyName', 'yearsInOperation', 'companySize', 'contactName', 'contactEmail', 'contactPosition', 'contactPhone', 'services', 'regions', 'fleetSize', 'website', 'agreements', 'terms'];
+        
+        // Remove any logistics fields that might have been accidentally included
+        logisticsFields.forEach(field => {
+          if (field in normalUserData) {
+            console.error('❌ ERROR: Logistics field found in normal user data:', field);
+            delete normalUserData[field];
+          }
+        });
+        
+        // Final verification - ensure registrationNumber is absolutely not present
+        if ('registrationNumber' in normalUserData) {
+          console.error('❌ CRITICAL: registrationNumber still present in normalUserData after cleanup!');
+          delete normalUserData.registrationNumber;
+          console.log('🔧 EMERGENCY: Removed registrationNumber from normalUserData');
+        }
+        
+        console.log('🔍 Sending normal user data:', normalUserData);
+        console.log('🔍 Original formData for comparison:', formData);
+        console.log('🔍 Does normalUserData have registrationNumber?', 'registrationNumber' in normalUserData);
+        console.log('🔍 Does formData have registrationNumber?', 'registrationNumber' in formData);
+        console.log('🔍 Final normalUserData keys:', Object.keys(normalUserData));
+        
+        resultAction = await dispatch(signupUser(normalUserData));
       }
 
       // Handle the result
@@ -379,8 +435,13 @@ const SignupForm = () => {
         // Check if email verification is required
         if (payload.needsVerification) {
           const email = payload.email || (formData.role === ROLES.USER ? formData.email : formData.contactEmail);
-          setVerificationEmail(email);
-          setShowVerificationPrompt(true);
+          // Navigate directly to verification page instead of showing modal
+          navigate('/verify-email', { 
+            state: { 
+              email: email,
+              fromSignup: true 
+            } 
+          });
           return;
         }
         

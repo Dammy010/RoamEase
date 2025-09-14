@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft, Loader2, Key } from 'lucide-react';
 import VerificationCodeInput from '../components/VerificationCodeInput';
@@ -7,8 +7,10 @@ import api from '../services/api';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1); // 1: Enter code, 2: Reset password
   const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -18,6 +20,13 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Get email from navigation state
+  useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  }, [location.state]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -173,6 +182,11 @@ const ResetPasswordPage = () => {
               : 'Enter your new password below'
             }
           </p>
+          {email && (
+            <p className="mt-1 text-sm font-medium text-indigo-600">
+              {email}
+            </p>
+          )}
         </div>
 
         {/* Step 1: Enter Code */}
@@ -199,10 +213,10 @@ const ResetPasswordPage = () => {
                 </button>
               )}
               <button
-                onClick={() => navigate('/forgot-password')}
+                onClick={() => navigate(location.state?.fromForgotPassword ? '/forgot-password' : '/login')}
                 className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
               >
-                Back to Forgot Password
+                {location.state?.fromForgotPassword ? 'Back to Forgot Password' : 'Back to Login'}
               </button>
             </div>
           </div>

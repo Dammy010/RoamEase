@@ -54,16 +54,32 @@ export const uploadProfilePicture = createAsyncThunk(
   'settings/uploadProfilePicture',
   async (file, { rejectWithValue }) => {
     try {
+      console.log('🔄 Redux: Starting upload process...');
+      console.log('🔄 Redux: File object:', file);
+      
       const formData = new FormData();
       formData.append('profilePicture', file);
+      
+      console.log('🔄 Redux: FormData created, checking entries...');
+      for (let [key, value] of formData.entries()) {
+        console.log(`🔄 Redux: FormData entry - ${key}:`, value);
+      }
+      
+      console.log('🔄 Redux: Sending request to /settings/upload-profile-picture...');
       
       const response = await api.post('/settings/upload-profile-picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+      
+      console.log('✅ Redux: Upload response received:', response.data);
       return response.data;
     } catch (error) {
+      console.error('❌ Redux: Upload error:', error);
+      console.error('❌ Redux: Error response:', error.response?.data);
+      console.error('❌ Redux: Error status:', error.response?.status);
+      console.error('❌ Redux: Error headers:', error.response?.headers);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }

@@ -81,8 +81,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Debug/test route
 app.get("/api/test-connectivity", (req, res) => {
@@ -117,6 +117,8 @@ app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/profile", require("./routes/profileRoutes"));
 app.use("/api/settings", require("./routes/settingsRoutes"));
+app.use("/api/reports", require("./routes/reportRoutes"));
+app.use("/api/subscriptions", require("./routes/subscriptionRoutes"));
 app.use("/api/debug", require("./routes/debugRoutes"));
 
 // Error handling

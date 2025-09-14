@@ -44,7 +44,6 @@ const registerUser = async (req, res) => {
       companyName,
       country,
       yearsInOperation,
-      registrationNumber,
       companySize,
       contactName,
       contactPosition,
@@ -56,6 +55,43 @@ const registerUser = async (req, res) => {
       agreements,
       terms,
     } = req.body;
+
+    // Only destructure registrationNumber for logistics users
+    let registrationNumber;
+    if (role === 'logistics') {
+      registrationNumber = req.body.registrationNumber;
+    }
+
+    // Debug logging
+    console.log('🔍 Registration debug:', {
+      role,
+      registrationNumber,
+      registrationNumberType: typeof registrationNumber,
+      registrationNumberEmpty: registrationNumber === '',
+      registrationNumberNull: registrationNumber === null,
+      registrationNumberUndefined: registrationNumber === undefined,
+      hasRegistrationNumberInBody: 'registrationNumber' in req.body,
+      registrationNumberInBody: req.body.registrationNumber,
+      fullRequestBody: req.body
+    });
+
+    // Additional debugging for normal users
+    if (role === 'user') {
+      console.log('🔍 NORMAL USER DEBUG:');
+      console.log('  - registrationNumber in req.body:', 'registrationNumber' in req.body);
+      console.log('  - registrationNumber value:', req.body.registrationNumber);
+      console.log('  - All req.body keys:', Object.keys(req.body));
+      
+      // Safety check: remove ALL logistics fields from req.body for normal users
+      const logisticsFields = ['registrationNumber', 'companyName', 'yearsInOperation', 'companySize', 'contactName', 'contactEmail', 'contactPosition', 'contactPhone', 'services', 'regions', 'fleetSize', 'website', 'agreements', 'terms'];
+      
+      logisticsFields.forEach(field => {
+        if (field in req.body) {
+          console.log(`🔧 BACKEND SAFETY: Removing ${field} from req.body for normal user`);
+          delete req.body[field];
+        }
+      });
+    }
 
     // Required field checks
     if (!email || !password || !role) {
@@ -76,7 +112,7 @@ const registerUser = async (req, res) => {
       // Country is optional for normal users
     }
 
-    if (role === "logistics" && !registrationNumber) {
+    if (role === "logistics" && (!registrationNumber || registrationNumber.trim() === '')) {
       return res.status(400).json({
         message: "Registration number is required for logistics users",
       });
@@ -145,10 +181,68 @@ const registerUser = async (req, res) => {
         insuranceCertificate: req.files?.insuranceCertificate?.[0]?.path || "",
         governmentId: req.files?.governmentId?.[0]?.path || "",
       };
+    } else {
+      // For normal users, explicitly ensure registrationNumber is not included
+      // This prevents any accidental inclusion that might cause unique constraint issues
+      if (userData.hasOwnProperty('registrationNumber')) {
+        delete userData.registrationNumber;
+      }
+      
+      // Also check for any other logistics-specific fields that might cause issues
+      const logisticsOnlyFields = [
+        'companyName', 'yearsInOperation', 'registrationNumber', 
+        'companySize', 'contactName', 'contactPosition', 'contactPhone',
+        'services', 'regions', 'fleetSize', 'website', 'agreements', 'terms'
+      ];
+      
+      logisticsOnlyFields.forEach(field => {
+        if (userData.hasOwnProperty(field)) {
+          delete userData[field];
+        }
+      });
+    }
+    // Note: registrationNumber is only added for logistics users above
+    // Normal users don't have this field, avoiding unique constraint issues
+
+    // Final safety check: ensure registrationNumber is never included for normal users
+    if (role !== 'logistics' && 'registrationNumber' in userData) {
+      console.log('🔧 FINAL SAFETY: Removing registrationNumber from userData for normal user');
+      delete userData.registrationNumber;
     }
 
-    // Save user
-    const user = await User.create(userData);
+    // CRITICAL: For normal users, explicitly ensure registrationNumber is undefined
+    if (role !== 'logistics') {
+      userData.registrationNumber = undefined;
+    }
+
+    console.log('🔍 UserData before create:', {
+      role: userData.role,
+      hasRegistrationNumber: 'registrationNumber' in userData,
+      registrationNumberValue: userData.registrationNumber,
+      userDataKeys: Object.keys(userData)
+    });
+
+    // Save user with error handling for duplicate registration numbers
+    let user;
+    try {
+      user = await User.create(userData);
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern?.registrationNumber) {
+        console.log('🔧 DUPLICATE REGISTRATION NUMBER: Attempting to clean up and retry...');
+        
+        // Clean up any existing users with empty registration numbers
+        await User.updateMany(
+          { registrationNumber: '' },
+          { $unset: { registrationNumber: 1 } }
+        );
+        
+        // Retry creating the user
+        user = await User.create(userData);
+        console.log('✅ User created successfully after cleanup');
+      } else {
+        throw error; // Re-throw if it's not a duplicate registration number error
+      }
+    }
 
     // Send verification email
     try {

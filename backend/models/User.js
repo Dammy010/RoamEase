@@ -90,7 +90,7 @@ const userSchema = new mongoose.Schema(
     },
     companySize: {
       type: String,
-      enum: ["small", "medium", "large"],
+      enum: ["small", "medium", "large", "enterprise"],
       required: function () {
         return this.role === "logistics";
       },
@@ -198,6 +198,15 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to handle empty registration numbers
+userSchema.pre('save', function(next) {
+  // If registrationNumber is an empty string and user is not logistics, set it to undefined
+  if (this.role !== 'logistics' && this.registrationNumber === '') {
+    this.registrationNumber = undefined;
+  }
+  next();
+});
 
 // Indexes
 userSchema.index({ role: 1 });

@@ -83,6 +83,7 @@ const profileSlice = createSlice({
       successRate: 0
     },
     loading: false,
+    statsLoading: false,
     error: null,
     updateLoading: false,
     passwordLoading: false,
@@ -175,16 +176,16 @@ const profileSlice = createSlice({
       
       // Get Profile Stats
       .addCase(getProfileStats.pending, (state) => {
-        state.loading = true;
+        state.statsLoading = true;
         state.error = null;
       })
       .addCase(getProfileStats.fulfilled, (state, action) => {
-        state.loading = false;
+        state.statsLoading = false;
         state.stats = action.payload.stats;
         state.error = null;
       })
       .addCase(getProfileStats.rejected, (state, action) => {
-        state.loading = false;
+        state.statsLoading = false;
         state.error = action.payload;
       });
   }

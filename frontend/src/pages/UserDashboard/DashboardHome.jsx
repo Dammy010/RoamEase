@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 // Removed: import Sidebar from "../../components/shared/Sidebar";
 import { PlusCircle, Package, MessageSquare, Clock, UserCircle, Truck, MapPin, Calendar, Wallet, TrendingUp, RefreshCw, Eye, ArrowRight } from "lucide-react";
+import NotificationBell from "../../components/NotificationBell";
 import { initializeSocketAfterLogin } from "../../services/socket";
 import { fetchUserShipments, fetchShipmentHistory } from "../../redux/slices/shipmentSlice";
 import { fetchProfile } from "../../redux/slices/authSlice";
-import { ProfilePictureModal } from "../../components/forms/ProfileForm";
+import FullScreenImageViewer from "../../components/shared/FullScreenImageViewer";
 import { getProfilePictureUrl } from "../../utils/imageUtils";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -176,8 +177,14 @@ const UserDashboardHome = () => {
                 </div>
               </div>
               
-              {/* Right Content - Avatar */}
-              <div className="flex-shrink-0">
+              {/* Right Content - Avatar and Notifications */}
+              <div className="flex-shrink-0 flex items-center gap-6">
+                {/* Notification Bell */}
+                <div className="relative">
+                  <NotificationBell />
+                </div>
+                
+                {/* Avatar */}
                 <div className="relative">
                   {userProfile.avatar ? (
                     <img
@@ -582,9 +589,14 @@ const UserDashboardHome = () => {
           </div>
         </section>
       </div>
-      {/* New: Render ProfilePictureModal */}
+      {/* Full Screen Image Viewer */}
       {showProfilePicModal && (
-        <ProfilePictureModal imageUrl={userProfile.avatar} onClose={() => setShowProfilePicModal(false)} />
+        <FullScreenImageViewer 
+          isOpen={showProfilePicModal}
+          onClose={() => setShowProfilePicModal(false)}
+          imageUrl={userProfile.avatar}
+          alt="Profile Picture"
+        />
       )}
     </div>
   );

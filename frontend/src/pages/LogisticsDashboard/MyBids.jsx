@@ -251,7 +251,7 @@ const MyBids = () => {
                   <ArrowLeft className="text-white" size={24} />
                 </button>
                 <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                  <Wallet className="text-white" size={32} />
+                  <Wallet className="text-indigo-600 dark:text-indigo-200" size={32} />
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-white">My Bids</h1>

@@ -21,8 +21,8 @@ const createBid = async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields: shipmentId, price, and eta are required' });
     }
 
-    if (req.user.role !== 'logistics' && req.user.role !== 'carrier') {
-      return res.status(403).json({ message: 'Only logistics providers and carriers can create bids' });
+    if (req.user.role !== 'logistics') {
+      return res.status(403).json({ message: 'Only logistics providers can create bids' });
     }
 
     // Check if logistics provider is verified
@@ -276,8 +276,8 @@ const acceptBid = async (req, res) => {
 // Get bids made by the logged-in carrier/logistics
 const getMyBids = async (req, res) => {
   try {
-    if (req.user.role !== 'logistics' && req.user.role !== 'carrier') {
-      return res.status(403).json({ message: 'Only logistics providers and carriers can view their bids' });
+    if (req.user.role !== 'logistics') {
+      return res.status(403).json({ message: 'Only logistics providers can view their bids' });
     }
 
     const bids = await Bid.find({ carrier: req.user._id })
@@ -386,9 +386,9 @@ const getBidsOnMyShipments = async (req, res) => {
   try {
     console.log("DEBUG: getBidsOnMyShipments - Request from user:", req.user._id, "Role:", req.user.role);
     
-    if (req.user.role !== 'user' && req.user.role !== 'admin') {
+    if (req.user.role !== 'user' && req.user.role !== 'admin' && req.user.role !== 'logistics') {
       console.log("DEBUG: getBidsOnMyShipments - User role not authorized:", req.user.role);
-      return res.status(403).json({ message: 'Only shippers and admins can view bids on their shipments' });
+      return res.status(403).json({ message: 'Only shippers, logistics providers, and admins can view bids on their shipments' });
     }
 
     // Find all shipments posted by the logged-in user

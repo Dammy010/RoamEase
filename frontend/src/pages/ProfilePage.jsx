@@ -3,13 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useTheme } from '../contexts/ThemeContext';
 import { getProfilePictureUrl } from '../utils/imageUtils';
+import FullScreenImageViewer from '../components/shared/FullScreenImageViewer';
 import { ProfilePictureModal } from '../components/forms/ProfileForm';
 import { 
   User, Mail, Phone, MapPin, Building, Calendar, 
   Edit3, Save, Camera, Upload, CheckCircle, 
   Award, Star, Package, Truck, Clock, Globe,
   Shield, Settings, Bell, CreditCard, LogOut,
-  Eye, EyeOff, AlertTriangle, Trash2
+  Eye, EyeOff, AlertTriangle, Trash2, RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
@@ -17,18 +18,24 @@ import {
   changePassword, 
   deleteAccount, 
   getProfileStats,
-  clearProfileError 
+  clearProfileError,
+  uploadProfilePicture
 } from '../redux/slices/profileSlice';
+import { fetchProfile } from '../redux/slices/authSlice';
 import { useSelector as useSettingsSelector } from 'react-redux';
+import { getSocket } from '../services/socket';
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
-  const { user } = useSelector((state) => state.auth);
+  const authState = useSelector((state) => state.auth);
+  const { user } = authState;
+  
   const { 
     profileData: profileState, 
     stats, 
     loading, 
+    statsLoading,
     error, 
     updateLoading, 
     passwordLoading, 
@@ -41,14 +48,13 @@ const ProfilePage = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [showFullScreenImage, setShowFullScreenImage] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.role === 'logistics' ? (user?.companyName || '') : (user?.name || ''),
     email: user?.email || '',
     phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
     companyName: user?.companyName || '',
     country: user?.country || '',
-    address: user?.address || '',
-    bio: user?.bio || '',
     website: user?.website || '',
     yearsInOperation: user?.yearsInOperation || '',
     companySize: user?.companySize || '',
@@ -76,14 +82,42 @@ const ProfilePage = () => {
         phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
         companyName: user?.companyName || '',
         country: user?.country || '',
-        address: user?.address || '',
-        bio: user?.bio || '',
         website: user?.website || '',
         yearsInOperation: user?.yearsInOperation || '',
         companySize: user?.companySize || '',
         registrationNumber: user?.registrationNumber || ''
       });
+      
+      // Fetch profile statistics
       dispatch(getProfileStats());
+    }
+  }, [user, dispatch]);
+
+  // Refresh stats when user changes
+  useEffect(() => {
+    if (user && !statsLoading) {
+      dispatch(getProfileStats());
+    }
+  }, [user?._id, dispatch]);
+
+  // Listen for verification updates
+  useEffect(() => {
+    if (user?.role === 'logistics') {
+      const socket = getSocket();
+      
+      const handleVerificationUpdate = (updatedUser) => {
+        console.log('🔔 Verification update received:', updatedUser);
+        if (updatedUser._id === user._id) {
+          // Refresh the user profile to get updated verification status
+          dispatch(fetchProfile());
+        }
+      };
+
+      socket.on('verification-updated', handleVerificationUpdate);
+      
+      return () => {
+        socket.off('verification-updated', handleVerificationUpdate);
+      };
     }
   }, [user, dispatch]);
 
@@ -123,6 +157,8 @@ const ProfilePage = () => {
       if (updateProfile.fulfilled.match(result)) {
         toast.success('Profile updated successfully');
         setIsEditing(false);
+        // Refresh user profile to sync with updated data
+        dispatch(fetchProfile());
       } else if (updateProfile.rejected.match(result)) {
         toast.error(result.payload || 'Failed to update profile');
       }
@@ -138,8 +174,6 @@ const ProfilePage = () => {
       phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
       companyName: user?.companyName || '',
       country: user?.country || '',
-      address: user?.address || '',
-      bio: user?.bio || '',
       website: user?.website || '',
       yearsInOperation: user?.yearsInOperation || '',
       companySize: user?.companySize || '',
@@ -198,6 +232,22 @@ const ProfilePage = () => {
     }
   };
 
+  const handleProfilePictureUpload = async (file) => {
+    try {
+      const result = await dispatch(uploadProfilePicture(file));
+      if (uploadProfilePicture.fulfilled.match(result)) {
+        toast.success('Profile picture updated successfully');
+        // Refresh user profile to get updated picture
+        dispatch(fetchProfile());
+        setShowProfilePictureModal(false);
+      } else if (uploadProfilePicture.rejected.match(result)) {
+        toast.error(result.payload || 'Failed to update profile picture');
+      }
+    } catch (error) {
+      toast.error('An error occurred while uploading profile picture');
+    }
+  };
+
   const getInitials = (name) => {
     return name
       .split(' ')
@@ -217,28 +267,101 @@ const ProfilePage = () => {
 
   const getVerificationStatus = () => {
     if (user?.role === 'logistics') {
-      return user?.verificationStatus === 'verified' ? 'Verified' : 'Pending Verification';
+      // Check both verificationStatus and isVerified fields
+      const isVerified = user?.verificationStatus === 'verified' || user?.isVerified === true;
+      return isVerified ? 'Verified' : 'Pending Verification';
     }
     return 'Verified';
   };
 
   const getVerificationColor = () => {
     if (user?.role === 'logistics') {
-      return user?.verificationStatus === 'verified' ? 'text-green-600' : 'text-yellow-600';
+      // Check both verificationStatus and isVerified fields
+      const isVerified = user?.verificationStatus === 'verified' || user?.isVerified === true;
+      return isVerified ? 'text-green-600' : 'text-yellow-600';
     }
     return 'text-green-600';
   };
+
+  // Show loading state if no user and loading
+  if (!user && loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no user and error
+  if (!user && error) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Profile</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login prompt if no user
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Please Login</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">You need to be logged in to view your profile.</p>
+          <Link
+            to="/login"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Show fallback if user data is incomplete
+  if (!user.email) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Profile Data Incomplete</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Please refresh the page or log in again.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-6">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Profile</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Manage your profile information and preferences
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                Manage your profile information and account settings
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -263,40 +386,58 @@ const ProfilePage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6 sticky top-8">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sticky top-8">
               {/* Profile Picture */}
               <div className="text-center mb-6">
-                <div className="relative inline-block">
+                <div className="relative inline-block group">
                   {user?.profilePicture ? (
                     <img
                       src={getProfilePictureUrl(user.profilePicture)}
                       alt="Profile"
-                      className="w-24 h-24 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setShowProfilePictureModal(true)}
+                      className="w-28 h-28 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700"
+                      onClick={() => setShowFullScreenImage(true)}
+                      onError={(e) => {
+                        console.error('Profile picture failed to load:', e.target.src);
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
                     />
-                  ) : (
-                    <div 
-                      className={`w-24 h-24 bg-gradient-to-r ${getRoleColor(user?.role)} rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg cursor-pointer hover:opacity-80 transition-opacity`}
-                      onClick={() => setShowProfilePictureModal(true)}
-                    >
-                      {getInitials(user?.name || 'User')}
-                    </div>
-                  )}
+                  ) : null}
+                  <div 
+                    className={`w-28 h-28 bg-gradient-to-r ${getRoleColor(user?.role)} rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700 ${user?.profilePicture ? 'hidden' : ''}`}
+                    onClick={() => setShowFullScreenImage(true)}
+                  >
+                    {getInitials(user?.name || user?.companyName || 'User')}
+                  </div>
                   {uploadLoading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
+                  <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="w-4 h-4" />
+                  </div>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mt-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-4">
                   {user?.role === 'logistics' ? (user?.companyName || 'Company Name') : (user?.name || 'User Name')}
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
                   {user?.role === 'logistics' ? 'Logistics Provider' : 'Shipper'}
                 </p>
-                <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium mt-2 ${getVerificationColor()}`}>
-                  <CheckCircle className="w-4 h-4" />
-                  {getVerificationStatus()}
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getVerificationColor()}`}>
+                    <CheckCircle className="w-4 h-4" />
+                    {getVerificationStatus()}
+                  </div>
+                  {user?.role === 'logistics' && (
+                    <button
+                      onClick={() => dispatch(fetchProfile())}
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      title="Refresh verification status"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -307,16 +448,28 @@ const ProfilePage = () => {
                     <span className="text-sm text-gray-600 dark:text-gray-400">Rating</span>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="font-semibold text-gray-900 dark:text-white">{stats.rating}</span>
+                      {statsLoading ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-8 rounded"></div>
+                      ) : (
+                        <span className="font-semibold text-gray-900 dark:text-white">{stats.rating}</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Success Rate</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{stats.successRate}%</span>
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-12 rounded"></div>
+                    ) : (
+                      <span className="font-semibold text-gray-900 dark:text-white">{stats.successRate}%</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Response Time</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{stats.responseTime}</span>
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-16 rounded"></div>
+                    ) : (
+                      <span className="font-semibold text-gray-900 dark:text-white">{stats.responseTime}</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -337,6 +490,13 @@ const ProfilePage = () => {
                   <Bell className="w-5 h-5" />
                   <span>Notifications</span>
                 </Link>
+                <button
+                  onClick={() => setShowPasswordForm(!showPasswordForm)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Change Password</span>
+                </button>
                 <Link
                   to="/billing"
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -351,12 +511,15 @@ const ProfilePage = () => {
           {/* Profile Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Personal Information */}
-            <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
-                  <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Personal Information</h3>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h3>
+                  <p className="text-gray-600 dark:text-gray-400">Update your personal details and contact information</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -434,45 +597,14 @@ const ProfilePage = () => {
                       </div>
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Address
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <textarea
-                          name="address"
-                          value={profileData.address}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                          rows={3}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                    </div>
                   </>
                 )}
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={profileData.bio}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    placeholder="Tell us about yourself..."
-                  />
-                </div>
               </div>
             </div>
 
             {/* Company Information (for logistics) */}
             {user?.role === 'logistics' && (
-              <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                     <Building className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -568,40 +700,102 @@ const ProfilePage = () => {
             )}
 
             {/* Statistics */}
-            <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                  <Award className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Statistics</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Your performance metrics and achievements</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Statistics</h3>
+                <button
+                  onClick={() => dispatch(getProfileStats())}
+                  disabled={statsLoading}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                  title="Refresh statistics"
+                >
+                  <RefreshCw className={`w-5 h-5 ${statsLoading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-1">
-                    {stats.totalShipments}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Shipments</div>
+              {error ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">Failed to load statistics</p>
+                  <button
+                    onClick={() => dispatch(getProfileStats())}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Retry
+                  </button>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-                    {stats.completedShipments}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+              ) : statsLoading && !stats.totalShipments && !stats.completedShipments ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">Loading statistics...</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">
-                    {stats.rating}
+              ) : (
+                <div className={`grid gap-6 ${user?.role === 'logistics' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'}`}>
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                    ) : (
+                      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
+                        {stats.totalShipments || 0}
+                      </div>
+                    )}
+                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      {user?.role === 'logistics' ? 'Total Bids' : 'Total Shipments'}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Rating</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                    {stats.successRate}%
+                  
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                    ) : (
+                      <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                        {stats.completedShipments || 0}
+                      </div>
+                    )}
+                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      {user?.role === 'logistics' ? 'Accepted Bids' : 'Completed'}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Success Rate</div>
+                  
+                  {/* Only show Rating and Success Rate for logistics users */}
+                  {user?.role === 'logistics' && (
+                    <>
+                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                        {statsLoading ? (
+                          <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-1 mb-2">
+                            <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                            <span className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                              {stats.rating || 0}
+                            </span>
+                          </div>
+                        )}
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Rating</div>
+                      </div>
+                      
+                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                        {statsLoading ? (
+                          <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                        ) : (
+                          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                            {stats.successRate || 0}%
+                          </div>
+                        )}
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Success Rate</div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -636,7 +830,7 @@ const ProfilePage = () => {
 
             {/* Password Change Form */}
             {showPasswordForm && (
-              <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6 mt-6">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mt-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Change Password</h3>
                 <div className="space-y-4">
                   <div>
@@ -769,11 +963,46 @@ const ProfilePage = () => {
       {showProfilePictureModal && (
         <ProfilePictureModal 
           imageUrl={getProfilePictureUrl(user?.profilePicture)} 
-          onClose={() => setShowProfilePictureModal(false)} 
+          onClose={() => setShowProfilePictureModal(false)}
+          onUpload={handleProfilePictureUpload}
+          uploadLoading={uploadLoading}
+        />
+      )}
+
+      {/* Full Screen Image Viewer */}
+      {showFullScreenImage && (
+        <FullScreenImageViewer 
+          isOpen={showFullScreenImage}
+          onClose={() => setShowFullScreenImage(false)}
+          imageUrl={getProfilePictureUrl(user?.profilePicture)}
+          alt="Profile Picture"
         />
       )}
     </div>
   );
 };
 
-export default ProfilePage;
+// Fallback component in case of any issues
+const ProfilePageFallback = () => (
+  <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+    <div className="text-center">
+      <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Profile Page</h2>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">Loading your profile...</p>
+    </div>
+  </div>
+);
+
+
+// Wrap the main component with error boundary
+const ProfilePageWithErrorBoundary = () => {
+  try {
+    return <ProfilePage />;
+  } catch (error) {
+    console.error('ProfilePage Error:', error);
+    return <ProfilePageFallback />;
+  }
+};
+
+// Export the main component with error boundary
+export default ProfilePageWithErrorBoundary;

@@ -84,16 +84,16 @@ const MessageBubble = ({ message }) => {
   };
 
   return (
-    <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-4`}>
+    <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-6 group`}>
       <div className={`max-w-xs lg:max-w-md ${isMine ? "order-2" : "order-1"}`}>
         {/* Sender Info */}
-        <div className={`text-xs text-gray-500 mb-1 ${isMine ? "text-right" : "text-left"}`}>
+        <div className={`text-xs text-gray-500 mb-2 px-2 ${isMine ? "text-right" : "text-left"}`}>
           {message.sender.name}
         </div>
         
         {/* Message Content */}
         <div
-          className={`p-4 rounded-2xl break-words shadow-lg backdrop-blur-sm ${
+          className={`p-4 rounded-2xl break-words shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:shadow-xl ${
             isMine 
               ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white border border-blue-400/20" 
               : "bg-white/90 text-gray-900 border border-gray-200/50"

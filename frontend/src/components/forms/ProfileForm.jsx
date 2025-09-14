@@ -24,7 +24,7 @@ const Input = ({ label, id, type = "text", required, ...props }) => (
 );
 
 // Select Component with enhanced styling
-const Select = ({ label, id, options, required, ...props }) => (
+const Select = ({ label, id, options, optionLabels, required, ...props }) => (
   <div className="mb-5">
     {label && (
       <label htmlFor={id} className="block text-sm font-semibold text-gray-700 mb-2">
@@ -40,31 +40,100 @@ const Select = ({ label, id, options, required, ...props }) => (
       <option value="">Select {label?.toLowerCase()}</option>
       {options.map((opt) => (
         <option key={opt} value={opt}>
-          {opt}
+          {optionLabels ? optionLabels[opt] || opt : opt}
         </option>
       ))}
     </select>
   </div>
 );
 
-// Profile Picture Modal Component (retained as is)
-export const ProfilePictureModal = ({ imageUrl, onClose }) => {
-  if (!imageUrl) return null;
+// Profile Picture Modal Component with upload functionality
+export const ProfilePictureModal = ({ imageUrl, onClose, onUpload, uploadLoading }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(imageUrl);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+    }
+  };
+
+  const handleUpload = () => {
+    if (selectedFile && onUpload) {
+      onUpload(selectedFile);
+    }
+  };
+
+  const handleClose = () => {
+    setSelectedFile(null);
+    setPreviewUrl(imageUrl);
+    onClose();
+  };
 
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      onClick={handleClose}
     >
-      <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <div className="relative bg-white rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
         <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-white text-3xl bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center"
+          onClick={handleClose}
+          className="absolute top-2 right-2 text-gray-500 text-2xl hover:text-gray-700"
           aria-label="Close"
         >
           &times;
         </button>
-        <img src={imageUrl} alt="Profile" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-lg" />
+        
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h3>
+        
+        <div className="text-center mb-4">
+          {previewUrl ? (
+            <img 
+              src={previewUrl} 
+              alt="Profile Preview" 
+              className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-gray-200" 
+            />
+          ) : (
+            <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
+              <span className="text-gray-500 text-2xl">No Image</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={handleClose}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={!selectedFile || uploadLoading}
+            className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            {uploadLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Uploading...
+              </>
+            ) : (
+              'Upload'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -328,7 +397,13 @@ const ProfileForm = ({ user }) => {
                 name="companySize"
                 value={formData.companySize}
                 onChange={handleChange}
-                options={["small", "medium", "large"]}
+                options={["small", "medium", "large", "enterprise"]}
+                optionLabels={{
+                  small: "1-50 employees",
+                  medium: "51-200 employees", 
+                  large: "201-500 employees",
+                  enterprise: "500+ employees"
+                }}
                 required
               />
               <Input label="Website" id="website" name="website" value={formData.website} onChange={handleChange} type="url" />

@@ -90,14 +90,17 @@ const NotificationBell = () => {
   return (
     <button
       onClick={handleBellClick}
-      className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+      className={`relative p-3 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg border border-white/20 hover:shadow-xl group ${unreadCount > 0 ? 'notification-bell' : ''}`}
       title="View Notifications"
     >
-      <Bell className="w-6 h-6" />
+      <Bell className="w-6 h-6 group-hover:animate-pulse" />
       {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+        <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white notification-badge`}>
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
+      )}
+      {unreadCount === 0 && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
       )}
     </button>
   );

@@ -3,6 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
+  createSubscription, 
+  confirmSubscription, 
+  getUserSubscriptions, 
+  cancelSubscription,
+  clearError 
+} from '../../redux/slices/subscriptionSlice';
+import { 
   CreditCard, 
   CheckCircle, 
   Star, 
@@ -29,142 +36,128 @@ const Subscriptions = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
   const { formatCurrency } = useCurrency();
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { 
+    subscriptions, 
+    currentSubscription, 
+    loading, 
+    error, 
+    paymentLoading, 
+    paymentError 
+  } = useSelector((state) => state.subscription);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
 
-  const plans = [
-    {
-      id: 'basic',
-      name: 'Basic',
-      description: 'Perfect for small logistics companies',
-      price: 29,
-      period: 'month',
-      originalPrice: 39,
-      discount: 25,
-      features: [
-        'Up to 50 shipments/month',
-        'Basic analytics dashboard',
-        'Email support',
-        'Standard tracking features',
-        'Mobile app access'
-      ],
-      limitations: [
-        'Limited API access',
-        'Basic reporting only'
-      ],
-      popular: false,
-      icon: Shield,
-      color: 'blue'
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      description: 'Most popular choice for growing businesses',
-      price: 99,
-      period: 'month',
-      originalPrice: 129,
-      discount: 23,
-      features: [
-        'Unlimited shipments',
-        'Advanced analytics & insights',
-        'Priority support (24/7)',
-        'Full API access',
-        'Custom integrations',
-        'Advanced reporting',
-        'Team collaboration tools',
-        'White-label options'
-      ],
-      limitations: [],
-      popular: true,
-      icon: Crown,
-      color: 'purple'
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'Custom solutions for large operations',
-      price: 299,
-      period: 'month',
-      originalPrice: 399,
-      discount: 25,
-      features: [
-        'Everything in Premium',
-        'Dedicated account manager',
-        'Custom development',
-        'SLA guarantee (99.9%)',
-        'On-premise deployment',
-        'Advanced security features',
-        'Custom training sessions',
-        'Priority feature requests'
-      ],
-      limitations: [],
-      popular: false,
-      icon: Sparkles,
-      color: 'gold'
+  const [billingCycle, setBillingCycle] = useState('monthly');
+
+  // Error handling
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      dispatch(clearError());
     }
-  ];
+    if (paymentError) {
+      toast.error(paymentError);
+      dispatch(clearError());
+    }
+  }, [error, paymentError, dispatch]);
+
+  const basicPlan = {
+    id: 'basic',
+    name: 'Basic',
+    description: 'Perfect for small logistics companies',
+    features: [
+      'Up to 50 shipments/month',
+      'Basic analytics dashboard',
+      'Email support',
+      'Standard tracking features',
+      'Mobile app access',
+      'Real-time notifications',
+      'API access'
+    ],
+    limitations: [
+      'No custom integrations',
+      'Basic support only'
+    ],
+    popular: true,
+    icon: Shield,
+    color: 'blue',
+    pricing: {
+      weekly: { price: 9, originalPrice: 12, discount: 25 },
+      monthly: { price: 29, originalPrice: 39, discount: 25 },
+      yearly: { price: 299, originalPrice: 468, discount: 36 }
+    }
+  };
 
   useEffect(() => {
     fetchSubscriptions();
   }, []);
 
   const fetchSubscriptions = async () => {
-    setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSubscriptions([
-        {
-          id: 1,
-          plan: 'Premium',
-          status: 'active',
-          startDate: '2025-01-01',
-          endDate: '2025-12-31',
-          price: 99,
-          nextBilling: '2025-02-01',
-          features: ['Unlimited shipments', 'Priority support', 'Advanced analytics']
-        }
-      ]);
+      await dispatch(getUserSubscriptions()).unwrap();
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
       toast.error('Failed to load subscriptions');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleUpgrade = (plan) => {
-    setSelectedPlan(plan);
-    setShowPaymentModal(true);
+  const handleUpgrade = async (plan) => {
+    if (currentSubscription && currentSubscription.status === 'active') {
+      toast.info('You already have an active subscription');
+      return;
+    }
+
+    try {
+      const planWithBilling = {
+        ...plan,
+        billingCycle,
+        price: plan.pricing[billingCycle].price,
+        period: billingCycle === 'weekly' ? 'week' : billingCycle === 'monthly' ? 'month' : 'year'
+      };
+      
+      setSelectedPlan(planWithBilling);
+      
+      // Create subscription
+      const result = await dispatch(createSubscription({ billingCycle })).unwrap();
+      
+      if (result.success) {
+        setShowPaymentModal(true);
+        toast.success('Subscription created! Please complete payment.');
+      }
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      toast.error(error || 'Failed to create subscription');
+    }
   };
 
   const handlePayment = async (paymentData) => {
-    setPaymentLoading(true);
     try {
-      // TODO: Implement actual payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success(`Successfully upgraded to ${selectedPlan.name} plan!`);
-      setShowPaymentModal(false);
-      setSelectedPlan(null);
-      fetchSubscriptions();
+      // Confirm subscription payment
+      const result = await dispatch(confirmSubscription({ 
+        paymentIntentId: paymentData.paymentIntentId 
+      })).unwrap();
+      
+      if (result.success) {
+        toast.success(`Successfully upgraded to ${selectedPlan.name} plan!`);
+        setShowPaymentModal(false);
+        setSelectedPlan(null);
+        fetchSubscriptions();
+      }
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
-    } finally {
-      setPaymentLoading(false);
+      console.error('Payment error:', error);
+      toast.error(error || 'Payment failed. Please try again.');
     }
   };
 
   const handleCancel = async (subscriptionId) => {
     if (window.confirm('Are you sure you want to cancel this subscription? You will lose access to premium features at the end of your billing period.')) {
       try {
-        // TODO: Implement actual cancellation
+        await dispatch(cancelSubscription(subscriptionId)).unwrap();
         toast.success('Subscription cancelled successfully');
         fetchSubscriptions();
       } catch (error) {
-        toast.error('Failed to cancel subscription');
+        console.error('Cancel subscription error:', error);
+        toast.error(error || 'Failed to cancel subscription');
       }
     }
   };
@@ -178,7 +171,7 @@ const Subscriptions = () => {
             Choose Your Perfect Plan
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Scale your logistics business with our powerful platform. Start free, upgrade anytime.
+            Scale your logistics business with our powerful platform. Upgrade anytime.
           </p>
         </div>
 
@@ -219,132 +212,154 @@ const Subscriptions = () => {
               </div>
             )}
 
-            {/* Pricing Plans */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {plans.map((plan) => {
-                const IconComponent = plan.icon;
-                const isCurrentPlan = subscriptions.length > 0 && subscriptions[0].plan === plan.name;
-                
-                return (
-                  <div
-                    key={plan.id}
-                    className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 transition-all duration-300 hover:shadow-2xl ${
-                      plan.popular
-                        ? 'border-purple-500 dark:border-purple-400 scale-105'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    } ${isCurrentPlan ? 'ring-2 ring-green-500 dark:ring-green-400' : ''}`}
-                  >
-                    {plan.popular && (
-                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
-                          <Star className="w-4 h-4" />
-                          <span>Most Popular</span>
-                        </span>
-                      </div>
-                    )}
+            {/* Billing Cycle Toggle */}
+            <div className="flex items-center justify-center space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 max-w-md mx-auto mb-8">
+              <button
+                onClick={() => setBillingCycle('weekly')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === 'weekly'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === 'monthly'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === 'yearly'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
 
-                    {isCurrentPlan && (
+            {/* Pricing Plans */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-md">
+                {(() => {
+                  const IconComponent = basicPlan.icon;
+                  const currentPricing = basicPlan.pricing[billingCycle];
+                  const periodText = billingCycle === 'weekly' ? 'week' : billingCycle === 'monthly' ? 'month' : 'year';
+                  const isCurrentPlan = subscriptions.length > 0 && subscriptions[0].plan === basicPlan.name;
+                
+                  return (
+                    <div className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 transition-all duration-300 hover:shadow-2xl border-blue-500 dark:border-blue-400 ${isCurrentPlan ? 'ring-2 ring-green-500 dark:ring-green-400' : ''}`}>
                       <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-green-600 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
-                          <Check className="w-4 h-4" />
-                          <span>Current Plan</span>
+                        <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                          <Star className="w-4 h-4" />
+                          <span>Basic Plan</span>
                         </span>
                       </div>
-                    )}
+
+                      {isCurrentPlan && (
+                        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                          <span className="bg-green-600 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                            <Check className="w-4 h-4" />
+                            <span>Current Plan</span>
+                          </span>
+                        </div>
+                      )}
 
                     <div className="p-8">
-                      {/* Plan Header */}
-                      <div className="text-center mb-8">
-                        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
-                          plan.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30' :
-                          plan.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900/30' :
-                          'bg-yellow-100 dark:bg-yellow-900/30'
-                        }`}>
-                          <IconComponent className={`w-8 h-8 ${
-                            plan.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                            plan.color === 'purple' ? 'text-purple-600 dark:text-purple-400' :
-                            'text-yellow-600 dark:text-yellow-400'
-                          }`} />
-                        </div>
-                        
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                          {plan.name}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                          {plan.description}
-                        </p>
-
-                        {/* Pricing */}
-                        <div className="mb-6">
-                          <div className="flex items-baseline justify-center space-x-2">
-                            <span className="text-5xl font-bold text-gray-900 dark:text-white">
-                              {formatCurrency(plan.price)}
-                            </span>
-                            <span className="text-gray-600 dark:text-gray-400">/{plan.period}</span>
+                        {/* Plan Header */}
+                        <div className="text-center mb-8">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+                            <IconComponent className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                           </div>
-                          {plan.originalPrice && (
+                          
+                          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            {basicPlan.name}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            {basicPlan.description}
+                          </p>
+
+                          {/* Pricing */}
+                          <div className="mb-6">
+                            <div className="flex items-baseline justify-center space-x-2">
+                              <span className="text-5xl font-bold text-gray-900 dark:text-white">
+                                {formatCurrency(currentPricing.price)}
+                              </span>
+                              <span className="text-gray-600 dark:text-gray-400">/{periodText}</span>
+                            </div>
                             <div className="flex items-center justify-center space-x-2 mt-2">
                               <span className="text-lg text-gray-500 line-through">
-                                {formatCurrency(plan.originalPrice)}
+                                {formatCurrency(currentPricing.originalPrice)}
                               </span>
                               <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded-full text-sm font-semibold">
-                                {plan.discount}% OFF
+                                {currentPricing.discount}% OFF
                               </span>
                             </div>
-                          )}
+                            {billingCycle === 'yearly' && (
+                              <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
+                                Save ${currentPricing.originalPrice - currentPricing.price} per year!
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Features */}
-                      <div className="space-y-4 mb-8">
-                        <h4 className="font-semibold text-gray-900 dark:text-white mb-4">What's included:</h4>
-                        {plan.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-start space-x-3">
-                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-                          </div>
-                        ))}
-                        {plan.limitations.map((limitation, idx) => (
-                          <div key={idx} className="flex items-start space-x-3">
-                            <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-500 dark:text-gray-400">{limitation}</span>
-                          </div>
-                        ))}
-                      </div>
+                        {/* Features */}
+                        <div className="space-y-4 mb-8">
+                          <h4 className="font-semibold text-gray-900 dark:text-white mb-4">What's included:</h4>
+                          {basicPlan.features.map((feature, idx) => (
+                            <div key={idx} className="flex items-start space-x-3">
+                              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                            </div>
+                          ))}
+                          {basicPlan.limitations.map((limitation, idx) => (
+                            <div key={idx} className="flex items-start space-x-3">
+                              <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-500 dark:text-gray-400">{limitation}</span>
+                            </div>
+                          ))}
+                        </div>
 
-                      {/* Action Button */}
-                      <button
-                        onClick={() => handleUpgrade(plan)}
-                        disabled={isCurrentPlan || paymentLoading}
-                        className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
-                          isCurrentPlan
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 cursor-not-allowed'
-                            : plan.popular
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl'
-                            : 'bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white'
-                        }`}
-                      >
-                        {isCurrentPlan ? (
-                          <>
-                            <Check className="w-5 h-5" />
-                            <span>Current Plan</span>
-                          </>
-                        ) : paymentLoading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>Processing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>{plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}</span>
-                            <ArrowRight className="w-5 h-5" />
-                          </>
-                        )}
-                      </button>
+                        {/* Action Button */}
+                        <button
+                          onClick={() => handleUpgrade(basicPlan)}
+                          disabled={isCurrentPlan || paymentLoading}
+                          className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
+                            isCurrentPlan
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                          }`}
+                        >
+                          {isCurrentPlan ? (
+                            <>
+                              <Check className="w-5 h-5" />
+                              <span>Current Plan</span>
+                            </>
+                          ) : paymentLoading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Processing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Get Started</span>
+                              <ArrowRight className="w-5 h-5" />
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })()}
+              </div>
             </div>
 
             {/* Features Comparison */}
@@ -357,11 +372,9 @@ const Subscriptions = () => {
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700">
                       <th className="text-left py-4 px-6 font-semibold text-gray-900 dark:text-white">Features</th>
-                      {plans.map((plan) => (
-                        <th key={plan.id} className="text-center py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                          {plan.name}
-                        </th>
-                      ))}
+                      <th className="text-center py-4 px-6 font-semibold text-gray-900 dark:text-white">
+                        {basicPlan.name}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -377,27 +390,25 @@ const Subscriptions = () => {
                     ].map((feature, idx) => (
                       <tr key={idx}>
                         <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{feature}</td>
-                        {plans.map((plan) => (
-                          <td key={plan.id} className="text-center py-4 px-6">
-                            {idx === 0 ? (
-                              plan.name === 'Basic' ? '50' : plan.name === 'Premium' ? 'Unlimited' : 'Unlimited'
-                            ) : idx === 1 ? (
-                              <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                            ) : idx === 2 ? (
-                              plan.name === 'Basic' ? <X className="w-5 h-5 text-red-500 mx-auto" /> : <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                            ) : idx === 3 ? (
-                              plan.name === 'Basic' ? <X className="w-5 h-5 text-red-500 mx-auto" /> : <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                            ) : idx === 4 ? (
-                              plan.name === 'Basic' ? <X className="w-5 h-5 text-red-500 mx-auto" /> : <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                            ) : idx === 5 ? (
-                              plan.name === 'Basic' ? <X className="w-5 h-5 text-red-500 mx-auto" /> : <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                            ) : idx === 6 ? (
-                              plan.name === 'Basic' ? <X className="w-5 h-5 text-red-500 mx-auto" /> : <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                            ) : (
-                              plan.name === 'Enterprise' ? <CheckCircle className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />
-                            )}
-                          </td>
-                        ))}
+                        <td className="text-center py-4 px-6">
+                          {idx === 0 ? (
+                            '50'
+                          ) : idx === 1 ? (
+                            <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
+                          ) : idx === 2 ? (
+                            <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
+                          ) : idx === 3 ? (
+                            <X className="w-5 h-5 text-red-500 mx-auto" />
+                          ) : idx === 4 ? (
+                            <X className="w-5 h-5 text-red-500 mx-auto" />
+                          ) : idx === 5 ? (
+                            <X className="w-5 h-5 text-red-500 mx-auto" />
+                          ) : idx === 6 ? (
+                            <X className="w-5 h-5 text-red-500 mx-auto" />
+                          ) : (
+                            <X className="w-5 h-5 text-red-500 mx-auto" />
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -412,16 +423,12 @@ const Subscriptions = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Can I change plans anytime?</h4>
-                  <p className="text-gray-600 dark:text-gray-400">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Is there a free trial?</h4>
-                  <p className="text-gray-600 dark:text-gray-400">We offer a 14-day free trial for all plans. No credit card required to start.</p>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Can I change billing cycles anytime?</h4>
+                  <p className="text-gray-600 dark:text-gray-400">Yes, you can switch between weekly, monthly, and yearly billing cycles at any time. Changes take effect on your next billing date.</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">What payment methods do you accept?</h4>
-                  <p className="text-gray-600 dark:text-gray-400">We accept all major credit cards, PayPal, and bank transfers for Enterprise plans.</p>
+                  <p className="text-gray-600 dark:text-gray-400">We accept all major credit cards (Visa, MasterCard, American Express) and PayPal.</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Can I cancel anytime?</h4>

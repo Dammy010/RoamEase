@@ -127,27 +127,27 @@ const NewMessageInput = ({ conversationId }) => {
   };
 
   return (
-    <div className="border-t bg-white">
+    <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200/50">
       {/* Attachments Preview */}
       {attachments.length > 0 && (
-        <div className="p-2 bg-gray-50 border-b">
+        <div className="p-3 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-gray-200/30">
           <div className="flex flex-wrap gap-2">
             {attachments.map((attachment) => (
-              <div key={attachment.id} className="flex items-center gap-2 bg-white p-2 rounded-lg border">
+              <div key={attachment.id} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-200">
                 {attachment.type.startsWith('image/') ? (
-                  <img src={attachment.url} alt={attachment.name} className="w-8 h-8 object-cover rounded" />
+                  <img src={attachment.url} alt={attachment.name} className="w-8 h-8 object-cover rounded-lg" />
                 ) : (
                   <FileText className="w-8 h-8 text-blue-500" />
                 )}
-                <div className="text-xs">
+                <div className="text-xs min-w-0">
                   <p className="font-medium truncate max-w-24">{attachment.name}</p>
                   <p className="text-gray-500">{formatFileSize(attachment.size)}</p>
                 </div>
                 <button
                   onClick={() => removeAttachment(attachment.id)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-all duration-200"
                 >
-                  <X size={16} />
+                  <X size={14} />
                 </button>
               </div>
             ))}
@@ -166,34 +166,35 @@ const NewMessageInput = ({ conversationId }) => {
       )}
 
       {/* Input Form */}
-      <form onSubmit={handleSend} className="flex items-center p-4">
+      <form onSubmit={handleSend} className="flex items-center p-4 gap-2">
         {/* Emoji Button */}
         <button
           type="button"
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl mr-2 transition-all duration-200 shadow-sm hover:shadow-md"
+          className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
+          title="Add emoji"
         >
-          <Smile size={20} />
+          <Smile size={20} className="group-hover:scale-110 transition-transform duration-200" />
         </button>
 
         {/* File Upload Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl mr-2 transition-all duration-200 shadow-sm hover:shadow-md"
+          className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
           title="Attach file"
         >
-          <Paperclip size={20} />
+          <Paperclip size={20} className="group-hover:scale-110 transition-transform duration-200" />
         </button>
 
         {/* Image Upload Button */}
         <button
           type="button"
           onClick={() => imageInputRef.current?.click()}
-          className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl mr-2 transition-all duration-200 shadow-sm hover:shadow-md"
+          className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
           title="Attach image"
         >
-          <Image size={20} />
+          <Image size={20} className="group-hover:scale-110 transition-transform duration-200" />
         </button>
 
         {/* Hidden File Inputs */}
@@ -220,20 +221,21 @@ const NewMessageInput = ({ conversationId }) => {
           placeholder="Type a message..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="flex-1 px-4 py-3 border-0 rounded-xl bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:bg-white shadow-sm text-gray-700 placeholder-gray-500"
+          className="flex-1 px-4 py-3 border-0 rounded-xl bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:bg-white shadow-sm text-gray-700 placeholder-gray-500 transition-all duration-200 focus:shadow-md"
         />
 
         {/* Send Button */}
         <button
           type="submit"
           disabled={(!text.trim() && attachments.length === 0) || isUploading}
-          className={`ml-3 p-3 rounded-xl text-white font-semibold shadow-lg transition-all duration-200 ${
+          className={`p-3 rounded-xl text-white font-semibold shadow-lg transition-all duration-200 group ${
             (text.trim() || attachments.length > 0) && !isUploading
               ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105"
               : "bg-gray-300 cursor-not-allowed"
           }`}
+          title={isUploading ? "Uploading..." : "Send message"}
         >
-          <Send size={18} />
+          <Send size={18} className={`transition-transform duration-200 ${(text.trim() || attachments.length > 0) && !isUploading ? 'group-hover:translate-x-0.5' : ''}`} />
         </button>
       </form>
     </div>

@@ -6,23 +6,44 @@
  * @returns {string|null} - The full URL or null if no picture
  */
 export const getProfilePictureUrl = (profilePicture) => {
-  if (!profilePicture) return null;
+  if (!profilePicture || typeof profilePicture !== 'string') {
+    return null;
+  }
   
   // If it's already a full URL, return as is
-  if (profilePicture.startsWith('http')) return profilePicture;
+  if (profilePicture.startsWith('http')) {
+    return profilePicture;
+  }
   
   // Get the backend base URL
   const backendBaseUrl = process.env.NODE_ENV === 'production' 
     ? window.location.origin 
     : 'http://localhost:5000';
   
-  // If the path already includes 'uploads/' prefix, use it directly
-  if (profilePicture.startsWith('uploads/')) {
-    return `${backendBaseUrl}/${profilePicture.replace(/\\/g, '/')}`;
+  // Normalize the path - remove any leading slashes and normalize separators
+  let cleanPath = profilePicture.replace(/\\/g, '/').replace(/^\/+/, '');
+  
+  console.log('🔍 getProfilePictureUrl - Original path:', profilePicture);
+  console.log('🔍 getProfilePictureUrl - Clean path:', cleanPath);
+  
+  // If the path already includes 'uploads/profiles/', use it directly
+  if (cleanPath.startsWith('uploads/profiles/')) {
+    const finalUrl = `${backendBaseUrl}/${cleanPath}`;
+    console.log('🔍 getProfilePictureUrl - Final URL (uploads/profiles):', finalUrl);
+    return finalUrl;
+  }
+  
+  // If the path starts with 'uploads/' but not 'uploads/profiles/', assume it's in profiles
+  if (cleanPath.startsWith('uploads/')) {
+    const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath.replace('uploads/', '')}`;
+    console.log('🔍 getProfilePictureUrl - Final URL (uploads):', finalUrl);
+    return finalUrl;
   }
   
   // If it's just a filename, assume it's in the profiles directory
-  return `${backendBaseUrl}/uploads/profiles/${profilePicture}`;
+  const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath}`;
+  console.log('🔍 getProfilePictureUrl - Final URL (filename):', finalUrl);
+  return finalUrl;
 };
 
 /**

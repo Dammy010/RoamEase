@@ -16,8 +16,14 @@ ensureDir('uploads/chat'); // New: Directory for chat attachments
 // Storage config
 const storage = multer.diskStorage({
   destination(req, file, cb) {
+    console.log('📁 Upload Middleware: Determining destination for file:', {
+      fieldname: file.fieldname,
+      originalname: file.originalname
+    });
+    
     // Store profile pictures in 'uploads/profiles'
     if (file.fieldname === 'profilePicture') {
+      console.log('📁 Upload Middleware: Storing profile picture in uploads/profiles/');
       cb(null, 'uploads/profiles/');
     } 
     // Store general photos (e.g., shipment photos) in 'uploads/photos'
@@ -37,18 +43,38 @@ const storage = multer.diskStorage({
     }
   },
   filename(req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    const filename = `${Date.now()}-${file.originalname}`;
+    console.log('📁 Upload Middleware: Generated filename:', filename);
+    cb(null, filename);
   },
 });
 
 // File filter
 const fileFilter = (req, file, cb) => {
+  console.log('🔍 Upload Middleware: File filter check:', {
+    fieldname: file.fieldname,
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size
+  });
+  
   if (file.fieldname === 'profilePicture' || file.fieldname === 'photos') {
     // Accept only images for profile pictures and general photos
     const allowedImages = /jpg|jpeg|png/i; // Case-insensitive
     const extname = allowedImages.test(path.extname(file.originalname));
     const mimetype = allowedImages.test(file.mimetype); // Check mimetype too
-    if (extname && mimetype) return cb(null, true);
+    
+    console.log('🔍 Upload Middleware: Image validation:', {
+      extname,
+      mimetype,
+      allowed: extname && mimetype
+    });
+    
+    if (extname && mimetype) {
+      console.log('✅ Upload Middleware: File accepted');
+      return cb(null, true);
+    }
+    console.log('❌ Upload Middleware: File rejected - not a valid image');
     return cb(new Error('Only JPG, JPEG, PNG images are allowed for profile pictures and photos!'));
   }
 
@@ -72,7 +98,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage, 
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // Optional: Limit file size to 10MB
+  limits: { fileSize: 50 * 1024 * 1024 } // Limit file size to 50MB
 });
 
 module.exports = upload;

@@ -2,10 +2,11 @@ import React, { useEffect, useState, useCallback } from "react"; // New: Import 
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 // Removed: import Sidebar from "../../components/shared/Sidebar";
-import { FaTruck, FaFileUpload, FaList, FaGavel, FaComments, FaUserCircle, FaWallet, FaRedo, FaHistory } from "react-icons/fa";
-import { ArrowRight } from "lucide-react";
+import { FaTruck, FaFileUpload, FaList, FaComments, FaUserCircle, FaWallet, FaRedo, FaHistory } from "react-icons/fa";
+import { ArrowRight, Gavel, Package, List } from "lucide-react";
+import NotificationBell from "../../components/NotificationBell";
 import { initSocket } from "../../services/socket";
-import { ProfilePictureModal } from "../../components/forms/ProfileForm"; // New: Import ProfilePictureModal
+import FullScreenImageViewer from "../../components/shared/FullScreenImageViewer";
 import { getLogisticsDisplayName, getVerificationStatusText } from "../../utils/logisticsUtils";
 import { fetchProfile } from "../../redux/slices/authSlice";
 import { fetchLogisticsDashboardData, fetchLogisticsHistory } from "../../redux/slices/logisticsSlice";
@@ -107,7 +108,7 @@ const LogisticsDashboardHome = () => {
     {
       name: "Available Shipments",
       description: "Browse and accept available shipment jobs.",
-      icon: <FaTruck size={28} />,
+      icon: <Package size={28} />,
       color: "from-green-500 to-green-600",
       path: "/logistics/available-shipments",
       notification: safeDashboardData.availableShipments,
@@ -115,7 +116,7 @@ const LogisticsDashboardHome = () => {
     {
       name: "My Bids",
       description: "View and manage your submitted bids.",
-      icon: <FaGavel size={28} />,
+      icon: <Gavel size={28} />,
       color: "from-blue-500 to-blue-600",
       path: "/logistics/my-bids",
       notification: safeDashboardData.myBids,
@@ -123,7 +124,7 @@ const LogisticsDashboardHome = () => {
     {
       name: "Active Shipments",
       description: "Track your ongoing shipments.",
-      icon: <FaList size={28} />,
+      icon: <List size={28} />,
       color: "from-purple-500 to-purple-600",
       path: "/logistics/active-shipments",
       notification: safeDashboardData.activeShipments,
@@ -209,8 +210,14 @@ const LogisticsDashboardHome = () => {
               </div>
             </div>
             
-            {/* Right Content - Avatar */}
-            <div className="flex-shrink-0">
+            {/* Right Content - Avatar and Notifications */}
+            <div className="flex-shrink-0 flex items-center gap-6">
+              {/* Notification Bell */}
+              <div className="relative">
+                <NotificationBell />
+              </div>
+              
+              {/* Avatar */}
               <div className="relative">
                 {logisticsUser.avatar ? (
                   <img
@@ -442,9 +449,14 @@ const LogisticsDashboardHome = () => {
         </div>
       </section>
       
-      {/* Profile Picture Modal */}
+      {/* Full Screen Image Viewer */}
       {showProfilePicModal && (
-        <ProfilePictureModal imageUrl={logisticsUser.avatar} onClose={() => setShowProfilePicModal(false)} />
+        <FullScreenImageViewer 
+          isOpen={showProfilePicModal}
+          onClose={() => setShowProfilePicModal(false)}
+          imageUrl={logisticsUser.avatar}
+          alt="Profile Picture"
+        />
       )}
     </main>
   );

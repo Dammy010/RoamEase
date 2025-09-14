@@ -231,13 +231,13 @@ const getProfileStats = async (req, res) => {
       const Shipment = require('../models/Shipment');
       const Bid = require('../models/Bid');
 
-      // Get total shipments they've bid on
-      const totalBids = await Bid.countDocuments({ user: userId });
+      // Get total bids they've placed
+      const totalBids = await Bid.countDocuments({ carrier: userId });
       stats.totalShipments = totalBids;
 
-      // Get completed shipments
+      // Get accepted bids
       const completedBids = await Bid.countDocuments({ 
-        user: userId, 
+        carrier: userId, 
         status: 'accepted' 
       });
       stats.completedShipments = completedBids;
@@ -258,10 +258,10 @@ const getProfileStats = async (req, res) => {
       const totalShipments = await Shipment.countDocuments({ user: userId });
       stats.totalShipments = totalShipments;
 
-      // Get completed shipments
+      // Get completed shipments (status: 'completed' means user has confirmed delivery)
       const completedShipments = await Shipment.countDocuments({ 
         user: userId, 
-        status: 'delivered' 
+        status: 'completed' 
       });
       stats.completedShipments = completedShipments;
 

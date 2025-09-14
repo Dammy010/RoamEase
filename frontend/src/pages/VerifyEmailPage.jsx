@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { CheckCircle, XCircle, ArrowLeft, Loader2, Mail } from 'lucide-react';
 import VerificationCodeInput from '../components/VerificationCodeInput';
@@ -7,10 +7,18 @@ import api from '../services/api';
 
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [email, setEmail] = useState('');
+
+  // Get email from navigation state
+  useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  }, [location.state]);
 
   const handleCodeComplete = async (code) => {
     setLoading(true);
@@ -106,6 +114,11 @@ const VerifyEmailPage = () => {
           <p className="mt-2 text-sm text-gray-600">
             Enter the 6-digit verification code sent to your email address
           </p>
+          {email && (
+            <p className="mt-1 text-sm font-medium text-indigo-600">
+              {email}
+            </p>
+          )}
         </div>
 
         {/* Verification Code Input */}
@@ -129,7 +142,10 @@ const VerifyEmailPage = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                readOnly={location.state?.email}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  location.state?.email ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
                 placeholder="Enter your email address"
               />
             </div>
@@ -154,12 +170,21 @@ const VerifyEmailPage = () => {
               </button>
             )}
             
-            <button
-              onClick={handleGoToLogin}
-              className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Back to Login
-            </button>
+            {location.state?.fromSignup ? (
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Back to Signup
+              </button>
+            ) : (
+              <button
+                onClick={handleGoToLogin}
+                className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Back to Login
+              </button>
+            )}
           </div>
         </div>
       </div>

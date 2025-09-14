@@ -281,16 +281,31 @@ const changePassword = async (req, res) => {
 // Upload profile picture
 const uploadProfilePicture = async (req, res) => {
   try {
+    console.log('🚀 Backend: Profile picture upload started');
+    console.log('🚀 Backend: User ID:', req.user._id);
+    console.log('🚀 Backend: Request file:', req.file);
+    console.log('🚀 Backend: Request body:', req.body);
+    
     const userId = req.user._id;
     
     if (!req.file) {
+      console.error('❌ Backend: No file uploaded');
       return res.status(400).json({
         success: false,
         message: 'No file uploaded'
       });
     }
 
+    console.log('✅ Backend: File received:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
+    });
+
     const profilePicturePath = `/uploads/profiles/${req.file.filename}`;
+    console.log('📁 Backend: Profile picture path:', profilePicturePath);
     
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -299,11 +314,17 @@ const uploadProfilePicture = async (req, res) => {
     ).select('-password');
 
     if (!updatedUser) {
+      console.error('❌ Backend: User not found');
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
+
+    console.log('✅ Backend: User updated successfully:', {
+      id: updatedUser._id,
+      profilePicture: updatedUser.profilePicture
+    });
 
     res.json({
       success: true,
@@ -311,7 +332,7 @@ const uploadProfilePicture = async (req, res) => {
       profilePicture: updatedUser.profilePicture
     });
   } catch (error) {
-    console.error('Profile picture upload error:', error);
+    console.error('💥 Backend: Profile picture upload error:', error);
     res.status(500).json({
       success: false,
       message: 'Error uploading profile picture',

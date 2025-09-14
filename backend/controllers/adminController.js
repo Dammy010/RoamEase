@@ -114,6 +114,18 @@ exports.verifyLogistics = async (req, res) => {
 
     await logistics.save();
 
+    // Emit verification update to the logistics user
+    const io = require('../socket').getIO();
+    if (io) {
+      io.to(`user-${logistics._id}`).emit('verification-updated', {
+        _id: logistics._id,
+        verificationStatus: logistics.verificationStatus,
+        isVerified: logistics.isVerified,
+        verificationNotes: logistics.verificationNotes
+      });
+      console.log(`📡 Emitted verification-updated to user-${logistics._id}`);
+    }
+
     res.json({
       message: `Logistics ${action === "verify" ? "verified" : "rejected"} successfully`,
       logistics: {

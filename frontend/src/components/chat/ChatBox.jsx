@@ -93,55 +93,100 @@ const ChatBox = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* Chat Header with Participant Info */}
-      <div className="p-4 border-b bg-white dark:bg-gray-800/90 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-700/50">
+      {/* Fixed Chat Header with Participant Info */}
+      <div className="flex-shrink-0 p-4 border-b bg-white dark:bg-gray-800/90 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-700/50">
         <div className="flex items-center gap-3">
           {/* Participant Avatar */}
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-            {otherParticipant?.avatar ? (
-              <img 
-                src={otherParticipant.avatar} 
-                alt={otherParticipant.name} 
-                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
-              />
-            ) : (
-              <span className="text-lg font-bold text-white">
-                {otherParticipant?.name?.[0]?.toUpperCase() || 'U'}
-              </span>
-            )}
+            {(() => {
+              // Check all possible avatar fields
+              const avatarFields = ['avatar', 'profilePicture', 'image', 'profileImage', 'photo', 'picture'];
+              let avatarUrl = null;
+              
+              for (const field of avatarFields) {
+                if (otherParticipant?.[field]) {
+                  avatarUrl = otherParticipant[field];
+                  break;
+                }
+              }
+              
+              // Debug logging - show all participant data
+              console.log('=== CHAT BOX DEBUG ===');
+              console.log('Participant:', otherParticipant);
+              console.log('All participant keys:', Object.keys(otherParticipant || {}));
+              console.log('Avatar URL found:', avatarUrl);
+              console.log('========================');
+              
+              if (avatarUrl) {
+                // Convert relative URL to full URL
+                const fullAvatarUrl = avatarUrl.startsWith('http') 
+                  ? avatarUrl 
+                  : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${avatarUrl}`;
+                
+                console.log('🖼️ Full avatar URL:', fullAvatarUrl);
+                
+                return (
+                  <img 
+                    src={fullAvatarUrl} 
+                    alt={otherParticipant?.name || otherParticipant?.companyName || 'Participant'} 
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                    onError={(e) => {
+                      console.log('❌ Image failed to load:', fullAvatarUrl);
+                      console.log('Error details:', e);
+                      // Fallback to initials if image fails to load
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Image loaded successfully:', fullAvatarUrl);
+                    }}
+                  />
+                );
+              }
+              
+              return null;
+            })()}
+            <span className={`text-lg font-bold text-white ${(() => {
+              const avatarFields = ['avatar', 'profilePicture', 'image', 'profileImage', 'photo', 'picture'];
+              const hasAvatar = avatarFields.some(field => otherParticipant?.[field]);
+              return hasAvatar ? 'hidden' : 'flex';
+            })()}`}>
+              {(() => {
+                const displayName = otherParticipant?.companyName || otherParticipant?.name || otherParticipant?.email || 'U';
+                return displayName[0]?.toUpperCase() || 'U';
+              })()}
+            </span>
           </div>
           
           {/* Participant Info */}
           <div className="flex-1">
             <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {(() => {
-                // Debug: Log participant data
-                console.log('ChatBox participant data:', otherParticipant);
-                
-                if (otherParticipant?.role === 'logistics' || otherParticipant?.role === 'logistics') {
+                if (otherParticipant?.role === 'logistics') {
                   // For logistics users, prioritize company name
-                  const displayName = otherParticipant?.companyName || otherParticipant?.contactName || otherParticipant?.name || otherParticipant?.email || 'Unknown Company';
-                  console.log('Logistics user in chat, display name:', displayName);
-                  return displayName;
+                  return otherParticipant?.companyName || otherParticipant?.contactName || otherParticipant?.name || otherParticipant?.email || 'Unknown Company';
                 } else {
                   // For regular users, use name or email
-                  const displayName = otherParticipant?.name || otherParticipant?.email || 'Unknown User';
-                  console.log('Regular user in chat, display name:', displayName);
-                  return displayName;
+                  return otherParticipant?.name || otherParticipant?.email || 'Unknown User';
                 }
               })()}
             </h3>
-            <p className="text-sm text-gray-500">Online</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="text-sm text-gray-500">Online</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Scrollable Messages Area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-transparent via-white/30 to-white/50"
+        className="flex-1 overflow-y-auto chat-scroll p-4 space-y-4 bg-gradient-to-b from-transparent via-white/30 to-white/50"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f8fafc' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f8fafc' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          height: 'calc(100vh - 200px)', // Fixed height to prevent container scrolling
+          maxHeight: 'calc(100vh - 200px)'
         }}
       >
         {loadingMessages ? (
@@ -164,8 +209,8 @@ const ChatBox = () => {
         )}
       </div>
 
-      {/* Input */}
-      <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50 shadow-lg">
+      {/* Fixed Input Area */}
+      <div className="flex-shrink-0 bg-white dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50 shadow-lg sticky bottom-0 z-10">
         <NewMessageInput conversationId={selectedConversationId} />
       </div>
     </div>

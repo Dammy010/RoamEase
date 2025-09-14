@@ -234,6 +234,14 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    updateProfilePicture: (state, action) => {
+      console.log("DEBUG: authSlice - updateProfilePicture action dispatched:", action.payload);
+      if (state.user) {
+        state.user.profilePicture = action.payload;
+        // Update localStorage as well
+        localStorage.setItem("user", JSON.stringify(state.user));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -348,5 +356,5 @@ const authSlice = createSlice({
 });
 
 // ---------------- Exports ----------------
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, updateProfilePicture } = authSlice.actions;
 export default authSlice.reducer;

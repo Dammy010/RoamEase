@@ -30,12 +30,17 @@ import {
   changePassword,
   updateProfile
 } from '../redux/slices/settingsSlice';
-import { logout } from '../redux/slices/authSlice';
+import { logout, updateProfilePicture } from '../redux/slices/authSlice';
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  
+  // Debug user data (only log when profile picture changes)
+  useEffect(() => {
+    console.log('👤 SettingsPage: User profile picture updated:', user?.profilePicture);
+  }, [user?.profilePicture]);
   const { theme, toggleTheme, isDark } = useTheme();
   const { currency, setCurrency: setCurrencyContext, currencies, formatCurrency } = useCurrency();
   
@@ -59,8 +64,6 @@ const SettingsPage = () => {
     phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
     companyName: user?.companyName || '',
     country: user?.country || '',
-    address: user?.address || '',
-    bio: user?.bio || ''
   });
   
   // Password change state
@@ -224,14 +227,58 @@ const SettingsPage = () => {
   // Profile picture handlers
   const handleProfilePictureUpload = async (file) => {
     try {
+      console.log('🚀 Starting profile picture upload...');
+      console.log('📁 File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
+      // Validate file
+      if (!file) {
+        console.error('❌ No file selected');
+        toast.error('No file selected');
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        console.error('❌ Invalid file type:', file.type);
+        toast.error('Please select an image file');
+        return;
+      }
+      
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        console.error('❌ File too large:', file.size);
+        toast.error('File size must be less than 50MB');
+        return;
+      }
+      
+      console.log('✅ File validation passed, dispatching upload...');
+      
       const result = await dispatch(uploadProfilePicture(file));
+      console.log('📤 Upload result:', result);
+      
       if (uploadProfilePicture.fulfilled.match(result)) {
+        console.log('✅ Upload successful!');
+        console.log('📸 Upload result data:', result.payload);
+        console.log('📸 Profile picture path:', result.payload?.profilePicture);
+        
+        // Update user data in Redux instead of reloading
+        dispatch({
+          type: 'auth/updateProfilePicture',
+          payload: result.payload.profilePicture
+        });
+        
         toast.success('Profile picture updated successfully');
         setShowProfilePictureModal(false);
       } else {
+        console.error('❌ Upload failed:', result.payload);
+        console.error('❌ Upload error details:', result.error);
         toast.error(result.payload || 'Failed to upload profile picture');
       }
     } catch (error) {
+      console.error('💥 Upload error:', error);
       toast.error('Failed to upload profile picture');
     }
   };
@@ -240,7 +287,10 @@ const SettingsPage = () => {
     try {
       const result = await dispatch(removeProfilePicture());
       if (removeProfilePicture.fulfilled.match(result)) {
+        // Update user data in Redux instead of reloading
+        dispatch(updateProfilePicture(null));
         toast.success('Profile picture removed successfully');
+        setShowProfilePictureModal(false);
       } else {
         toast.error(result.payload || 'Failed to remove profile picture');
       }
@@ -309,6 +359,14 @@ const SettingsPage = () => {
             src={getProfilePictureUrl(user?.profilePicture)}
             alt="Profile"
             className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
+            onError={(e) => {
+              console.error('❌ Image load error:', e);
+              console.error('❌ Image src:', e.target.src);
+              console.error('❌ User profile picture:', user?.profilePicture);
+            }}
+            onLoad={() => {
+              console.log('✅ Image loaded successfully:', getProfilePictureUrl(user?.profilePicture));
+            }}
           />
           <button
             onClick={() => setShowProfilePictureModal(true)}
@@ -401,34 +459,8 @@ const SettingsPage = () => {
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Address
-              </label>
-              <textarea
-                value={profileData.address}
-                onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                disabled={!isEditingProfile}
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-              />
-            </div>
           </>
         )}
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Bio
-          </label>
-          <textarea
-            value={profileData.bio}
-            onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-            disabled={!isEditingProfile}
-            rows={4}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-            placeholder="Tell us about yourself..."
-          />
-        </div>
       </div>
 
       {/* Profile Actions */}
@@ -444,8 +476,6 @@ const SettingsPage = () => {
                   phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
                   companyName: user?.companyName || '',
                   country: user?.country || '',
-                  address: user?.address || '',
-                  bio: user?.bio || ''
                 });
                 setProfileErrors({});
               }}
@@ -901,7 +931,8 @@ const SettingsPage = () => {
           onClose={() => setShowProfilePictureModal(false)}
           onUpload={handleProfilePictureUpload}
           onRemove={handleProfilePictureRemove}
-          currentImage={getProfilePictureUrl(user?.profilePicture)}
+          profilePicture={getProfilePictureUrl(user?.profilePicture)}
+          uploadLoading={updateLoading}
         />
       )}
     </div>

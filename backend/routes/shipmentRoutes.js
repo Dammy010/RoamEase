@@ -44,8 +44,8 @@ router.get('/my-active-shipments', protect, allowRoles('logistics'), getActiveSh
 // New: Route for logistics companies to get their history
 router.get('/logistics-history', protect, allowRoles('logistics'), getLogisticsHistory);
 
-// New: Route for users to get delivered shipments awaiting confirmation
-router.get('/delivered', protect, allowRoles('user'), getDeliveredShipments);
+// New: Route for users and logistics to get delivered shipments awaiting confirmation
+router.get('/delivered', protect, allowRoles('user', 'logistics'), getDeliveredShipments);
 
 // New: Route for logistics companies to get their ratings (MUST come before /:id)
 router.get('/my-ratings', protect, allowRoles('logistics'), (req, res, next) => {

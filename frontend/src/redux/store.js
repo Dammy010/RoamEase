@@ -9,6 +9,8 @@ import logisticsReducer from './slices/logisticsSlice';
 import notificationReducer from './slices/notificationSlice';
 import profileReducer from './slices/profileSlice';
 import settingsReducer from './slices/settingsSlice';
+import reportReducer from './slices/reportSlice';
+import subscriptionReducer from './slices/subscriptionSlice';
 
 export default configureStore({
   reducer: {
@@ -22,5 +24,7 @@ export default configureStore({
     notifications: notificationReducer,
     profile: profileReducer,
     settings: settingsReducer,
+    reports: reportReducer,
+    subscription: subscriptionReducer,
   },
 });

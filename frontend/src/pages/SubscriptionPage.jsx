@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import { createSubscription, confirmSubscription, clearError } from '../redux/slices/subscriptionSlice';
 import { 
   CreditCard, 
   CheckCircle, 
@@ -30,90 +31,61 @@ import {
 import { useCurrency } from '../contexts/CurrencyContext';
 
 const SubscriptionPage = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { 
+    subscriptions, 
+    currentSubscription, 
+    loading, 
+    error, 
+    paymentLoading, 
+    paymentError 
+  } = useSelector((state) => state.subscription);
   const { formatCurrency } = useCurrency();
-  const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
 
-  const plans = [
-    {
+  const [billingCycle, setBillingCycle] = useState('monthly');
+
+  // Error handling
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      dispatch(clearError());
+    }
+    if (paymentError) {
+      toast.error(paymentError);
+      dispatch(clearError());
+    }
+  }, [error, paymentError, dispatch]);
+
+  const basicPlan = {
       id: 'basic',
       name: 'Basic',
       description: 'Perfect for small logistics companies',
-      price: 29,
-      period: 'month',
-      originalPrice: 39,
-      discount: 25,
       features: [
         'Up to 50 shipments/month',
         'Basic analytics dashboard',
         'Email support',
         'Standard tracking features',
         'Mobile app access',
-        'Basic reporting'
+      'Basic reporting',
+      'Real-time notifications',
+      'API access'
       ],
       limitations: [
-        'Limited API access',
-        'No custom integrations'
+      'No custom integrations',
+      'Basic support only'
       ],
-      popular: false,
+    popular: true,
       icon: Shield,
       color: 'blue',
-      trialDays: 14
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      description: 'Most popular choice for growing businesses',
-      price: 99,
-      period: 'month',
-      originalPrice: 129,
-      discount: 23,
-      features: [
-        'Unlimited shipments',
-        'Advanced analytics & insights',
-        'Priority support (24/7)',
-        'Full API access',
-        'Custom integrations',
-        'Advanced reporting',
-        'Team collaboration tools',
-        'White-label options',
-        'Real-time notifications'
-      ],
-      limitations: [],
-      popular: true,
-      icon: Crown,
-      color: 'purple',
-      trialDays: 14
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'Custom solutions for large operations',
-      price: 299,
-      period: 'month',
-      originalPrice: 399,
-      discount: 25,
-      features: [
-        'Everything in Premium',
-        'Dedicated account manager',
-        'Custom development',
-        'SLA guarantee (99.9%)',
-        'On-premise deployment',
-        'Advanced security features',
-        'Custom training sessions',
-        'Priority feature requests',
-        'Multi-tenant support'
-      ],
-      limitations: [],
-      popular: false,
-      icon: Sparkles,
-      color: 'gold',
-      trialDays: 30
+    pricing: {
+      weekly: { price: 9, originalPrice: 12, discount: 25 },
+      monthly: { price: 29, originalPrice: 39, discount: 25 },
+      yearly: { price: 299, originalPrice: 468, discount: 36 }
     }
-  ];
+  };
 
   const features = [
     {
@@ -148,27 +120,55 @@ const SubscriptionPage = () => {
     }
   ];
 
-  const handleUpgrade = (plan) => {
+  const handleUpgrade = async (plan) => {
     if (!user) {
       toast.info('Please sign up or log in to subscribe to a plan');
       return;
     }
-    setSelectedPlan(plan);
-    setShowPaymentModal(true);
+
+    if (currentSubscription && currentSubscription.status === 'active') {
+      toast.info('You already have an active subscription');
+      return;
+    }
+
+    try {
+      const planWithBilling = {
+        ...plan,
+        billingCycle,
+        price: plan.pricing[billingCycle].price,
+        period: billingCycle === 'weekly' ? 'week' : billingCycle === 'monthly' ? 'month' : 'year'
+      };
+      
+      setSelectedPlan(planWithBilling);
+      
+      // Create subscription
+      const result = await dispatch(createSubscription({ billingCycle })).unwrap();
+      
+      if (result.success) {
+        setShowPaymentModal(true);
+        toast.success('Subscription created! Please complete payment.');
+      }
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      toast.error(error || 'Failed to create subscription');
+    }
   };
 
   const handlePayment = async (paymentData) => {
-    setPaymentLoading(true);
     try {
-      // TODO: Implement actual payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success(`Successfully subscribed to ${selectedPlan.name} plan!`);
-      setShowPaymentModal(false);
-      setSelectedPlan(null);
+      // Confirm subscription payment
+      const result = await dispatch(confirmSubscription({ 
+        paymentIntentId: paymentData.paymentIntentId 
+      })).unwrap();
+      
+      if (result.success) {
+        toast.success(`Successfully subscribed to ${selectedPlan.name} plan!`);
+        setShowPaymentModal(false);
+        setSelectedPlan(null);
+      }
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
-    } finally {
-      setPaymentLoading(false);
+      console.error('Payment error:', error);
+      toast.error(error || 'Payment failed. Please try again.');
     }
   };
 
@@ -243,92 +243,112 @@ const SubscriptionPage = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Choose Your Perfect Plan
+              Choose Your Billing Cycle
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Start with a free trial, then choose the plan that fits your business needs. 
-              Upgrade or downgrade anytime.
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
+              Choose the billing cycle that works best for you. 
+              Cancel or change anytime.
             </p>
+
+            {/* Billing Cycle Toggle */}
+            <div className="flex items-center justify-center space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 max-w-md mx-auto">
+              <button
+                onClick={() => setBillingCycle('weekly')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === 'weekly'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === 'monthly'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === 'yearly'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {plans.map((plan) => {
-              const IconComponent = plan.icon;
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
+              {(() => {
+                const IconComponent = basicPlan.icon;
+                const currentPricing = basicPlan.pricing[billingCycle];
+                const periodText = billingCycle === 'weekly' ? 'week' : billingCycle === 'monthly' ? 'month' : 'year';
               
               return (
-                <div
-                  key={plan.id}
-                  className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 transition-all duration-300 hover:shadow-2xl ${
-                    plan.popular
-                      ? 'border-purple-500 dark:border-purple-400 scale-105'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  {plan.popular && (
+                  <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 border-blue-500 dark:border-blue-400 transition-all duration-300 hover:shadow-2xl">
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                      <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
                         <Star className="w-4 h-4" />
-                        <span>Most Popular</span>
+                        <span>Basic Plan</span>
                       </span>
                     </div>
-                  )}
 
                   <div className="p-8">
                     {/* Plan Header */}
                     <div className="text-center mb-8">
-                      <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
-                        plan.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30' :
-                        plan.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900/30' :
-                        'bg-yellow-100 dark:bg-yellow-900/30'
-                      }`}>
-                        <IconComponent className={`w-8 h-8 ${
-                          plan.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                          plan.color === 'purple' ? 'text-purple-600 dark:text-purple-400' :
-                          'text-yellow-600 dark:text-yellow-400'
-                        }`} />
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+                          <IconComponent className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                       </div>
                       
                       <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                        {plan.name}
+                          {basicPlan.name}
                       </h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        {plan.description}
+                          {basicPlan.description}
                       </p>
 
                       {/* Pricing */}
                       <div className="mb-6">
                         <div className="flex items-baseline justify-center space-x-2">
                           <span className="text-5xl font-bold text-gray-900 dark:text-white">
-                            {formatCurrency(plan.price)}
+                              {formatCurrency(currentPricing.price)}
                           </span>
-                          <span className="text-gray-600 dark:text-gray-400">/{plan.period}</span>
+                            <span className="text-gray-600 dark:text-gray-400">/{periodText}</span>
                         </div>
-                        {plan.originalPrice && (
                           <div className="flex items-center justify-center space-x-2 mt-2">
                             <span className="text-lg text-gray-500 line-through">
-                              {formatCurrency(plan.originalPrice)}
+                              {formatCurrency(currentPricing.originalPrice)}
                             </span>
                             <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded-full text-sm font-semibold">
-                              {plan.discount}% OFF
+                              {currentPricing.discount}% OFF
                             </span>
                           </div>
+                          {billingCycle === 'yearly' && (
+                            <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
+                              Save ${currentPricing.originalPrice - currentPricing.price} per year!
+                            </p>
                         )}
-                        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                          {plan.trialDays}-day free trial
-                        </div>
                       </div>
                     </div>
 
                     {/* Features */}
                     <div className="space-y-4 mb-8">
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-4">What's included:</h4>
-                      {plan.features.map((feature, idx) => (
+                        {basicPlan.features.map((feature, idx) => (
                         <div key={idx} className="flex items-start space-x-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                         </div>
                       ))}
-                      {plan.limitations.map((limitation, idx) => (
+                        {basicPlan.limitations.map((limitation, idx) => (
                         <div key={idx} className="flex items-start space-x-3">
                           <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-500 dark:text-gray-400">{limitation}</span>
@@ -336,32 +356,38 @@ const SubscriptionPage = () => {
                       ))}
                     </div>
 
-                    {/* Action Button */}
-                    <button
-                      onClick={() => handleUpgrade(plan)}
-                      disabled={paymentLoading}
-                      className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
-                        plan.popular
-                          ? 'bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl'
-                          : 'bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white'
-                      }`}
-                    >
-                      {paymentLoading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>{plan.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial'}</span>
-                          <ArrowRight className="w-5 h-5" />
-                        </>
-                      )}
-                    </button>
+                      {/* Action Button */}
+                      <button
+                        onClick={() => handleUpgrade(basicPlan)}
+                        disabled={paymentLoading || (currentSubscription && currentSubscription.status === 'active')}
+                        className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
+                          currentSubscription && currentSubscription.status === 'active'
+                            ? 'bg-green-600 text-white cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                        }`}
+                      >
+                        {paymentLoading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : currentSubscription && currentSubscription.status === 'active' ? (
+                          <>
+                            <CheckCircle className="w-5 h-5" />
+                            <span>Subscribed</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Subscribe Now</span>
+                            <ArrowRight className="w-5 h-5" />
+                          </>
+                        )}
+                      </button>
                   </div>
                 </div>
               );
-            })}
+              })()}
+            </div>
           </div>
         </div>
       </div>
@@ -381,16 +407,12 @@ const SubscriptionPage = () => {
           <div className="space-y-8">
             {[
               {
-                question: "Can I change plans anytime?",
-                answer: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately and we'll prorate any billing differences."
-              },
-              {
-                question: "Is there a free trial?",
-                answer: "Yes! We offer a 14-day free trial for Basic and Premium plans, and a 30-day trial for Enterprise. No credit card required to start."
+                question: "Can I change billing cycles anytime?",
+                answer: "Yes, you can switch between weekly, monthly, and yearly billing cycles at any time. Changes take effect on your next billing date and we'll prorate any billing differences."
               },
               {
                 question: "What payment methods do you accept?",
-                answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers for Enterprise plans."
+                answer: "We accept all major credit cards (Visa, MasterCard, American Express) and PayPal."
               },
               {
                 question: "Can I cancel anytime?",
@@ -398,7 +420,7 @@ const SubscriptionPage = () => {
               },
               {
                 question: "Do you offer discounts for annual plans?",
-                answer: "Yes! We offer 20% off when you pay annually for Basic and Premium plans. Contact us for custom Enterprise pricing."
+                answer: "Yes! We offer 36% off when you pay annually for the Basic plan. This saves you $169 per year compared to monthly billing."
               },
               {
                 question: "What happens to my data if I cancel?",
@@ -432,7 +454,7 @@ const SubscriptionPage = () => {
               onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })}
               className="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
             >
-              <span>Start Free Trial</span>
+              <span>Get Started</span>
               <ArrowRight className="w-5 h-5" />
             </button>
             <button
@@ -719,7 +741,7 @@ const PaymentModal = ({ plan, onClose, onPayment, loading }) => {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    <span>Start Free Trial</span>
+                    <span>Get Started</span>
                   </>
                 )}
               </button>

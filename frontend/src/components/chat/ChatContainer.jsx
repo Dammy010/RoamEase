@@ -40,7 +40,7 @@ const ChatContainer = () => {
   });
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50 shadow-sm">
         <div className="px-6 py-4">
@@ -85,14 +85,14 @@ const ChatContainer = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Chat List */}
-        <div className={`${isMobile ? 'w-full' : 'w-80'} border-r border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800/50 backdrop-blur-sm flex-shrink-0`}>
+        <div className={`${isMobile ? 'w-full' : 'w-80'} border-r border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800/50 backdrop-blur-sm flex-shrink-0 h-full`}>
           <ChatList conversations={filteredConversations} />
         </div>
 
         {/* Chat Box */}
-        <div className={`${isMobile ? 'hidden' : 'flex-1'} flex flex-col`}>
+        <div className={`${isMobile ? 'hidden' : 'flex-1'} flex flex-col h-full`}>
           <ChatBox />
         </div>
       </div>

@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTheme } from '../../contexts/ThemeContext';
-import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, Wallet, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { ClipboardCheck, Users, Truck, AlertTriangle, BarChart2, UserCircle, Package, Wallet, MessageSquare, Shield, Settings, Eye, ArrowRight, TrendingUp, Activity, CheckCircle, Clock, AlertCircle, RefreshCw, FileText } from 'lucide-react';
+import NotificationBell from '../../components/NotificationBell';
 import { fetchDashboardData, fetchTotalUsers, fetchNormalUsersCount } from '../../redux/slices/adminSlice';
 import isEqual from 'lodash.isequal';
-import { ProfilePictureModal } from '../../components/forms/ProfileForm';
+import FullScreenImageViewer from '../../components/shared/FullScreenImageViewer';
 import { getProfilePictureUrl } from '../../utils/imageUtils';
 
 const AdminDashboardHome = () => {
@@ -81,6 +82,7 @@ const AdminDashboardHome = () => {
     { name: 'Verified Logistics', description: 'Approved logistics companies.', icon: <Truck size={24} />, color: 'from-blue-500 to-indigo-600', path: '/admin/logistics-list', count: analytics?.logistics?.verified || 0 },
     { name: 'Pending Logistics', description: 'Browse and manage pending logistics companies verifications.', icon: <ClipboardCheck size={24} />, color: 'from-orange-500 to-red-600', path: '/admin/verify-logistics', count: analytics?.logistics?.pending || 0 },
     { name: 'Total Users', description: 'Total number of registered users on the platform.', icon: <Users size={24} />, color: 'from-green-500 to-emerald-600', path: '/admin/users/total', count: analytics?.users?.total || 0 },
+    { name: 'Report Management', description: 'Manage and track all system reports from users and logistics.', icon: <FileText size={24} />, color: 'from-purple-500 to-pink-600', path: '/admin/reports', count: 0 },
   ];
 
   console.log('AdminDashboardHome - Modules Array (with counts):', modules);
@@ -156,8 +158,14 @@ const AdminDashboardHome = () => {
                 </div>
               </div>
               
-              {/* Right Content - Avatar */}
-              <div className="flex-shrink-0">
+              {/* Right Content - Avatar and Notifications */}
+              <div className="flex-shrink-0 flex items-center gap-6">
+                {/* Notification Bell */}
+                <div className="relative">
+                  <NotificationBell />
+                </div>
+                
+                {/* Avatar */}
                 <div className="relative">
                   {adminProfile.avatar ? (
                     <img
@@ -360,9 +368,14 @@ const AdminDashboardHome = () => {
           </div>
         </div>
       </div>
-      {/* New: Render ProfilePictureModal */}
+      {/* Full Screen Image Viewer */}
       {showProfilePicModal && (
-        <ProfilePictureModal imageUrl={adminProfile.avatar} onClose={() => setShowProfilePicModal(false)} />
+        <FullScreenImageViewer 
+          isOpen={showProfilePicModal}
+          onClose={() => setShowProfilePicModal(false)}
+          imageUrl={adminProfile.avatar}
+          alt="Profile Picture"
+        />
       )}
     </div>
   );

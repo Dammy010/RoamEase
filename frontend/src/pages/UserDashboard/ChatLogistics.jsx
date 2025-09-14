@@ -20,14 +20,18 @@ const ChatLogistics = () => {
 
   return (
     <div className="flex h-full min-h-screen">
-      {/* Sidebar with Back Button + Chat List */}
+      {/* Sidebar with Chat List */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
-        <button
-          onClick={() => navigate("/user/dashboard")}
-          className="m-3 px-4 py-2 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700 transition"
-        >
-          ← Back to Dashboard
-        </button>
+        {/* Back Button - Top Right of Chat List */}
+        <div className="flex justify-end p-3">
+          <button
+            onClick={() => navigate("/user/dashboard")}
+            className="p-2 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700 transition"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        </div>
         <div className="flex-1 overflow-y-auto">
           <ChatList />
         </div>

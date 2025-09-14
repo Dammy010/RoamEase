@@ -55,6 +55,13 @@ const notificationSchema = new mongoose.Schema({
       'account_suspended',
       'account_reactivated',
       
+      // Report notifications
+      'report_created',
+      'report_updated',
+      'report_resolved',
+      'report_closed',
+      'report_rejected',
+      
       // Admin notifications
       'new_user_registered',
       'new_logistics_registered',
@@ -86,7 +93,7 @@ const notificationSchema = new mongoose.Schema({
   relatedEntity: {
     type: {
       type: String,
-      enum: ['shipment', 'bid', 'payment', 'dispute', 'user', 'system']
+      enum: ['shipment', 'bid', 'payment', 'dispute', 'user', 'system', 'report']
     },
     id: {
       type: mongoose.Schema.Types.ObjectId
