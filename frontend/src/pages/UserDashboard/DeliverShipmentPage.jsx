@@ -54,8 +54,7 @@ const DeliverShipmentPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-700 animate-pulse">Loading shipment details...</p>
+      <div className="flex items-center justify-center min-h-screen">        <p className="text-lg text-gray-700 animate-pulse">Loading shipment details...</p>
       </div>
     );
   }

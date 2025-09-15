@@ -1,5 +1,8 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const emailService = require('../utils/emailService');
+const smsService = require('./smsService');
+const pushService = require('./pushService');
 
 class NotificationService {
   /**
@@ -32,50 +35,240 @@ class NotificationService {
         createdAt: notification.createdAt
       });
       
-      // Emit real-time notification via Socket.io
-      const io = require('../socket/index').getIO();
-      if (io) {
-        const roomName = `user-${notification.recipient}`;
-        const notificationPayload = {
-          _id: notification._id,
-          id: notification._id, // For compatibility
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          priority: notification.priority,
-          status: notification.status,
-          createdAt: notification.createdAt,
-          relatedEntity: notification.relatedEntity,
-          metadata: notification.metadata,
-          actions: notification.actions
-        };
-        
-        console.log(`📡 Emitting notification to room: ${roomName}`);
-        console.log(`📋 Notification payload:`, notificationPayload);
-        
-        // Check if the room exists and has users
-        const room = io.sockets.adapter.rooms.get(roomName);
-        console.log(`👥 Users in room ${roomName}:`, room ? room.size : 0);
-        console.log(`📡 Available rooms:`, Array.from(io.sockets.adapter.rooms.keys()));
-        
-        // Emit to specific user room
-        console.log(`📤 Emitting notification to room: ${roomName}`);
-        io.to(roomName).emit('new-notification', notificationPayload);
-        
-        // Also emit to admin rooms if it's a system notification
-        if (notification.type.includes('system') || notification.type.includes('admin')) {
-          io.to('admin-room').emit('new-notification', notificationPayload);
-        }
-        
-        console.log(`✅ Notification emitted successfully to room: ${roomName}`);
-      } else {
-        console.log('⚠️ Socket.io not available for notification emission');
-      }
+      // Get user preferences and send through appropriate channels
+      await this.sendNotificationThroughChannels(notification);
       
       return notification;
     } catch (error) {
       console.error('❌ Error creating notification:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Send notification through user's preferred channels
+   */
+  static async sendNotificationThroughChannels(notification) {
+    try {
+      // Get user with preferences
+      const user = await User.findById(notification.recipient).select('name email phoneNumber notificationPreferences pushSubscriptions');
+      
+      if (!user) {
+        console.log('⚠️ User not found for notification:', notification.recipient);
+        return;
+      }
+
+      const preferences = user.notificationPreferences || {};
+
+      // Send email notification if enabled
+      if (preferences.email && this.shouldSendEmailNotification(notification.type)) {
+        await this.sendEmailNotification(notification, user);
+      }
+
+      // Send SMS notification if enabled
+      if (preferences.sms && user.phoneNumber && this.shouldSendSMSNotification(notification.type)) {
+        await this.sendSMSNotification(notification, user);
+      }
+
+      // Send push notification if enabled
+      if (preferences.push && this.shouldSendPushNotification(notification.type)) {
+        await this.sendPushNotification(notification, user);
+      }
+
+    } catch (error) {
+      console.error('❌ Error sending notification through channels:', error);
+      // Don't fail the notification creation if channel sending fails
+    }
+  }
+
+  /**
+   * Check if email notification should be sent for this type
+   */
+  static shouldSendEmailNotification(type) {
+    // Always send important notifications via email
+    const importantTypes = [
+      'verification_approved',
+      'verification_rejected',
+      'bid_accepted',
+      'shipment_delivered',
+      'payment_failed',
+      'dispute_created'
+    ];
+    
+    return importantTypes.includes(type) || true; // Default to true for now
+  }
+
+  /**
+   * Check if SMS notification should be sent for this type
+   */
+  static shouldSendSMSNotification(type) {
+    // Only send urgent notifications via SMS
+    const urgentTypes = [
+      'verification_approved',
+      'bid_accepted',
+      'shipment_delivered',
+      'payment_failed',
+      'dispute_created'
+    ];
+    
+    return urgentTypes.includes(type);
+  }
+
+  /**
+   * Check if push notification should be sent for this type
+   */
+  static shouldSendPushNotification(type) {
+    // Send most notifications via push
+    const excludedTypes = [
+      'marketing',
+      'updates'
+    ];
+    
+    return !excludedTypes.includes(type);
+  }
+
+  /**
+   * Send in-app notification via Socket.io
+   */
+  static async sendInAppNotification(notification) {
+    const io = require('../socket/index').getIO();
+    if (io) {
+      const roomName = `user-${notification.recipient}`;
+      const notificationPayload = {
+        _id: notification._id,
+        id: notification._id, // For compatibility
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        priority: notification.priority,
+        status: notification.status,
+        createdAt: notification.createdAt,
+        relatedEntity: notification.relatedEntity,
+        metadata: notification.metadata,
+        actions: notification.actions
+      };
+      
+      console.log(`📡 Emitting in-app notification to room: ${roomName}`);
+      
+      // Emit to specific user room
+      io.to(roomName).emit('new-notification', notificationPayload);
+      
+      // Also emit to admin rooms if it's a system notification
+      if (notification.type.includes('system') || notification.type.includes('admin')) {
+        io.to('admin-room').emit('new-notification', notificationPayload);
+      }
+      
+      console.log(`✅ In-app notification emitted successfully to room: ${roomName}`);
+    } else {
+      console.log('⚠️ Socket.io not available for in-app notification');
+    }
+  }
+
+  /**
+   * Send email notification
+   */
+  static async sendEmailNotification(notification, user) {
+    try {
+      const { sendNotificationEmail } = require('../utils/emailService');
+      
+      const emailResult = await sendNotificationEmail(
+        user.email,
+        user.name || 'User',
+        notification
+      );
+      
+      if (emailResult.success) {
+        console.log('✅ Email notification sent successfully to:', user.email);
+      } else {
+        console.error('❌ Failed to send email notification:', emailResult.error);
+      }
+    } catch (error) {
+      console.error('❌ Error sending email notification:', error);
+    }
+  }
+
+  /**
+   * Send SMS notification
+   */
+  static async sendSMSNotification(notification, user) {
+    try {
+      if (!user.phoneNumber) {
+        console.log('⚠️ No phone number available for SMS notification');
+        return;
+      }
+
+      const smsResult = await smsService.sendNotificationSMS(user.phoneNumber, notification);
+      
+      if (smsResult.success) {
+        console.log('✅ SMS notification sent successfully to:', user.phoneNumber);
+      } else {
+        console.error('❌ Failed to send SMS notification:', smsResult.error);
+      }
+    } catch (error) {
+      console.error('❌ Error sending SMS notification:', error);
+    }
+  }
+
+  /**
+   * Send push notification
+   */
+  static async sendPushNotification(notification, user) {
+    try {
+      const pushSubscriptions = user.pushSubscriptions || [];
+      
+      if (pushSubscriptions.length === 0) {
+        console.log('⚠️ No push subscriptions available for push notification');
+        return;
+      }
+
+      const results = await pushService.sendBulkPushNotifications(pushSubscriptions, notification);
+      
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.filter(r => !r.success).length;
+      
+      console.log(`✅ Push notifications sent: ${successCount} successful, ${failureCount} failed`);
+
+      // Remove expired subscriptions
+      const expiredSubscriptions = results
+        .filter(r => !r.success && r.error === 'Subscription expired')
+        .map(r => r.subscription);
+        
+      if (expiredSubscriptions.length > 0) {
+        await this.removeExpiredPushSubscriptions(notification.recipient, expiredSubscriptions);
+      }
+    } catch (error) {
+      console.error('❌ Error sending push notification:', error);
+    }
+  }
+
+  /**
+   * Remove expired push subscriptions
+   */
+  static async removeExpiredPushSubscriptions(userId, expiredSubscriptionIds) {
+    try {
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { pushSubscriptions: { _id: { $in: expiredSubscriptionIds } } } }
+      );
+      console.log(`✅ Removed ${expiredSubscriptionIds.length} expired push subscriptions`);
+    } catch (error) {
+      console.error('❌ Error removing expired push subscriptions:', error);
+    }
+  }
+
+  /**
+   * Remove expired push notification tokens
+   */
+  static async removeExpiredPushTokens(userId, expiredTokens) {
+    try {
+      const preferences = await NotificationPreferences.getUserPreferences(userId);
+      preferences.push.deviceTokens = preferences.push.deviceTokens.filter(
+        token => !expiredTokens.includes(token.token)
+      );
+      await preferences.save();
+      console.log('✅ Removed expired push tokens for user:', userId);
+    } catch (error) {
+      console.error('❌ Error removing expired push tokens:', error);
     }
   }
 

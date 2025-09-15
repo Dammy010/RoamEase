@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const ResponseHelper = require("../utils/responseHelper");
 const Logger = require("../utils/logger");
 const ValidationHelper = require("../utils/validationHelper");
-const { generateVerificationToken, generateVerificationCode, generateResetToken, sendVerificationEmail, sendResendVerificationEmail, sendPasswordResetEmail, getEmailAnalytics } = require("../utils/emailService");
+const { generateVerificationToken, generateVerificationCode, generateResetToken, sendVerificationEmail, sendResendVerificationEmail, sendPasswordResetEmail, sendNormalUserSignupEmail, sendLogisticsUserSignupEmail, sendLogisticsVerificationEmail, getEmailAnalytics } = require("../utils/emailService");
 
 // ===== HELPERS =====
 
@@ -259,6 +259,51 @@ const registerUser = async (req, res) => {
     } catch (emailError) {
       console.error('❌ Error sending verification email:', emailError.message);
       // Don't fail registration if email fails, just log it
+    }
+
+    // Note: Congratulatory emails will be sent after email verification
+
+    // Create notifications for user registration
+    try {
+      console.log('📦 Creating notifications for user registration:', user._id);
+      
+      // 1. Notification for admin users about new registration
+      const adminUsers = await User.find({ role: 'admin' }).select('_id name');
+      if (adminUsers.length > 0) {
+        const adminNotifications = adminUsers.map(adminUser => ({
+          recipient: adminUser._id,
+          type: role === 'logistics' ? 'new_logistics_registered' : 'new_user_registered',
+          title: role === 'logistics' ? 'New Logistics Registration' : 'New User Registration',
+          message: `A new ${role} user "${displayName}" has registered and ${role === 'logistics' ? 'requires verification' : 'is ready to use the platform'}.`,
+          priority: role === 'logistics' ? 'high' : 'medium',
+          relatedEntity: {
+            type: 'user',
+            id: user._id
+          },
+          metadata: {
+            userId: user._id,
+            userName: displayName,
+            userRole: role,
+            userEmail: user.email,
+            registeredAt: new Date(),
+            needsVerification: role === 'logistics'
+          },
+          actions: [
+            {
+              label: role === 'logistics' ? 'Review Application' : 'View User',
+              action: 'view',
+              url: role === 'logistics' ? `/admin/logistics/${user._id}` : `/admin/users/${user._id}`,
+              method: 'GET'
+            }
+          ]
+        }));
+
+        await NotificationService.createBulkNotifications(adminNotifications);
+        console.log('✅ Admin notifications created for user registration');
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating registration notifications:', notificationError);
+      // Don't fail registration if notification creation fails
     }
 
     // Prepare response
@@ -606,6 +651,30 @@ const verifyEmail = async (req, res) => {
 
     // Log successful verification
     console.log(`✅ Email verified successfully for user: ${user.email}`);
+
+    // Send congratulatory verification email based on user role
+    try {
+      console.log('📧 Attempting to send congratulatory verification email to:', user.email);
+      let congratulatoryEmailResult;
+      
+      if (user.role === 'logistics') {
+        const companyName = user.companyName || 'Logistics Partner';
+        congratulatoryEmailResult = await sendLogisticsVerificationEmail(user.email, companyName);
+      } else {
+        const userName = user.name || 'User';
+        congratulatoryEmailResult = await sendNormalUserSignupEmail(user.email, userName);
+      }
+      
+      if (congratulatoryEmailResult.success) {
+        console.log('✅ Congratulatory verification email sent successfully to:', user.email);
+      } else {
+        console.error('❌ Failed to send congratulatory verification email:', congratulatoryEmailResult.error);
+        // Don't fail verification if email fails, just log it
+      }
+    } catch (congratulatoryEmailError) {
+      console.error('❌ Error sending congratulatory verification email:', congratulatoryEmailError.message);
+      // Don't fail verification if email fails, just log it
+    }
 
     res.json({
       message: "Email verified successfully! You can now log in to your account.",

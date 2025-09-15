@@ -13,7 +13,8 @@ import {
   Save, Edit3, Camera, LogOut, Trash2, AlertTriangle,
   CheckCircle, Settings as SettingsIcon, ChevronRight,
   Eye, EyeOff, Lock, Key, Smartphone as PhoneIcon,
-  Check, X, Loader2, RefreshCw
+  Check, X, Loader2, RefreshCw, HelpCircle, FileText, 
+  ExternalLink, MessageCircle
 } from 'lucide-react';
 import { 
   updateSettings, 
@@ -28,7 +29,8 @@ import {
   uploadProfilePicture,
   removeProfilePicture,
   changePassword,
-  updateProfile
+  updateProfile,
+  testNotificationPreferences
 } from '../redux/slices/settingsSlice';
 import { logout, updateProfilePicture } from '../redux/slices/authSlice';
 
@@ -209,11 +211,21 @@ const SettingsPage = () => {
   };
 
   // Handle notification toggle
-  const handleNotificationToggle = (key) => {
+  const handleNotificationToggle = async (key) => {
     const newValue = !notificationSettings[key];
-    dispatch(updateNotificationPreference({ key, value: newValue }));
-    dispatch(updateNotifications({ [key]: newValue }));
-    toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} notifications ${newValue ? 'enabled' : 'disabled'}`);
+    
+    try {
+      // Update the backend
+      await dispatch(updateNotifications({ [key]: newValue })).unwrap();
+      
+      // Update local state
+      dispatch(updateNotificationPreference({ key, value: newValue }));
+      
+      toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} notifications ${newValue ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error updating notification preference:', error);
+      toast.error(`Failed to update ${key} notification preference`);
+    }
   };
 
   // Handle privacy toggle
@@ -222,6 +234,22 @@ const SettingsPage = () => {
     dispatch(updatePrivacyPreference({ key, value: newValue }));
     dispatch(updatePrivacy({ [key]: newValue }));
     toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} visibility ${newValue ? 'enabled' : 'disabled'}`);
+  };
+
+  // Handle test notification
+  const handleTestNotification = async (type, channel) => {
+    try {
+      const result = await dispatch(testNotificationPreferences({ type, channel })).unwrap();
+      
+      if (result.success) {
+        toast.success(`Test ${channel} notification sent successfully!`);
+      } else {
+        toast.error(`Failed to send test ${channel} notification: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      toast.error(`Failed to send test ${channel} notification`);
+    }
   };
 
   // Profile picture handlers
@@ -345,6 +373,18 @@ const SettingsPage = () => {
       title: 'Preferences',
       icon: SettingsIcon,
       description: 'Theme, currency, and app preferences'
+    },
+    {
+      id: 'notification-preferences',
+      title: 'Notification Preferences',
+      icon: Bell,
+      description: 'Control how you receive notifications'
+    },
+    {
+      id: 'support',
+      title: 'Support & Legal',
+      icon: HelpCircle,
+      description: 'Contact, help, and legal information'
     }
   ];
 
@@ -845,6 +885,331 @@ const SettingsPage = () => {
     </div>
   );
 
+  const renderNotificationPreferencesSection = () => (
+    <div className="space-y-6">
+      {/* Email Notifications */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Email Notifications
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Receive notifications via email
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" className="sr-only peer" defaultChecked />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Shipment Updates</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Bid Notifications</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">System Alerts</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* SMS Notifications */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+              <PhoneIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                SMS Notifications
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Receive notifications via SMS
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" className="sr-only peer" />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+        
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Phone number: {user?.phoneNumber || 'Not provided'}
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Urgent Notifications</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Payment Alerts</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Push Notifications
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Receive notifications on your device
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" className="sr-only peer" defaultChecked />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">All Notifications</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Quiet Hours */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+              <Moon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Quiet Hours
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Suppress notifications during specific hours
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" className="sr-only peer" />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Start Time
+            </label>
+            <input
+              type="time"
+              defaultValue="22:00"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              End Time
+            </label>
+            <input
+              type="time"
+              defaultValue="08:00"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Test Notifications */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Test Notifications
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Send test notifications to verify your preferences are working
+        </p>
+        
+        <div className="flex flex-wrap gap-3">
+          <button 
+            onClick={() => handleTestNotification('bid_received', 'email')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!notificationSettings.email}
+          >
+            Test Email
+          </button>
+          <button 
+            onClick={() => handleTestNotification('bid_accepted', 'sms')}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!notificationSettings.sms || !user?.phoneNumber}
+          >
+            Test SMS
+          </button>
+          <button 
+            onClick={() => handleTestNotification('shipment_delivered', 'push')}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!notificationSettings.push}
+          >
+            Test Push
+          </button>
+        </div>
+        {!user?.phoneNumber && notificationSettings.sms && (
+          <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
+            ⚠️ SMS notifications require a phone number. Please add one in your profile.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSupportSection = () => (
+    <div className="space-y-6">
+      {/* Contact Support */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Contact Support
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Get help with your account or technical issues
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/contact')}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <span>Contact Us</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Help Center */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+              <HelpCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Help Center
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Find answers to frequently asked questions
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/help')}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <span>Visit Help Center</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Legal Links */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Legal Information
+        </h3>
+        <div className="space-y-4">
+          {/* Terms of Service */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Terms of Service
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Read our terms and conditions
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/terms')}
+              className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+            >
+              <span>View</span>
+              <ExternalLink className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Privacy Policy */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Privacy Policy
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Learn how we protect your data
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/privacy')}
+              className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+            >
+              <span>View</span>
+              <ExternalLink className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderSection = () => {
     switch (activeSection) {
       case 'profile':
@@ -857,6 +1222,10 @@ const SettingsPage = () => {
         return renderSecuritySection();
       case 'preferences':
         return renderPreferencesSection();
+      case 'notification-preferences':
+        return renderNotificationPreferencesSection();
+      case 'support':
+        return renderSupportSection();
       default:
         return renderProfileSection();
     }

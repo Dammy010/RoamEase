@@ -11,7 +11,10 @@ const PostShipment = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-6">
-      <ShipmentForm />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6"></div>
+        <ShipmentForm />
+      </div>
     </div>
   );
 };

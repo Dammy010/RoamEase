@@ -157,9 +157,7 @@ const MyShipments = () => {
 
   return (
     <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
-      <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-
-        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 dark:text-white">My Shipments</h2>
+      <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 dark:text-white">My Shipments</h2>
 
         {/* Loading */}
         {loading && (

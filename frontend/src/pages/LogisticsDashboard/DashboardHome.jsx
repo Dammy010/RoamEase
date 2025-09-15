@@ -156,8 +156,7 @@ const LogisticsDashboardHome = () => {
   }
 
   return (
-    <main className="p-6 bg-white dark:bg-gray-900 min-h-screen">
-      {/* Welcome Section */}
+    <main className="p-6 bg-white dark:bg-gray-900 min-h-screen">      {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl shadow-lg mb-6">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-black/10"></div>

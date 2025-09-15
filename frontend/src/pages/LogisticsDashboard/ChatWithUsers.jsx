@@ -19,8 +19,7 @@ const ChatWithUsers = () => {
   }, [conversationId, dispatch]);
   
   return (
-    <div className="flex h-full min-h-screen">
-      {/* Sidebar with Chat List */}
+    <div className="flex h-full min-h-screen">      {/* Sidebar with Chat List */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
         {/* Back Button - Top Right of Chat List */}
         <div className="flex justify-end p-3">

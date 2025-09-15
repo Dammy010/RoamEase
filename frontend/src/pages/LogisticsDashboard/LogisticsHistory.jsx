@@ -82,8 +82,7 @@ const LogisticsHistory = () => {
 
   if (historyLoading) {
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">        <div className="max-w-7xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             <div className="flex items-center justify-center py-12">
               <div className="text-center">

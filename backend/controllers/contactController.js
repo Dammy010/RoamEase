@@ -3,6 +3,7 @@ const nodemailer = require('nodemailer');
 // Create contact form submission
 const submitContactForm = async (req, res) => {
   try {
+    console.log('Contact form submission received:', req.body);
     const { name, email, subject, message } = req.body;
 
     // Validation
@@ -27,8 +28,24 @@ const submitContactForm = async (req, res) => {
       });
     }
 
+    // Check if email configuration is available
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.log('Email configuration not found. Contact form data:', {
+        name, email, subject, message,
+        timestamp: new Date().toISOString(),
+        ip: req.ip || req.connection.remoteAddress
+      });
+      
+      // Return success even without email sending for development
+      return res.status(200).json({
+        message: 'Contact form submitted successfully (email not configured)',
+        success: true,
+        note: 'Email configuration not set up. Contact details logged to console.'
+      });
+    }
+
     // Create transporter
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT || 587,
       secure: false,
@@ -157,9 +174,19 @@ const submitContactForm = async (req, res) => {
 
   } catch (error) {
     console.error('Contact form submission error:', error);
+    
+    // Log the contact form data for debugging
+    console.log('Contact form data that failed:', {
+      name: req.body.name,
+      email: req.body.email,
+      subject: req.body.subject,
+      message: req.body.message,
+      timestamp: new Date().toISOString()
+    });
+    
     res.status(500).json({
       message: 'Failed to submit contact form',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };

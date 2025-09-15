@@ -344,7 +344,7 @@ const PricingPage = () => {
                         : 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg hover:shadow-xl'
                     }`}
                   >
-                    <span>{plan.id === 'enterprise' ? 'Contact Sales' : `Choose ${plan.name}`}</span>
+                    <span>Choose {plan.name}</span>
                     <ArrowRight className="w-5 h-5" />
                   </motion.button>
                 </div>
@@ -464,7 +464,7 @@ const PricingPage = () => {
                 whileTap={{ scale: 0.95 }}
                 className="border-2 border-white text-white font-semibold px-8 py-4 rounded-2xl hover:bg-white hover:text-blue-600 transition-colors duration-300"
               >
-                Contact Sales
+                Choose Enterprise
               </motion.button>
             </div>
           </motion.div>

@@ -177,8 +177,7 @@ const ReportManagement = () => {
   // Check if user is admin
   if (user?.role !== 'admin') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-center max-w-md mx-auto px-6">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">        <div className="text-center max-w-md mx-auto px-6">
           <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
           </div>

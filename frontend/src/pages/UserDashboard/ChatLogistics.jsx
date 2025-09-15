@@ -23,15 +23,7 @@ const ChatLogistics = () => {
       {/* Sidebar with Chat List */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
         {/* Back Button - Top Right of Chat List */}
-        <div className="flex justify-end p-3">
-          <button
-            onClick={() => navigate("/user/dashboard")}
-            className="p-2 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700 transition"
-            title="Back to Dashboard"
-          >
-            <ArrowLeft size={20} />
-          </button>
-        </div>
+        <div className="flex justify-end p-3"></div>
         <div className="flex-1 overflow-y-auto">
           <ChatList />
         </div>

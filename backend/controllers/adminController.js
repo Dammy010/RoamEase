@@ -5,6 +5,7 @@ const Bid = require("../models/Bid");
 const Dispute = require("../models/Dispute");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const NotificationService = require("../services/notificationService");
 
 /**
  * GET /api/admin/users
@@ -113,6 +114,57 @@ exports.verifyLogistics = async (req, res) => {
     logistics.verificationNotes = notes || "";
 
     await logistics.save();
+
+    // Create notifications for verification action
+    try {
+      console.log('📦 Creating notifications for logistics verification:', logistics._id, action);
+      
+      // 1. Notification for the logistics user
+      const logisticsNotificationData = {
+        recipient: logistics._id,
+        type: action === 'verify' ? 'verification_approved' : 'verification_rejected',
+        title: action === 'verify' ? 'Verification Approved' : 'Verification Rejected',
+        message: action === 'verify' 
+          ? `Congratulations! Your logistics account has been verified and approved. You can now bid on shipments.`
+          : `Your verification request has been rejected. Reason: ${notes || 'Please contact support for more information.'}`,
+        priority: action === 'verify' ? 'high' : 'medium',
+        relatedEntity: {
+          type: 'user',
+          id: logistics._id
+        },
+        metadata: {
+          userId: logistics._id,
+          userName: logistics.companyName || logistics.name,
+          userRole: 'logistics',
+          action: action,
+          verifiedBy: req.user._id,
+          verifiedByName: req.user.name,
+          verifiedAt: new Date(),
+          notes: notes || ''
+        },
+        actions: action === 'verify' ? [
+          {
+            label: 'Start Bidding',
+            action: 'view',
+            url: '/logistics/dashboard',
+            method: 'GET'
+          }
+        ] : [
+          {
+            label: 'Contact Support',
+            action: 'view',
+            url: '/contact',
+            method: 'GET'
+          }
+        ]
+      };
+
+      await NotificationService.createNotification(logisticsNotificationData);
+      console.log('✅ Logistics notification created for verification action');
+    } catch (notificationError) {
+      console.error('❌ Error creating verification notifications:', notificationError);
+      // Don't fail verification if notification creation fails
+    }
 
     // Emit verification update to the logistics user
     const io = require('../socket').getIO();

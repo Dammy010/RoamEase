@@ -294,8 +294,7 @@ const AvailableShipments = () => {
   if (loading) {
     console.log('🔍 AvailableShipments: Showing loading state');
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>

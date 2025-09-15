@@ -313,6 +313,124 @@ const updateShipmentStatus = async (req, res) => {
     const io = getIO();
     io.emit('shipment-updated', populatedShipment); // Emit shipment updated event
 
+    // Create notifications for shipment status update
+    try {
+      console.log('📦 Creating notifications for shipment status update:', shipment._id, 'to', status);
+      
+      // 1. Notification for the shipment owner
+      const userNotificationData = {
+        recipient: shipment.user._id,
+        type: 'shipment_status_updated',
+        title: 'Shipment Status Updated',
+        message: `Your shipment "${shipment.shipmentTitle}" status has been updated to "${status}".`,
+        priority: 'medium',
+        relatedEntity: {
+          type: 'shipment',
+          id: shipment._id
+        },
+        metadata: {
+          shipmentId: shipment._id,
+          shipmentTitle: shipment.shipmentTitle,
+          oldStatus: shipment.status,
+          newStatus: status,
+          updatedBy: req.user._id,
+          updatedByName: req.user.name || req.user.companyName,
+          updatedAt: new Date()
+        },
+        actions: [
+          {
+            label: 'View Shipment',
+            action: 'view',
+            url: `/shipments/${shipment._id}`,
+            method: 'GET'
+          }
+        ]
+      };
+
+      await NotificationService.createNotification(userNotificationData);
+      console.log('✅ User notification created for shipment status update');
+
+      // 2. Notification for admin users
+      const adminUsers = await User.find({ role: 'admin' }).select('_id name');
+      if (adminUsers.length > 0) {
+        const adminNotifications = adminUsers.map(adminUser => ({
+          recipient: adminUser._id,
+          type: 'shipment_status_updated',
+          title: 'Shipment Status Updated',
+          message: `Shipment "${shipment.shipmentTitle}" status has been updated to "${status}" by ${req.user.name || req.user.companyName}.`,
+          priority: 'low',
+          relatedEntity: {
+            type: 'shipment',
+            id: shipment._id
+          },
+          metadata: {
+            shipmentId: shipment._id,
+            shipmentTitle: shipment.shipmentTitle,
+            oldStatus: shipment.status,
+            newStatus: status,
+            updatedBy: req.user._id,
+            updatedByName: req.user.name || req.user.companyName,
+            updatedAt: new Date(),
+            ownerId: shipment.user._id
+          },
+          actions: [
+            {
+              label: 'View Shipment',
+              action: 'view',
+              url: `/admin/shipments/${shipment._id}`,
+              method: 'GET'
+            }
+          ]
+        }));
+
+        await NotificationService.createBulkNotifications(adminNotifications);
+        console.log('✅ Admin notifications created for shipment status update');
+      }
+
+      // 3. If status is 'accepted', notify the logistics provider
+      if (status === 'accepted') {
+        const Bid = require('../models/Bid');
+        const acceptedBid = await Bid.findOne({ 
+          shipment: shipment._id, 
+          status: 'accepted' 
+        }).populate('carrier', 'name email companyName');
+        
+        if (acceptedBid) {
+          const logisticsNotificationData = {
+            recipient: acceptedBid.carrier._id,
+            type: 'shipment_assigned',
+            title: 'Shipment Assigned to You',
+            message: `You have been assigned to handle the shipment "${shipment.shipmentTitle}".`,
+            priority: 'high',
+            relatedEntity: {
+              type: 'shipment',
+              id: shipment._id
+            },
+            metadata: {
+              shipmentId: shipment._id,
+              shipmentTitle: shipment.shipmentTitle,
+              assignedAt: new Date(),
+              bidId: acceptedBid._id
+            },
+            actions: [
+              {
+                label: 'View Shipment',
+                action: 'view',
+                url: `/shipments/${shipment._id}`,
+                method: 'GET'
+              }
+            ]
+          };
+
+          await NotificationService.createNotification(logisticsNotificationData);
+          console.log('✅ Logistics notification created for shipment assignment');
+        }
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating status update notifications:', notificationError);
+      // Don't fail the status update if notification creation fails
+    }
+
     return res.json({ success: true, shipment: populatedShipment });
   } catch (err) {
     return res.status(500).json({
@@ -1113,12 +1231,88 @@ const deleteShipment = async (req, res) => {
       });
     }
 
+    // Get shipment details before deletion for notifications
+    const populatedShipment = await shipment.populate('user', 'name email companyName country');
+    
+    // Find all logistics providers who had bids on this shipment
+    const Bid = require('../models/Bid');
+    const bidsOnShipment = await Bid.find({ shipment: id }).populate('carrier', 'name email companyName');
+    
     // Delete the shipment
     await Shipment.findByIdAndDelete(id);
 
     // Emit deletion event to all connected clients
     const io = getIO();
     io.emit('shipment-deleted', { shipmentId: id });
+
+    // Create notifications for shipment deletion
+    try {
+      console.log('📦 Creating notifications for shipment deletion:', id);
+      
+      // 1. Notification for admin users
+      const adminUsers = await User.find({ role: 'admin' }).select('_id name');
+      if (adminUsers.length > 0) {
+        const adminNotifications = adminUsers.map(adminUser => ({
+          recipient: adminUser._id,
+          type: 'shipment_deleted',
+          title: 'Shipment Deleted',
+          message: `Shipment "${populatedShipment.shipmentTitle}" has been deleted by ${populatedShipment.user.name || populatedShipment.user.companyName}.`,
+          priority: 'medium',
+          relatedEntity: {
+            type: 'shipment',
+            id: id
+          },
+          metadata: {
+            shipmentId: id,
+            shipmentTitle: populatedShipment.shipmentTitle,
+            deletedBy: req.user._id,
+            deletedByName: req.user.name || req.user.companyName,
+            deletedAt: new Date(),
+            ownerId: populatedShipment.user._id
+          },
+          actions: [
+            {
+              label: 'View User',
+              action: 'view',
+              url: `/admin/users/${populatedShipment.user._id}`,
+              method: 'GET'
+            }
+          ]
+        }));
+
+        await NotificationService.createBulkNotifications(adminNotifications);
+        console.log('✅ Admin notifications created for shipment deletion');
+      }
+
+      // 2. Notifications for logistics providers who had bids on this shipment
+      if (bidsOnShipment.length > 0) {
+        const logisticsNotifications = bidsOnShipment.map(bid => ({
+          recipient: bid.carrier._id,
+          type: 'shipment_cancelled',
+          title: 'Shipment Cancelled',
+          message: `The shipment "${populatedShipment.shipmentTitle}" you bid on has been cancelled by the owner.`,
+          priority: 'medium',
+          relatedEntity: {
+            type: 'shipment',
+            id: id
+          },
+          metadata: {
+            shipmentId: id,
+            shipmentTitle: populatedShipment.shipmentTitle,
+            cancelledBy: req.user._id,
+            cancelledByName: req.user.name || req.user.companyName,
+            cancelledAt: new Date(),
+            bidId: bid._id
+          }
+        }));
+
+        await NotificationService.createBulkNotifications(logisticsNotifications);
+        console.log('✅ Logistics notifications created for shipment cancellation');
+      }
+    } catch (notificationError) {
+      console.error('❌ Error creating deletion notifications:', notificationError);
+      // Don't fail the deletion if notification creation fails
+    }
 
     res.json({
       success: true,

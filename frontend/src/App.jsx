@@ -204,6 +204,15 @@ function App() {
                   <Route path="/reports" element={<ReportsPage />} />
                 </Route>
 
+                {/* Public pages accessible to authenticated users */}
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/help" element={<HelpCenterPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/services" element={<ServicesPage />} />
+
                 {/* Catch-all for authenticated users to redirect to their dashboard */}
                 <Route path="*" element={<Navigate to={`/${user.role}/dashboard`} replace />} />
               </Routes>

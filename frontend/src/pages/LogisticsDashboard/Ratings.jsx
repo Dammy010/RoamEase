@@ -167,8 +167,7 @@ const Ratings = () => {
   if (loading) {
     console.log('🔍 Showing loading state');
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center">        <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Star className="text-white" size={24} />
           </div>
@@ -213,35 +212,55 @@ const Ratings = () => {
 
   console.log('🔍 Rendering main ratings content');
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <Star className="text-white" size={24} />
+    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl shadow-lg mb-8">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+          
+          <div className="relative p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="text-white">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <Star className="text-white" size={24} />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold text-white mb-2">
+                      Customer Ratings
+                    </h1>
+                    <p className="text-indigo-100 text-lg">
+                      View and manage your delivery ratings
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold">Customer Ratings</h1>
-                <p className="text-blue-100 mt-1">View and manage your delivery ratings</p>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/20">
+                  <span className="text-white font-semibold text-lg">
+                    {ratings.length} Total Ratings
+                  </span>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-3 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-colors backdrop-blur-sm flex items-center gap-2 border border-white/20"
+                >
+                  <RefreshCw size={20} />
+                  Refresh
+                </button>
               </div>
             </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors backdrop-blur-sm flex items-center gap-2"
-            >
-              <RefreshCw size={16} />
-              Refresh
-            </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Rating Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        {/* Main Content */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          {/* Rating Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                 <Star className="text-blue-600 dark:text-blue-400" size={24} />
@@ -253,7 +272,7 @@ const Ratings = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-6 border border-green-200 dark:border-green-700">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                 <Award className="text-green-600 dark:text-green-400" size={24} />
@@ -265,7 +284,7 @@ const Ratings = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-xl p-6 border border-yellow-200 dark:border-yellow-700">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
                 <ThumbsUp className="text-yellow-600 dark:text-yellow-400" size={24} />
@@ -277,7 +296,7 @@ const Ratings = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-6 border border-purple-200 dark:border-purple-700">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
                 <TrendingUp className="text-purple-600 dark:text-purple-400" size={24} />
@@ -505,6 +524,7 @@ const Ratings = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

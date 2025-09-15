@@ -18,7 +18,7 @@ export const updateNotifications = createAsyncThunk(
   'settings/updateNotifications',
   async (notificationData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/notification-preferences', notificationData);
+      const response = await api.put('/settings/notifications', notificationData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -30,7 +30,7 @@ export const updatePrivacy = createAsyncThunk(
   'settings/updatePrivacy',
   async (privacyData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/privacy-settings', privacyData);
+      const response = await api.put('/settings/privacy', privacyData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -42,7 +42,7 @@ export const getSettings = createAsyncThunk(
   'settings/getSettings',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/settings/settings');
+      const response = await api.get('/settings');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -114,6 +114,56 @@ export const updateProfile = createAsyncThunk(
   async (profileData, { rejectWithValue }) => {
     try {
       const response = await api.put('/settings/profile', profileData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// Push notification management
+export const subscribeToPush = createAsyncThunk(
+  'settings/subscribeToPush',
+  async (subscription, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/settings/push/subscribe', { subscription });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const unsubscribeFromPush = createAsyncThunk(
+  'settings/unsubscribeFromPush',
+  async (endpoint, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/settings/push/unsubscribe', { endpoint });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const getPushPublicKey = createAsyncThunk(
+  'settings/getPushPublicKey',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/settings/push/public-key');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// Test notification preferences
+export const testNotificationPreferences = createAsyncThunk(
+  'settings/testNotificationPreferences',
+  async ({ type, channel }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/settings/test-notification', { type, channel });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

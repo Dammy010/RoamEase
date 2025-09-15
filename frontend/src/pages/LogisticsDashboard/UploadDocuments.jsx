@@ -125,8 +125,7 @@ const UploadDocuments = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-white dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto">
+    <div className="p-6 min-h-screen bg-white dark:bg-gray-900">      <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-6">
             <Upload className="w-8 h-8 text-blue-600" />

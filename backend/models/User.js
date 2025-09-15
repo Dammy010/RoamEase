@@ -188,6 +188,17 @@ const userSchema = new mongoose.Schema(
       updates: { type: Boolean, default: true }
     },
 
+    // Push Notification Subscriptions
+    pushSubscriptions: [{
+      endpoint: { type: String, required: true },
+      keys: {
+        p256dh: { type: String, required: true },
+        auth: { type: String, required: true }
+      },
+      userAgent: { type: String, default: '' },
+      createdAt: { type: Date, default: Date.now }
+    }],
+
     // Privacy Settings
     privacySettings: {
       profileVisibility: { type: String, default: "public" },
