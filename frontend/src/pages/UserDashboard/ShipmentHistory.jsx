@@ -23,8 +23,6 @@ const ShipmentHistory = () => {
         return <CheckCircle className="text-green-500" size={20} />;
       case 'delivered':
         return <Package className="text-blue-500" size={20} />;
-      case 'delivered':
-        return <Truck className="text-orange-500" size={20} />;
       default:
         return <Clock className="text-gray-500" size={20} />;
     }
@@ -36,8 +34,6 @@ const ShipmentHistory = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'delivered':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'delivered':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }

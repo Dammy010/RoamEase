@@ -609,7 +609,6 @@ const ReportManagement = () => {
               </div>
             )}
           </div>
-        )}
 
         {/* Report Detail Modal */}
         {selectedReport && (
@@ -621,7 +620,6 @@ const ReportManagement = () => {
         )}
       </div>
     </div>
-
   );
 };
 

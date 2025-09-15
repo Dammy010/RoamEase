@@ -86,8 +86,6 @@ const ShipmentDetail = () => {
       case 'completed':
       case 'delivered':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'delivered':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'accepted':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pending':
@@ -104,8 +102,6 @@ const ShipmentDetail = () => {
       case 'completed':
       case 'delivered':
         return <CheckCircle className="w-4 h-4" />;
-      case 'delivered':
-        return <Truck className="w-4 h-4" />;
       case 'accepted':
         return <Award className="w-4 h-4" />;
       case 'pending':

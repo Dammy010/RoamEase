@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -15,6 +15,7 @@ import { useTheme } from './contexts/ThemeContext';
 // New: Import Sidebar
 import FloatingDrawer from './components/shared/FloatingDrawer';
 import Navbar from './components/shared/Navbar';
+import ScrollToTop from './components/shared/ScrollToTop';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -33,7 +34,6 @@ import ContactPage from './pages/ContactPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import FAQPage from './pages/FAQPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/shared/ProtectedRoute';
@@ -85,8 +85,14 @@ function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { isDark } = useTheme();
+  const location = useLocation();
 
   console.log('App.jsx - Current User State:', user);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     // Initialize settings (currency, etc.) - theme is now handled by ThemeProvider
@@ -134,6 +140,7 @@ function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
         <ToastContainer position="top-right" autoClose={3000} />
+        <ScrollToTop />
         <div className="min-h-screen">
         {user ? (
           <>
@@ -217,7 +224,6 @@ function App() {
                 <Route path="/help" element={<HelpCenterPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                <Route path="/faq" element={<FAQPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/verify-notice" element={<EmailVerifyNotice />} />

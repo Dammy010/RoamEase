@@ -40,8 +40,8 @@ const Navbar = () => {
         <NavLink to="/about" className={linkClass}>
           About
         </NavLink>
-        <NavLink to="/faq" className={linkClass}>
-          FAQ
+        <NavLink to="/help" className={linkClass}>
+          Help Center
         </NavLink>
         <NavLink to="/contact" className={linkClass}>
           Contact
@@ -91,8 +91,8 @@ const Navbar = () => {
             <NavLink to="/about" className={mobileLinkClass} onClick={toggleMenu}>
               About
             </NavLink>
-            <NavLink to="/faq" className={mobileLinkClass} onClick={toggleMenu}>
-              FAQ
+            <NavLink to="/help" className={mobileLinkClass} onClick={toggleMenu}>
+              Help Center
             </NavLink>
             <NavLink to="/contact" className={mobileLinkClass} onClick={toggleMenu}>
               Contact

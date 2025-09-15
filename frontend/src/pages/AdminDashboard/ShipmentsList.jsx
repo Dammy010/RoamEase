@@ -83,8 +83,6 @@ const ShipmentsList = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'delivered':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'delivered':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
@@ -102,8 +100,6 @@ const ShipmentsList = () => {
         return <Award className="w-4 h-4" />;
       case 'delivered':
         return <Truck className="w-4 h-4" />;
-      case 'delivered':
-        return <UserCheck className="w-4 h-4" />;
       case 'cancelled':
         return <AlertCircle className="w-4 h-4" />;
       default:

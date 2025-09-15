@@ -59,7 +59,8 @@ const SubscriptionPage = () => {
     }
   }, [error, paymentError, dispatch]);
 
-  const basicPlan = {
+  const plans = [
+    {
       id: 'basic',
       name: 'Basic',
       description: 'Perfect for small logistics companies',
@@ -69,23 +70,83 @@ const SubscriptionPage = () => {
         'Email support',
         'Standard tracking features',
         'Mobile app access',
-      'Basic reporting',
-      'Real-time notifications',
-      'API access'
+        'Basic reporting',
+        'Real-time notifications',
+        'API access'
       ],
       limitations: [
-      'No custom integrations',
-      'Basic support only'
+        'No custom integrations',
+        'Basic support only'
       ],
-    popular: true,
+      popular: false,
       icon: Shield,
       color: 'blue',
-    pricing: {
-      weekly: { price: 9, originalPrice: 12, discount: 25 },
-      monthly: { price: 29, originalPrice: 39, discount: 25 },
-      yearly: { price: 299, originalPrice: 468, discount: 36 }
+      pricing: {
+        weekly: { price: 9, originalPrice: 12, discount: 25 },
+        monthly: { price: 29, originalPrice: 39, discount: 25 },
+        yearly: { price: 299, originalPrice: 468, discount: 36 }
+      }
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      description: 'Ideal for growing logistics businesses',
+      features: [
+        'Unlimited shipments',
+        'Advanced analytics & insights',
+        'Priority email & phone support',
+        'Advanced tracking features',
+        'Mobile app access',
+        'Advanced reporting & exports',
+        'Real-time notifications',
+        'Full API access',
+        'Custom integrations',
+        'Team collaboration tools',
+        'Advanced security features',
+        'Priority customer support'
+      ],
+      limitations: [],
+      popular: true,
+      icon: Crown,
+      color: 'purple',
+      pricing: {
+        weekly: { price: 19, originalPrice: 25, discount: 24 },
+        monthly: { price: 79, originalPrice: 99, discount: 20 },
+        yearly: { price: 799, originalPrice: 1188, discount: 33 }
+      }
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      description: 'For large-scale logistics operations',
+      features: [
+        'Unlimited everything',
+        'Custom analytics dashboard',
+        '24/7 dedicated support',
+        'White-label solutions',
+        'Custom mobile apps',
+        'Custom reporting & BI',
+        'Real-time notifications',
+        'Full API access',
+        'Custom integrations',
+        'Advanced team management',
+        'Enterprise security',
+        'Dedicated account manager',
+        'Custom training & onboarding',
+        'SLA guarantees',
+        'Custom billing options'
+      ],
+      limitations: [],
+      popular: false,
+      icon: Sparkles,
+      color: 'gold',
+      pricing: {
+        weekly: { price: 49, originalPrice: 65, discount: 25 },
+        monthly: { price: 199, originalPrice: 249, discount: 20 },
+        yearly: { price: 1999, originalPrice: 2988, discount: 33 }
+      }
     }
-  };
+  ];
 
   const features = [
     {
@@ -285,56 +346,73 @@ const SubscriptionPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <div className="w-full max-w-md">
-              {(() => {
-                const IconComponent = basicPlan.icon;
-                const currentPricing = basicPlan.pricing[billingCycle];
-                const periodText = billingCycle === 'weekly' ? 'week' : billingCycle === 'monthly' ? 'month' : 'year';
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {plans.map((plan) => {
+              const IconComponent = plan.icon;
+              const currentPricing = plan.pricing[billingCycle];
+              const periodText = billingCycle === 'weekly' ? 'week' : billingCycle === 'monthly' ? 'month' : 'year';
+              const isPopular = plan.popular;
               
               return (
-                  <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 border-blue-500 dark:border-blue-400 transition-all duration-300 hover:shadow-2xl">
+                <div 
+                  key={plan.id}
+                  className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl ${
+                    isPopular 
+                      ? 'border-2 border-purple-500 dark:border-purple-400 scale-105' 
+                      : 'border border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  {isPopular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                      <span className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
                         <Star className="w-4 h-4" />
-                        <span>Basic Plan</span>
+                        <span>Most Popular</span>
                       </span>
                     </div>
+                  )}
 
                   <div className="p-8">
                     {/* Plan Header */}
                     <div className="text-center mb-8">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
-                          <IconComponent className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
+                        plan.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30' :
+                        plan.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900/30' :
+                        'bg-yellow-100 dark:bg-yellow-900/30'
+                      }`}>
+                        <IconComponent className={`w-8 h-8 ${
+                          plan.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                          plan.color === 'purple' ? 'text-purple-600 dark:text-purple-400' :
+                          'text-yellow-600 dark:text-yellow-400'
+                        }`} />
                       </div>
                       
                       <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                          {basicPlan.name}
+                        {plan.name}
                       </h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-6">
-                          {basicPlan.description}
+                        {plan.description}
                       </p>
 
                       {/* Pricing */}
                       <div className="mb-6">
                         <div className="flex items-baseline justify-center space-x-2">
                           <span className="text-5xl font-bold text-gray-900 dark:text-white">
-                              {formatCurrency(currentPricing.price)}
+                            {formatCurrency(currentPricing.price)}
                           </span>
-                            <span className="text-gray-600 dark:text-gray-400">/{periodText}</span>
+                          <span className="text-gray-600 dark:text-gray-400">/{periodText}</span>
                         </div>
-                          <div className="flex items-center justify-center space-x-2 mt-2">
-                            <span className="text-lg text-gray-500 line-through">
-                              {formatCurrency(currentPricing.originalPrice)}
-                            </span>
-                            <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded-full text-sm font-semibold">
-                              {currentPricing.discount}% OFF
-                            </span>
-                          </div>
-                          {billingCycle === 'yearly' && (
-                            <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
-                              Save ${currentPricing.originalPrice - currentPricing.price} per year!
-                            </p>
+                        <div className="flex items-center justify-center space-x-2 mt-2">
+                          <span className="text-lg text-gray-500 line-through">
+                            {formatCurrency(currentPricing.originalPrice)}
+                          </span>
+                          <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded-full text-sm font-semibold">
+                            {currentPricing.discount}% OFF
+                          </span>
+                        </div>
+                        {billingCycle === 'yearly' && (
+                          <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
+                            Save ${currentPricing.originalPrice - currentPricing.price} per year!
+                          </p>
                         )}
                       </div>
                     </div>
@@ -342,58 +420,120 @@ const SubscriptionPage = () => {
                     {/* Features */}
                     <div className="space-y-4 mb-8">
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-4">What's included:</h4>
-                        {basicPlan.features.map((feature, idx) => (
+                      {plan.features.map((feature, idx) => (
                         <div key={idx} className="flex items-start space-x-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                          <span className="text-gray-700 dark:text-gray-300 text-sm">{feature}</span>
                         </div>
                       ))}
-                        {basicPlan.limitations.map((limitation, idx) => (
+                      {plan.limitations.map((limitation, idx) => (
                         <div key={idx} className="flex items-start space-x-3">
                           <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-500 dark:text-gray-400">{limitation}</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-sm">{limitation}</span>
                         </div>
                       ))}
                     </div>
 
-                      {/* Action Button */}
-                      <button
-                        onClick={() => handleUpgrade(basicPlan)}
-                        disabled={paymentLoading || (currentSubscription && currentSubscription.status === 'active')}
-                        className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
-                          currentSubscription && currentSubscription.status === 'active'
-                            ? 'bg-green-600 text-white cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
-                        }`}
-                      >
-                        {paymentLoading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>Processing...</span>
-                          </>
-                        ) : currentSubscription && currentSubscription.status === 'active' ? (
-                          <>
-                            <CheckCircle className="w-5 h-5" />
-                            <span>Subscribed</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Subscribe Now</span>
-                            <ArrowRight className="w-5 h-5" />
-                          </>
-                        )}
-                      </button>
+                    {/* Action Button */}
+                    <button
+                      onClick={() => handleUpgrade(plan)}
+                      disabled={paymentLoading || (currentSubscription && currentSubscription.status === 'active')}
+                      className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
+                        currentSubscription && currentSubscription.status === 'active'
+                          ? 'bg-green-600 text-white cursor-not-allowed'
+                          : isPopular
+                          ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl'
+                          : plan.color === 'blue'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                          : 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg hover:shadow-xl'
+                      }`}
+                    >
+                      {paymentLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : currentSubscription && currentSubscription.status === 'active' ? (
+                        <>
+                          <CheckCircle className="w-5 h-5" />
+                          <span>Subscribed</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Subscribe Now</span>
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               );
-              })()}
-            </div>
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Plan Comparison Table */}
+      <div className="py-20 bg-white dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Compare Plans
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              See how our plans stack up against each other
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Features</th>
+                  {plans.map((plan) => (
+                    <th key={plan.id} className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold">{plan.name}</span>
+                        <span className="text-xs text-gray-500">{plan.description}</span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {[
+                  { feature: 'Monthly Shipments', basic: 'Up to 50', premium: 'Unlimited', enterprise: 'Unlimited' },
+                  { feature: 'Analytics Dashboard', basic: 'Basic', premium: 'Advanced', enterprise: 'Custom' },
+                  { feature: 'Support', basic: 'Email', premium: 'Priority Email & Phone', enterprise: '24/7 Dedicated' },
+                  { feature: 'API Access', basic: 'Basic', premium: 'Full', enterprise: 'Full + Custom' },
+                  { feature: 'Custom Integrations', basic: 'No', premium: 'Yes', enterprise: 'Yes + White-label' },
+                  { feature: 'Team Collaboration', basic: 'No', premium: 'Yes', enterprise: 'Advanced' },
+                  { feature: 'Account Manager', basic: 'No', premium: 'No', enterprise: 'Yes' },
+                  { feature: 'SLA Guarantees', basic: 'No', premium: 'No', enterprise: 'Yes' }
+                ].map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      {row.feature}
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                      {row.basic}
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                      {row.premium}
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                      {row.enterprise}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
       {/* FAQ Section */}
-      <div className="py-20 bg-white dark:bg-gray-800">
+      <div className="py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -412,7 +552,7 @@ const SubscriptionPage = () => {
               },
               {
                 question: "What payment methods do you accept?",
-                answer: "We accept all major credit cards (Visa, MasterCard, American Express) and PayPal."
+                answer: "We accept all major credit cards (Visa, MasterCard, American Express), bank transfers, and digital wallets. All payments are processed securely through our encrypted payment system."
               },
               {
                 question: "Can I cancel anytime?",
@@ -420,14 +560,22 @@ const SubscriptionPage = () => {
               },
               {
                 question: "Do you offer discounts for annual plans?",
-                answer: "Yes! We offer 36% off when you pay annually for the Basic plan. This saves you $169 per year compared to monthly billing."
+                answer: "Yes! We offer significant discounts when you pay annually: 36% off Basic, 33% off Premium, and 33% off Enterprise plans. This can save you hundreds of dollars per year."
+              },
+              {
+                question: "What's the difference between Premium and Enterprise?",
+                answer: "Premium is perfect for growing businesses with unlimited shipments and advanced features. Enterprise includes white-label solutions, custom development, dedicated support, and SLA guarantees for large-scale operations."
+              },
+              {
+                question: "Can I upgrade or downgrade my plan?",
+                answer: "Yes! You can upgrade or downgrade your plan at any time. Upgrades take effect immediately, while downgrades take effect at your next billing cycle. We'll prorate any billing differences."
               },
               {
                 question: "What happens to my data if I cancel?",
                 answer: "Your data is safely stored for 30 days after cancellation. You can export all your data during this period or reactivate your account anytime."
               }
             ].map((faq, index) => (
-              <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                   {faq.question}
                 </h3>

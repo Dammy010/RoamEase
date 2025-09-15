@@ -16,7 +16,7 @@ const Footer = () => {
           </p>
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-300">
             <Mail size={16} />
-            <span>akindare2025@gmail.com</span>
+            <span>da9783790@gmail.com</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-300 mt-1">
             <Phone size={16} />
@@ -42,7 +42,6 @@ const Footer = () => {
             <li><Link to="/help" className="hover:text-blue-400 transition-colors duration-200">Help Center</Link></li>
             <li><Link to="/terms" className="hover:text-blue-400 transition-colors duration-200">Terms of Service</Link></li>
             <li><Link to="/privacy" className="hover:text-blue-400 transition-colors duration-200">Privacy Policy</Link></li>
-            <li><Link to="/faq" className="hover:text-blue-400 transition-colors duration-200">FAQ</Link></li>
           </ul>
         </div>
 
