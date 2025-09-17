@@ -1,4 +1,4 @@
-const NotificationPreferences = require('../models/NotificationPreferences');
+ const NotificationPreferences = require('../models/NotificationPreferences');
 const User = require('../models/User');
 
 // Get user's notification preferences

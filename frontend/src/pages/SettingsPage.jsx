@@ -1,25 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { getProfilePictureUrl } from '../utils/imageUtils';
-import ProfilePictureModal from '../components/shared/ProfilePictureModal';
-import ThemeToggle from '../components/shared/ThemeToggle';
-import { useTheme } from '../contexts/ThemeContext';
-import { useCurrency } from '../contexts/CurrencyContext';
-import { 
-  User, Bell, Shield, CreditCard, Globe, Moon, Sun, 
-  Palette, Wallet, Smartphone, Mail, MapPin, 
-  Save, Edit3, Camera, LogOut, Trash2, AlertTriangle,
-  CheckCircle, Settings as SettingsIcon, ChevronRight,
-  Eye, EyeOff, Lock, Key, Smartphone as PhoneIcon,
-  Check, X, Loader2, RefreshCw, HelpCircle, FileText, 
-  ExternalLink, MessageCircle
-} from 'lucide-react';
-import { 
-  updateSettings, 
-  updateNotifications, 
-  updatePrivacy, 
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { getProfilePictureUrl } from "../utils/imageUtils";
+import ProfilePictureModal from "../components/shared/ProfilePictureModal";
+import ThemeToggle from "../components/shared/ThemeToggle";
+import { useTheme } from "../contexts/ThemeContext";
+import { useCurrency } from "../contexts/CurrencyContext";
+import {
+  User,
+  Bell,
+  Shield,
+  CreditCard,
+  Globe,
+  Moon,
+  Sun,
+  Palette,
+  Wallet,
+  Smartphone,
+  Mail,
+  MapPin,
+  Save,
+  Edit3,
+  Camera,
+  LogOut,
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  Settings as SettingsIcon,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Lock,
+  Key,
+  Smartphone as PhoneIcon,
+  Check,
+  X,
+  Loader2,
+  RefreshCw,
+  HelpCircle,
+  FileText,
+  ExternalLink,
+  MessageCircle,
+} from "lucide-react";
+import {
+  updateSettings,
+  updateNotifications,
+  updatePrivacy,
   getSettings,
   clearSettingsError,
   setCurrency,
@@ -29,58 +56,66 @@ import {
   uploadProfilePicture,
   removeProfilePicture,
   changePassword,
+  testNotificationPreferences,
+} from "../redux/slices/settingsSlice";
+import {
+  logout,
+  updateProfilePicture,
   updateProfile,
-  testNotificationPreferences
-} from '../redux/slices/settingsSlice';
-import { logout, updateProfilePicture } from '../redux/slices/authSlice';
+} from "../redux/slices/authSlice";
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  
-  // Debug user data (only log when profile picture changes)
-  useEffect(() => {
-    console.log('👤 SettingsPage: User profile picture updated:', user?.profilePicture);
-  }, [user?.profilePicture]);
+
+  useEffect(() => {}, [user?.profilePicture]);
   const { theme, toggleTheme, isDark } = useTheme();
-  const { currency, setCurrency: setCurrencyContext, currencies, formatCurrency } = useCurrency();
-  
-  const { 
-    settings, 
-    notifications: notificationSettings, 
-    privacy: privacySettings, 
-    loading, 
-    error, 
-    updateLoading 
+  const {
+    currency,
+    setCurrency: setCurrencyContext,
+    currencies,
+    formatCurrency,
+  } = useCurrency();
+
+  const {
+    settings,
+    notifications: notificationSettings,
+    privacy: privacySettings,
+    error,
+    updateLoading,
   } = useSelector((state) => state.settings);
-  
+
   // Profile picture modal state
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
-  
+
   // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: user?.role === 'logistics' ? (user?.companyName || '') : (user?.name || ''),
-    email: user?.email || '',
-    phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
-    companyName: user?.companyName || '',
-    country: user?.country || '',
+    name:
+      user?.role === "logistics" ? user?.companyName || "" : user?.name || "",
+    email: user?.email || "",
+    phone:
+      user?.role === "logistics"
+        ? user?.contactPhone || ""
+        : user?.phoneNumber || "",
+    companyName: user?.companyName || "",
+    country: user?.country || "",
   });
-  
+
   // Password change state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
-    confirm: false
+    confirm: false,
   });
-  
+
   // Form validation states
   const [passwordErrors, setPasswordErrors] = useState({});
   const [profileErrors, setProfileErrors] = useState({});
@@ -88,8 +123,9 @@ const SettingsPage = () => {
   // Initialize settings on mount
   useEffect(() => {
     dispatch(initializeSettings());
+    // Load settings in background without blocking UI
     dispatch(getSettings());
-    
+
     // Initialize currency from user settings
     if (user?.preferences?.currency) {
       setCurrencyContext(user.preferences.currency);
@@ -115,115 +151,142 @@ const SettingsPage = () => {
   // Handle currency change
   const handleCurrencyChange = async (newCurrency) => {
     if (newCurrency === currency) return; // Don't update if same currency
-    
+
     try {
       // Update Redux state immediately for UI responsiveness
       dispatch(setCurrency(newCurrency));
-      
+
       // Update CurrencyContext
       setCurrencyContext(newCurrency);
-      
+
       // Update backend settings
       const result = await dispatch(updateSettings({ currency: newCurrency }));
-      
+
       if (updateSettings.fulfilled.match(result)) {
         toast.success(`Currency changed to ${newCurrency}`);
       } else {
         // Revert on error
         dispatch(setCurrency(currency));
         setCurrencyContext(currency);
-        toast.error('Failed to update currency');
+        toast.error("Failed to update currency");
       }
     } catch (error) {
-      console.error('Error changing currency:', error);
+      console.error("Error changing currency:", error);
       // Revert on error
       dispatch(setCurrency(currency));
       setCurrencyContext(currency);
-      toast.error('Failed to update currency');
+      toast.error("Failed to update currency");
     }
   };
 
   // Handle profile save
   const handleProfileSave = async () => {
     setProfileErrors({});
-    
+
     // Basic validation
     if (!profileData.name.trim()) {
-      setProfileErrors({ name: 'Name is required' });
+      setProfileErrors({ name: "Name is required" });
       return;
     }
-    
+
     if (!profileData.email.trim()) {
-      setProfileErrors({ email: 'Email is required' });
+      setProfileErrors({ email: "Email is required" });
       return;
     }
 
     try {
-      const result = await dispatch(updateProfile(profileData));
-      if (updateProfile.fulfilled.match(result)) {
-        toast.success('Profile updated successfully');
-        setIsEditingProfile(false);
+      // Format data based on user role
+      const profileDataToSend = { ...profileData };
+
+      if (user?.role === "logistics") {
+        // For logistics users, map name to companyName and phone to contactPhone
+        profileDataToSend.companyName = profileData.name;
+        profileDataToSend.contactPhone = profileData.phone;
+        delete profileDataToSend.name;
+        delete profileDataToSend.phone;
       } else {
-        toast.error(result.payload || 'Failed to update profile');
+        // For regular users, map phone to phoneNumber
+        profileDataToSend.phoneNumber = profileData.phone;
+        delete profileDataToSend.phone;
+      }
+
+      const result = await dispatch(updateProfile(profileDataToSend));
+      if (updateProfile.fulfilled.match(result)) {
+        toast.success("Profile updated successfully");
+        setIsEditingProfile(false);
+        // Refresh the page to show updated data
+        window.location.reload();
+      } else {
+        toast.error(result.payload || "Failed to update profile");
       }
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error("Failed to update profile");
     }
   };
 
   // Handle password change
   const handlePasswordChange = async () => {
     setPasswordErrors({});
-    
+
     // Validation
     if (!passwordData.currentPassword) {
-      setPasswordErrors({ currentPassword: 'Current password is required' });
+      setPasswordErrors({ currentPassword: "Current password is required" });
       return;
     }
-    
+
     if (!passwordData.newPassword) {
-      setPasswordErrors({ newPassword: 'New password is required' });
+      setPasswordErrors({ newPassword: "New password is required" });
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
-      setPasswordErrors({ newPassword: 'Password must be at least 6 characters' });
+      setPasswordErrors({
+        newPassword: "Password must be at least 6 characters",
+      });
       return;
     }
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordErrors({ confirmPassword: 'Passwords do not match' });
+      setPasswordErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
 
     try {
       const result = await dispatch(changePassword(passwordData));
       if (changePassword.fulfilled.match(result)) {
-        toast.success('Password changed successfully');
+        toast.success("Password changed successfully");
         setShowPasswordForm(false);
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
       } else {
-        toast.error(result.payload || 'Failed to change password');
+        toast.error(result.payload || "Failed to change password");
       }
     } catch (error) {
-      toast.error('Failed to change password');
+      toast.error("Failed to change password");
     }
   };
 
   // Handle notification toggle
   const handleNotificationToggle = async (key) => {
     const newValue = !notificationSettings[key];
-    
+
     try {
       // Update the backend
       await dispatch(updateNotifications({ [key]: newValue })).unwrap();
-      
+
       // Update local state
       dispatch(updateNotificationPreference({ key, value: newValue }));
-      
-      toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} notifications ${newValue ? 'enabled' : 'disabled'}`);
+
+      toast.success(
+        `${key.charAt(0).toUpperCase() + key.slice(1)} notifications ${
+          newValue ? "enabled" : "disabled"
+        }`
+      );
     } catch (error) {
-      console.error('Error updating notification preference:', error);
+      console.error("Error updating notification preference:", error);
       toast.error(`Failed to update ${key} notification preference`);
     }
   };
@@ -233,21 +296,29 @@ const SettingsPage = () => {
     const newValue = !privacySettings[key];
     dispatch(updatePrivacyPreference({ key, value: newValue }));
     dispatch(updatePrivacy({ [key]: newValue }));
-    toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} visibility ${newValue ? 'enabled' : 'disabled'}`);
+    toast.success(
+      `${key.charAt(0).toUpperCase() + key.slice(1)} visibility ${
+        newValue ? "enabled" : "disabled"
+      }`
+    );
   };
 
   // Handle test notification
   const handleTestNotification = async (type, channel) => {
     try {
-      const result = await dispatch(testNotificationPreferences({ type, channel })).unwrap();
-      
+      const result = await dispatch(
+        testNotificationPreferences({ type, channel })
+      ).unwrap();
+
       if (result.success) {
         toast.success(`Test ${channel} notification sent successfully!`);
       } else {
-        toast.error(`Failed to send test ${channel} notification: ${result.message}`);
+        toast.error(
+          `Failed to send test ${channel} notification: ${result.message}`
+        );
       }
     } catch (error) {
-      console.error('Error sending test notification:', error);
+      console.error("Error sending test notification:", error);
       toast.error(`Failed to send test ${channel} notification`);
     }
   };
@@ -255,59 +326,43 @@ const SettingsPage = () => {
   // Profile picture handlers
   const handleProfilePictureUpload = async (file) => {
     try {
-      console.log('🚀 Starting profile picture upload...');
-      console.log('📁 File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
-      });
-      
       // Validate file
       if (!file) {
-        console.error('❌ No file selected');
-        toast.error('No file selected');
+        console.error("❌ No file selected");
+        toast.error("No file selected");
         return;
       }
-      
-      if (!file.type.startsWith('image/')) {
-        console.error('❌ Invalid file type:', file.type);
-        toast.error('Please select an image file');
+
+      if (!file.type.startsWith("image/")) {
+        console.error("❌ Invalid file type:", file.type);
+        toast.error("Please select an image file");
         return;
       }
-      
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        console.error('❌ File too large:', file.size);
-        toast.error('File size must be less than 50MB');
+
+      if (file.size > 50 * 1024 * 1024) {
+        // 50MB limit
+        console.error("❌ File too large:", file.size);
+        toast.error("File size must be less than 50MB");
         return;
       }
-      
-      console.log('✅ File validation passed, dispatching upload...');
-      
       const result = await dispatch(uploadProfilePicture(file));
-      console.log('📤 Upload result:', result);
-      
       if (uploadProfilePicture.fulfilled.match(result)) {
-        console.log('✅ Upload successful!');
-        console.log('📸 Upload result data:', result.payload);
-        console.log('📸 Profile picture path:', result.payload?.profilePicture);
-        
         // Update user data in Redux instead of reloading
         dispatch({
-          type: 'auth/updateProfilePicture',
-          payload: result.payload.profilePicture
+          type: "auth/updateProfilePicture",
+          payload: result.payload.profilePicture,
         });
-        
-        toast.success('Profile picture updated successfully');
+
+        toast.success("Profile picture updated successfully");
         setShowProfilePictureModal(false);
       } else {
-        console.error('❌ Upload failed:', result.payload);
-        console.error('❌ Upload error details:', result.error);
-        toast.error(result.payload || 'Failed to upload profile picture');
+        console.error("❌ Upload failed:", result.payload);
+        console.error("❌ Upload error details:", result.error);
+        toast.error(result.payload || "Failed to upload profile picture");
       }
     } catch (error) {
-      console.error('💥 Upload error:', error);
-      toast.error('Failed to upload profile picture');
+      console.error("💥 Upload error:", error);
+      toast.error("Failed to upload profile picture");
     }
   };
 
@@ -317,78 +372,78 @@ const SettingsPage = () => {
       if (removeProfilePicture.fulfilled.match(result)) {
         // Update user data in Redux instead of reloading
         dispatch(updateProfilePicture(null));
-        toast.success('Profile picture removed successfully');
+        toast.success("Profile picture removed successfully");
         setShowProfilePictureModal(false);
       } else {
-        toast.error(result.payload || 'Failed to remove profile picture');
+        toast.error(result.payload || "Failed to remove profile picture");
       }
     } catch (error) {
-      toast.error('Failed to remove profile picture');
+      toast.error("Failed to remove profile picture");
     }
   };
 
   // Handle logout
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login');
-    toast.success('Logged out successfully');
+    navigate("/login");
+    toast.success("Logged out successfully");
   };
 
   // Toggle password visibility
   const togglePasswordVisibility = (field) => {
-    setShowPasswords(prev => ({
+    setShowPasswords((prev) => ({
       ...prev,
-      [field]: !prev[field]
+      [field]: !prev[field],
     }));
   };
 
   // Settings sections
   const settingsSections = [
     {
-      id: 'profile',
-      title: 'Profile',
+      id: "profile",
+      title: "Profile",
       icon: User,
-      description: 'Manage your personal information'
+      description: "Manage your personal information",
     },
     {
-      id: 'notifications',
-      title: 'Notifications',
+      id: "notifications",
+      title: "Notifications",
       icon: Bell,
-      description: 'Control your notification preferences'
+      description: "Control your notification preferences",
     },
     {
-      id: 'privacy',
-      title: 'Privacy',
+      id: "privacy",
+      title: "Privacy",
       icon: Shield,
-      description: 'Manage your privacy settings'
+      description: "Manage your privacy settings",
     },
     {
-      id: 'security',
-      title: 'Security',
+      id: "security",
+      title: "Security",
       icon: Lock,
-      description: 'Password and security settings'
+      description: "Password and security settings",
     },
     {
-      id: 'preferences',
-      title: 'Preferences',
+      id: "preferences",
+      title: "Preferences",
       icon: SettingsIcon,
-      description: 'Theme, currency, and app preferences'
+      description: "Theme, currency, and app preferences",
     },
     {
-      id: 'notification-preferences',
-      title: 'Notification Preferences',
+      id: "notification-preferences",
+      title: "Notification Preferences",
       icon: Bell,
-      description: 'Control how you receive notifications'
+      description: "Control how you receive notifications",
     },
     {
-      id: 'support',
-      title: 'Support & Legal',
+      id: "support",
+      title: "Support & Legal",
       icon: HelpCircle,
-      description: 'Contact, help, and legal information'
-    }
+      description: "Contact, help, and legal information",
+    },
   ];
 
-  const [activeSection, setActiveSection] = useState('profile');
+  const [activeSection, setActiveSection] = useState("profile");
 
   const renderProfileSection = () => (
     <div className="space-y-6">
@@ -400,12 +455,15 @@ const SettingsPage = () => {
             alt="Profile"
             className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
             onError={(e) => {
-              console.error('❌ Image load error:', e);
-              console.error('❌ Image src:', e.target.src);
-              console.error('❌ User profile picture:', user?.profilePicture);
+              console.error("❌ Image load error:", e);
+              console.error("❌ Image src:", e.target.src);
+              console.error("❌ User profile picture:", user?.profilePicture);
             }}
             onLoad={() => {
-              console.log('✅ Image loaded successfully:', getProfilePictureUrl(user?.profilePicture));
+              console.log(
+                "✅ Image loaded successfully:",
+                getProfilePictureUrl(user?.profilePicture)
+              );
             }}
           />
           <button
@@ -417,7 +475,7 @@ const SettingsPage = () => {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {user?.role === 'logistics' ? user?.companyName : user?.name}
+            {user?.role === "logistics" ? user?.companyName : user?.name}
           </h3>
           <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
           <button
@@ -433,15 +491,19 @@ const SettingsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {user?.role === 'logistics' ? 'Company Name' : 'Full Name'}
+            {user?.role === "logistics" ? "Company Name" : "Full Name"}
           </label>
           <input
             type="text"
             value={profileData.name}
-            onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+            onChange={(e) =>
+              setProfileData({ ...profileData, name: e.target.value })
+            }
             disabled={!isEditingProfile}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
-              profileErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              profileErrors.name
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             }`}
           />
           {profileErrors.name && (
@@ -457,10 +519,14 @@ const SettingsPage = () => {
             <input
               type="email"
               value={profileData.email}
-              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              onChange={(e) =>
+                setProfileData({ ...profileData, email: e.target.value })
+              }
               disabled={!isEditingProfile}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
-                profileErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                profileErrors.email
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
               }`}
             />
             {profileErrors.email && (
@@ -477,7 +543,9 @@ const SettingsPage = () => {
             <input
               type="tel"
               value={profileData.phone}
-              onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+              onChange={(e) =>
+                setProfileData({ ...profileData, phone: e.target.value })
+              }
               disabled={!isEditingProfile}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
             />
@@ -493,12 +561,13 @@ const SettingsPage = () => {
               <input
                 type="text"
                 value={profileData.country}
-                onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
+                onChange={(e) =>
+                  setProfileData({ ...profileData, country: e.target.value })
+                }
                 disabled={!isEditingProfile}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               />
             </div>
-
           </>
         )}
       </div>
@@ -511,11 +580,17 @@ const SettingsPage = () => {
               onClick={() => {
                 setIsEditingProfile(false);
                 setProfileData({
-                  name: user?.role === 'logistics' ? (user?.companyName || '') : (user?.name || ''),
-                  email: user?.email || '',
-                  phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
-                  companyName: user?.companyName || '',
-                  country: user?.country || '',
+                  name:
+                    user?.role === "logistics"
+                      ? user?.companyName || ""
+                      : user?.name || "",
+                  email: user?.email || "",
+                  phone:
+                    user?.role === "logistics"
+                      ? user?.contactPhone || ""
+                      : user?.phoneNumber || "",
+                  companyName: user?.companyName || "",
+                  country: user?.country || "",
                 });
                 setProfileErrors({});
               }}
@@ -553,32 +628,35 @@ const SettingsPage = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(notificationSettings).map(([key, value]) => (
-          <div key={key} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div
+            key={key}
+            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
             <div className="flex items-center space-x-3">
               <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               <div>
                 <h3 className="font-medium text-gray-900 dark:text-white capitalize">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                  {key.replace(/([A-Z])/g, " $1").trim()}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {key === 'email' && 'Receive email notifications'}
-                  {key === 'push' && 'Receive push notifications'}
-                  {key === 'sms' && 'Receive SMS notifications'}
-                  {key === 'marketing' && 'Receive marketing emails'}
-                  {key === 'security' && 'Receive security alerts'}
-                  {key === 'updates' && 'Receive app updates'}
+                  {key === "email" && "Receive email notifications"}
+                  {key === "push" && "Receive push notifications"}
+                  {key === "sms" && "Receive SMS notifications"}
+                  {key === "marketing" && "Receive marketing emails"}
+                  {key === "security" && "Receive security alerts"}
+                  {key === "updates" && "Receive app updates"}
                 </p>
               </div>
             </div>
             <button
               onClick={() => handleNotificationToggle(key)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                value ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                value ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  value ? 'translate-x-6' : 'translate-x-1'
+                  value ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
@@ -592,30 +670,34 @@ const SettingsPage = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(privacySettings).map(([key, value]) => (
-          <div key={key} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div
+            key={key}
+            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
             <div className="flex items-center space-x-3">
               <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               <div>
                 <h3 className="font-medium text-gray-900 dark:text-white capitalize">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                  {key.replace(/([A-Z])/g, " $1").trim()}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {key === 'profileVisibility' && 'Make your profile visible to others'}
-                  {key === 'showEmail' && 'Show email address on profile'}
-                  {key === 'showPhone' && 'Show phone number on profile'}
-                  {key === 'showLocation' && 'Show location on profile'}
+                  {key === "profileVisibility" &&
+                    "Make your profile visible to others"}
+                  {key === "showEmail" && "Show email address on profile"}
+                  {key === "showPhone" && "Show phone number on profile"}
+                  {key === "showLocation" && "Show location on profile"}
                 </p>
               </div>
             </div>
             <button
               onClick={() => handlePrivacyToggle(key)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                value ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                value ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  value ? 'translate-x-6' : 'translate-x-1'
+                  value ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
@@ -631,7 +713,9 @@ const SettingsPage = () => {
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Password</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Password
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Change your password to keep your account secure
             </p>
@@ -640,7 +724,7 @@ const SettingsPage = () => {
             onClick={() => setShowPasswordForm(!showPasswordForm)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            {showPasswordForm ? 'Cancel' : 'Change Password'}
+            {showPasswordForm ? "Cancel" : "Change Password"}
           </button>
         </div>
 
@@ -652,16 +736,23 @@ const SettingsPage = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showPasswords.current ? 'text' : 'password'}
+                  type={showPasswords.current ? "text" : "password"}
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value,
+                    })
+                  }
                   className={`w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    passwordErrors.currentPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    passwordErrors.currentPassword
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                 />
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('current')}
+                  onClick={() => togglePasswordVisibility("current")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPasswords.current ? (
@@ -672,7 +763,9 @@ const SettingsPage = () => {
                 </button>
               </div>
               {passwordErrors.currentPassword && (
-                <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {passwordErrors.currentPassword}
+                </p>
               )}
             </div>
 
@@ -682,16 +775,23 @@ const SettingsPage = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showPasswords.new ? 'text' : 'password'}
+                  type={showPasswords.new ? "text" : "password"}
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      newPassword: e.target.value,
+                    })
+                  }
                   className={`w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    passwordErrors.newPassword
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                 />
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('new')}
+                  onClick={() => togglePasswordVisibility("new")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPasswords.new ? (
@@ -702,7 +802,9 @@ const SettingsPage = () => {
                 </button>
               </div>
               {passwordErrors.newPassword && (
-                <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {passwordErrors.newPassword}
+                </p>
               )}
             </div>
 
@@ -712,16 +814,23 @@ const SettingsPage = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showPasswords.confirm ? 'text' : 'password'}
+                  type={showPasswords.confirm ? "text" : "password"}
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
                   className={`w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    passwordErrors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
                   }`}
                 />
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('confirm')}
+                  onClick={() => togglePasswordVisibility("confirm")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPasswords.confirm ? (
@@ -732,7 +841,9 @@ const SettingsPage = () => {
                 </button>
               </div>
               {passwordErrors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{passwordErrors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {passwordErrors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -740,7 +851,11 @@ const SettingsPage = () => {
               <button
                 onClick={() => {
                   setShowPasswordForm(false);
-                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  setPasswordData({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
                   setPasswordErrors({});
                 }}
                 className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -768,7 +883,9 @@ const SettingsPage = () => {
       <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">Sign Out</h3>
+            <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">
+              Sign Out
+            </h3>
             <p className="text-sm text-red-700 dark:text-red-400">
               Sign out of your account on this device
             </p>
@@ -793,7 +910,9 @@ const SettingsPage = () => {
           <div className="flex items-center space-x-3">
             <Palette className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Theme</h3>
+              <h3 className="font-medium text-gray-900 dark:text-white">
+                Theme
+              </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Choose your preferred theme
               </p>
@@ -804,83 +923,96 @@ const SettingsPage = () => {
       </div>
 
       {/* Currency - Only for Logistics Companies */}
-      {user?.role === 'logistics' && (
+      {user?.role === "logistics" && (
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Currency</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Select your preferred currency for displaying prices
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Current: {currency}
-            </div>
-            {updateLoading && (
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-            )}
-          </div>
-        </div>
-        
-        {/* Current Currency Display */}
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="text-2xl">{currencies.find(c => c.code === currency)?.flag || '💱'}</div>
+              <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               <div>
-                <div className="font-medium text-blue-900 dark:text-blue-300">
-                  {currencies.find(c => c.code === currency)?.name || 'Unknown Currency'}
-                </div>
-                <div className="text-sm text-blue-700 dark:text-blue-400">
-                  {currency} - {currencies.find(c => c.code === currency)?.symbol || '$'}
-                </div>
+                <h3 className="font-medium text-gray-900 dark:text-white">
+                  Currency
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Select your preferred currency for displaying prices
+                </p>
               </div>
             </div>
-            <div className="text-sm text-blue-600 dark:text-blue-400">
-              Example: {formatCurrency(100)}
+            <div className="flex items-center space-x-2">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Current: {currency}
+              </div>
+              {updateLoading && (
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              )}
             </div>
           </div>
-        </div>
-        
-        {/* Currency Selection Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {currencies.map((curr) => (
-            <button
-              key={curr.code}
-              onClick={() => handleCurrencyChange(curr.code)}
-              disabled={updateLoading}
-              className={`p-3 rounded-lg border transition-all duration-200 ${
-                currency === curr.code
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 ring-2 ring-blue-200 dark:ring-blue-800'
-                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-              } ${updateLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              <div className="text-center">
-                <div className="text-lg mb-1">{curr.flag}</div>
-                <div className="text-sm font-medium">{curr.code}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{curr.symbol}</div>
-                {currency === curr.code && (
-                  <div className="mt-1">
-                    <CheckCircle className="w-4 h-4 text-blue-600 mx-auto" />
+
+          {/* Current Currency Display */}
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">
+                  {currencies.find((c) => c.code === currency)?.flag || "💱"}
+                </div>
+                <div>
+                  <div className="font-medium text-blue-900 dark:text-blue-300">
+                    {currencies.find((c) => c.code === currency)?.name ||
+                      "Unknown Currency"}
                   </div>
-                )}
+                  <div className="text-sm text-blue-700 dark:text-blue-400">
+                    {currency} -{" "}
+                    {currencies.find((c) => c.code === currency)?.symbol || "$"}
+                  </div>
+                </div>
               </div>
-            </button>
-          ))}
-        </div>
-        
-        {/* Currency Info */}
-        <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-          <div className="text-xs text-gray-600 dark:text-gray-400">
-            <strong>Note:</strong> Currency changes will apply to all price displays throughout the app. 
-            Exchange rates are updated regularly and are for reference purposes only.
+              <div className="text-sm text-blue-600 dark:text-blue-400">
+                Example: {formatCurrency(100)}
+              </div>
+            </div>
+          </div>
+
+          {/* Currency Selection Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {currencies.map((curr) => (
+              <button
+                key={curr.code}
+                onClick={() => handleCurrencyChange(curr.code)}
+                disabled={updateLoading}
+                className={`p-3 rounded-lg border transition-all duration-200 ${
+                  currency === curr.code
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 ring-2 ring-blue-200 dark:ring-blue-800"
+                    : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                } ${
+                  updateLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-lg mb-1">{curr.flag}</div>
+                  <div className="text-sm font-medium">{curr.code}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {curr.symbol}
+                  </div>
+                  {currency === curr.code && (
+                    <div className="mt-1">
+                      <CheckCircle className="w-4 h-4 text-blue-600 mx-auto" />
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Currency Info */}
+          <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              <strong>Note:</strong> Currency changes will apply to all price
+              displays throughout the app. Exchange rates are updated regularly
+              and are for reference purposes only.
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );
@@ -908,24 +1040,30 @@ const SettingsPage = () => {
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
           </label>
         </div>
-        
+
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Shipment Updates</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Shipment Updates
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
             </label>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Bid Notifications</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Bid Notifications
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
             </label>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">System Alerts</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              System Alerts
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -955,21 +1093,25 @@ const SettingsPage = () => {
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
           </label>
         </div>
-        
+
         <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Phone number: {user?.phoneNumber || 'Not provided'}
+          Phone number: {user?.phoneNumber || "Not provided"}
         </div>
-        
+
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Urgent Notifications</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Urgent Notifications
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
             </label>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Payment Alerts</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Payment Alerts
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -999,10 +1141,12 @@ const SettingsPage = () => {
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
           </label>
         </div>
-        
+
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">All Notifications</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              All Notifications
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -1032,7 +1176,7 @@ const SettingsPage = () => {
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
           </label>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1065,24 +1209,24 @@ const SettingsPage = () => {
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Send test notifications to verify your preferences are working
         </p>
-        
+
         <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={() => handleTestNotification('bid_received', 'email')}
+          <button
+            onClick={() => handleTestNotification("bid_received", "email")}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!notificationSettings.email}
           >
             Test Email
           </button>
-          <button 
-            onClick={() => handleTestNotification('bid_accepted', 'sms')}
+          <button
+            onClick={() => handleTestNotification("bid_accepted", "sms")}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!notificationSettings.sms || !user?.phoneNumber}
           >
             Test SMS
           </button>
-          <button 
-            onClick={() => handleTestNotification('shipment_delivered', 'push')}
+          <button
+            onClick={() => handleTestNotification("shipment_delivered", "push")}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!notificationSettings.push}
           >
@@ -1091,7 +1235,8 @@ const SettingsPage = () => {
         </div>
         {!user?.phoneNumber && notificationSettings.sms && (
           <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-            ⚠️ SMS notifications require a phone number. Please add one in your profile.
+            ⚠️ SMS notifications require a phone number. Please add one in your
+            profile.
           </p>
         )}
       </div>
@@ -1117,7 +1262,7 @@ const SettingsPage = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate('/contact')}
+            onClick={() => navigate("/contact")}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <span>Contact Us</span>
@@ -1143,7 +1288,7 @@ const SettingsPage = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate('/help')}
+            onClick={() => navigate("/help")}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <span>Visit Help Center</span>
@@ -1174,7 +1319,7 @@ const SettingsPage = () => {
               </div>
             </div>
             <button
-              onClick={() => navigate('/terms')}
+              onClick={() => navigate("/terms")}
               className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
             >
               <span>View</span>
@@ -1198,7 +1343,7 @@ const SettingsPage = () => {
               </div>
             </div>
             <button
-              onClick={() => navigate('/privacy')}
+              onClick={() => navigate("/privacy")}
               className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
             >
               <span>View</span>
@@ -1212,42 +1357,33 @@ const SettingsPage = () => {
 
   const renderSection = () => {
     switch (activeSection) {
-      case 'profile':
+      case "profile":
         return renderProfileSection();
-      case 'notifications':
+      case "notifications":
         return renderNotificationsSection();
-      case 'privacy':
+      case "privacy":
         return renderPrivacySection();
-      case 'security':
+      case "security":
         return renderSecuritySection();
-      case 'preferences':
+      case "preferences":
         return renderPreferencesSection();
-      case 'notification-preferences':
+      case "notification-preferences":
         return renderNotificationPreferencesSection();
-      case 'support':
+      case "support":
         return renderSupportSection();
       default:
         return renderProfileSection();
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading settings...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            Settings
+          </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Manage your account settings and preferences
           </p>
@@ -1266,8 +1402,8 @@ const SettingsPage = () => {
                       onClick={() => setActiveSection(section.id)}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                         activeSection === section.id
-                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
                       <Icon className="w-5 h-5" />

@@ -1,12 +1,12 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../services/api';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import api from "../../services/api";
 
 // Async thunks for settings management
 export const updateSettings = createAsyncThunk(
-  'settings/updateSettings',
+  "settings/updateSettings",
   async (settingsData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/settings', settingsData);
+      const response = await api.put("/settings/settings", settingsData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -15,10 +15,13 @@ export const updateSettings = createAsyncThunk(
 );
 
 export const updateNotifications = createAsyncThunk(
-  'settings/updateNotifications',
+  "settings/updateNotifications",
   async (notificationData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/notifications', notificationData);
+      const response = await api.put(
+        "/settings/notifications",
+        notificationData
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -27,10 +30,10 @@ export const updateNotifications = createAsyncThunk(
 );
 
 export const updatePrivacy = createAsyncThunk(
-  'settings/updatePrivacy',
+  "settings/updatePrivacy",
   async (privacyData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/privacy', privacyData);
+      const response = await api.put("/settings/privacy", privacyData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -39,10 +42,10 @@ export const updatePrivacy = createAsyncThunk(
 );
 
 export const getSettings = createAsyncThunk(
-  'settings/getSettings',
+  "settings/getSettings",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/settings');
+      const response = await api.get("/settings");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -51,45 +54,38 @@ export const getSettings = createAsyncThunk(
 );
 
 export const uploadProfilePicture = createAsyncThunk(
-  'settings/uploadProfilePicture',
+  "settings/uploadProfilePicture",
   async (file, { rejectWithValue }) => {
     try {
-      console.log('🔄 Redux: Starting upload process...');
-      console.log('🔄 Redux: File object:', file);
-      
       const formData = new FormData();
-      formData.append('profilePicture', file);
-      
-      console.log('🔄 Redux: FormData created, checking entries...');
+      formData.append("profilePicture", file);
       for (let [key, value] of formData.entries()) {
-        console.log(`🔄 Redux: FormData entry - ${key}:`, value);
       }
-      
-      console.log('🔄 Redux: Sending request to /settings/upload-profile-picture...');
-      
-      const response = await api.post('/settings/upload-profile-picture', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      console.log('✅ Redux: Upload response received:', response.data);
+      const response = await api.post(
+        "/profile/upload-profile-picture",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error('❌ Redux: Upload error:', error);
-      console.error('❌ Redux: Error response:', error.response?.data);
-      console.error('❌ Redux: Error status:', error.response?.status);
-      console.error('❌ Redux: Error headers:', error.response?.headers);
+      console.error("❌ Redux: Upload error:", error);
+      console.error("❌ Redux: Error response:", error.response?.data);
+      console.error("❌ Redux: Error status:", error.response?.status);
+      console.error("❌ Redux: Error headers:", error.response?.headers);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
 
 export const removeProfilePicture = createAsyncThunk(
-  'settings/removeProfilePicture',
+  "settings/removeProfilePicture",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.delete('/settings/profile-picture');
+      const response = await api.delete("/auth/profile-picture");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -98,10 +94,10 @@ export const removeProfilePicture = createAsyncThunk(
 );
 
 export const changePassword = createAsyncThunk(
-  'settings/changePassword',
+  "settings/changePassword",
   async (passwordData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/change-password', passwordData);
+      const response = await api.put("/profile/change-password", passwordData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -110,10 +106,10 @@ export const changePassword = createAsyncThunk(
 );
 
 export const updateProfile = createAsyncThunk(
-  'settings/updateProfile',
+  "settings/updateProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/settings/profile', profileData);
+      const response = await api.put("/profile/profile", profileData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -123,10 +119,12 @@ export const updateProfile = createAsyncThunk(
 
 // Push notification management
 export const subscribeToPush = createAsyncThunk(
-  'settings/subscribeToPush',
+  "settings/subscribeToPush",
   async (subscription, { rejectWithValue }) => {
     try {
-      const response = await api.post('/settings/push/subscribe', { subscription });
+      const response = await api.post("/settings/push/subscribe", {
+        subscription,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -135,10 +133,12 @@ export const subscribeToPush = createAsyncThunk(
 );
 
 export const unsubscribeFromPush = createAsyncThunk(
-  'settings/unsubscribeFromPush',
+  "settings/unsubscribeFromPush",
   async (endpoint, { rejectWithValue }) => {
     try {
-      const response = await api.post('/settings/push/unsubscribe', { endpoint });
+      const response = await api.post("/settings/push/unsubscribe", {
+        endpoint,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -147,10 +147,10 @@ export const unsubscribeFromPush = createAsyncThunk(
 );
 
 export const getPushPublicKey = createAsyncThunk(
-  'settings/getPushPublicKey',
+  "settings/getPushPublicKey",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/settings/push/public-key');
+      const response = await api.get("/settings/push/public-key");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -158,12 +158,14 @@ export const getPushPublicKey = createAsyncThunk(
   }
 );
 
-// Test notification preferences
 export const testNotificationPreferences = createAsyncThunk(
-  'settings/testNotificationPreferences',
+  "settings/testNotificationPreferences",
   async ({ type, channel }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/settings/test-notification', { type, channel });
+      const response = await api.post("/settings/test-notification", {
+        type,
+        channel,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -172,12 +174,12 @@ export const testNotificationPreferences = createAsyncThunk(
 );
 
 const settingsSlice = createSlice({
-  name: 'settings',
+  name: "settings",
   initialState: {
     settings: {
-      currency: 'USD',
-      language: 'en',
-      timezone: 'UTC'
+      currency: "USD",
+      language: "en",
+      timezone: "UTC",
     },
     notifications: {
       email: true,
@@ -185,17 +187,17 @@ const settingsSlice = createSlice({
       sms: false,
       marketing: false,
       security: true,
-      updates: true
+      updates: true,
     },
     privacy: {
-      profileVisibility: 'public',
+      profileVisibility: "public",
       showEmail: true,
       showPhone: false,
-      showLocation: true
+      showLocation: true,
     },
     loading: false,
     error: null,
-    updateLoading: false
+    updateLoading: false,
   },
   reducers: {
     clearSettingsError: (state) => {
@@ -204,46 +206,52 @@ const settingsSlice = createSlice({
     // Theme is now handled by ThemeProvider - removed setTheme reducer
     setCurrency: (state, action) => {
       state.settings.currency = action.payload;
-      localStorage.setItem('currency', action.payload);
+      localStorage.setItem("currency", action.payload);
     },
     updateNotificationPreference: (state, action) => {
       const { key, value } = action.payload;
       state.notifications[key] = value;
       // Persist to localStorage
-      localStorage.setItem('notificationSettings', JSON.stringify(state.notifications));
+      localStorage.setItem(
+        "notificationSettings",
+        JSON.stringify(state.notifications)
+      );
     },
     updatePrivacyPreference: (state, action) => {
       const { key, value } = action.payload;
       state.privacy[key] = value;
       // Persist to localStorage
-      localStorage.setItem('privacySettings', JSON.stringify(state.privacy));
+      localStorage.setItem("privacySettings", JSON.stringify(state.privacy));
     },
     initializeSettings: (state) => {
       // Initialize from localStorage (theme is now handled by ThemeProvider)
-      const savedCurrency = localStorage.getItem('currency');
-      const savedNotifications = localStorage.getItem('notificationSettings');
-      const savedPrivacy = localStorage.getItem('privacySettings');
-      
+      const savedCurrency = localStorage.getItem("currency");
+      const savedNotifications = localStorage.getItem("notificationSettings");
+      const savedPrivacy = localStorage.getItem("privacySettings");
+
       if (savedCurrency) {
         state.settings.currency = savedCurrency;
       }
-      
+
       if (savedNotifications) {
         try {
-          state.notifications = { ...state.notifications, ...JSON.parse(savedNotifications) };
+          state.notifications = {
+            ...state.notifications,
+            ...JSON.parse(savedNotifications),
+          };
         } catch (error) {
-          console.error('Error parsing notification settings:', error);
+          console.error("Error parsing notification settings:", error);
         }
       }
-      
+
       if (savedPrivacy) {
         try {
           state.privacy = { ...state.privacy, ...JSON.parse(savedPrivacy) };
         } catch (error) {
-          console.error('Error parsing privacy settings:', error);
+          console.error("Error parsing privacy settings:", error);
         }
       }
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -261,7 +269,7 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Update Notifications
       .addCase(updateNotifications.pending, (state) => {
         state.updateLoading = true;
@@ -269,14 +277,17 @@ const settingsSlice = createSlice({
       })
       .addCase(updateNotifications.fulfilled, (state, action) => {
         state.updateLoading = false;
-        state.notifications = { ...state.notifications, ...action.payload.notifications };
+        state.notifications = {
+          ...state.notifications,
+          ...action.payload.notifications,
+        };
         state.error = null;
       })
       .addCase(updateNotifications.rejected, (state, action) => {
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Update Privacy
       .addCase(updatePrivacy.pending, (state) => {
         state.updateLoading = true;
@@ -291,7 +302,7 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Get Settings
       .addCase(getSettings.pending, (state) => {
         state.loading = true;
@@ -300,7 +311,10 @@ const settingsSlice = createSlice({
       .addCase(getSettings.fulfilled, (state, action) => {
         state.loading = false;
         state.settings = { ...state.settings, ...action.payload.settings };
-        state.notifications = { ...state.notifications, ...action.payload.notifications };
+        state.notifications = {
+          ...state.notifications,
+          ...action.payload.notifications,
+        };
         state.privacy = { ...state.privacy, ...action.payload.privacy };
         state.error = null;
       })
@@ -308,7 +322,7 @@ const settingsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       // Upload Profile Picture
       .addCase(uploadProfilePicture.pending, (state) => {
         state.updateLoading = true;
@@ -324,7 +338,7 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Remove Profile Picture
       .addCase(removeProfilePicture.pending, (state) => {
         state.updateLoading = true;
@@ -340,7 +354,7 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Change Password
       .addCase(changePassword.pending, (state) => {
         state.updateLoading = true;
@@ -354,7 +368,7 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Update Profile
       .addCase(updateProfile.pending, (state) => {
         state.updateLoading = true;
@@ -368,7 +382,7 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       });
-  }
+  },
 });
 
 export const {
@@ -376,6 +390,6 @@ export const {
   setCurrency,
   updateNotificationPreference,
   updatePrivacyPreference,
-  initializeSettings
+  initializeSettings,
 } = settingsSlice.actions;
 export default settingsSlice.reducer;

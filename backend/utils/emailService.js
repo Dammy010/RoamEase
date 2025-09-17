@@ -1,31 +1,36 @@
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 // Email analytics and logging
 const emailAnalytics = {
   sent: 0,
   failed: 0,
   lastSent: null,
-  errors: []
+  errors: [],
 };
 
 // Log email activity
 const logEmailActivity = (type, email, success, error = null) => {
   const timestamp = new Date().toISOString();
-  
+
   if (success) {
     emailAnalytics.sent++;
     emailAnalytics.lastSent = timestamp;
-    console.log(`✅ Email ${type} sent successfully to ${email} at ${timestamp}`);
+    console.log(
+      `✅ Email ${type} sent successfully to ${email} at ${timestamp}`
+    );
   } else {
     emailAnalytics.failed++;
     emailAnalytics.errors.push({
       timestamp,
       type,
       email,
-      error: error?.message || error
+      error: error?.message || error,
     });
-    console.error(`❌ Email ${type} failed to ${email} at ${timestamp}:`, error?.message || error);
+    console.error(
+      `❌ Email ${type} failed to ${email} at ${timestamp}:`,
+      error?.message || error
+    );
   }
 };
 
@@ -33,16 +38,21 @@ const logEmailActivity = (type, email, success, error = null) => {
 const getEmailAnalytics = () => {
   return {
     ...emailAnalytics,
-    successRate: emailAnalytics.sent + emailAnalytics.failed > 0 
-      ? ((emailAnalytics.sent / (emailAnalytics.sent + emailAnalytics.failed)) * 100).toFixed(2) + '%'
-      : '0%'
+    successRate:
+      emailAnalytics.sent + emailAnalytics.failed > 0
+        ? (
+            (emailAnalytics.sent /
+              (emailAnalytics.sent + emailAnalytics.failed)) *
+            100
+          ).toFixed(2) + "%"
+        : "0%",
   };
 };
 
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: process.env.SMTP_PORT || 587,
     secure: false, // true for 465, false for other ports
     auth: {
@@ -54,7 +64,7 @@ const createTransporter = () => {
 
 // Generate a secure random token
 const generateVerificationToken = () => {
-  return crypto.randomBytes(32).toString('hex');
+  return crypto.randomBytes(32).toString("hex");
 };
 
 // Generate a 6-digit verification code
@@ -64,19 +74,21 @@ const generateVerificationCode = () => {
 
 // Generate password reset token
 const generateResetToken = () => {
-  return crypto.randomBytes(32).toString('hex');
+  return crypto.randomBytes(32).toString("hex");
 };
 
 // Send verification email
-const sendVerificationEmail = async (email, code, name = 'User') => {
+const sendVerificationEmail = async (email, code, name = "User") => {
   try {
     const transporter = createTransporter();
-    
+
     // Create verification URL
-    const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email`;
-    const appName = process.env.APP_NAME || 'RoamEase';
+    const verificationUrl = `${
+      process.env.CLIENT_URL || "http://localhost:5173"
+    }/verify-email`;
+    const appName = process.env.APP_NAME || "RoamEase";
     const currentYear = new Date().getFullYear();
-    
+
     // Enhanced email template
     const mailOptions = {
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -201,27 +213,29 @@ const sendVerificationEmail = async (email, code, name = 'User') => {
         The ${appName} Team
         
         © ${currentYear} ${appName}. All rights reserved.
-      `
+      `,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    logEmailActivity('verification', email, true);
+    logEmailActivity("verification", email, true);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logEmailActivity('verification', email, false, error);
+    logEmailActivity("verification", email, false, error);
     return { success: false, error: error.message };
   }
 };
 
 // Send resend verification email
-const sendResendVerificationEmail = async (email, code, name = 'User') => {
+const sendResendVerificationEmail = async (email, code, name = "User") => {
   try {
     const transporter = createTransporter();
-    
-    const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email`;
-    const appName = process.env.APP_NAME || 'RoamEase';
+
+    const verificationUrl = `${
+      process.env.CLIENT_URL || "http://localhost:5173"
+    }/verify-email`;
+    const appName = process.env.APP_NAME || "RoamEase";
     const currentYear = new Date().getFullYear();
-    
+
     const mailOptions = {
       from: `"${appName}" <${process.env.SMTP_USER}>`,
       to: email,
@@ -344,24 +358,24 @@ const sendResendVerificationEmail = async (email, code, name = 'User') => {
         The ${appName} Team
         
         © ${currentYear} ${appName}. All rights reserved.
-      `
+      `,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    logEmailActivity('resend-verification', email, true);
+    logEmailActivity("resend-verification", email, true);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logEmailActivity('resend-verification', email, false, error);
+    logEmailActivity("resend-verification", email, false, error);
     return { success: false, error: error.message };
   }
 };
 
 // Send password reset email
-const sendPasswordResetEmail = async (email, code, name = 'User') => {
+const sendPasswordResetEmail = async (email, code, name = "User") => {
   try {
     const transporter = createTransporter();
-    const appName = process.env.APP_NAME || 'RoamEase';
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const appName = process.env.APP_NAME || "RoamEase";
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     const resetUrl = `${clientUrl}/reset-password`;
     const currentYear = new Date().getFullYear();
 
@@ -463,14 +477,14 @@ const sendPasswordResetEmail = async (email, code, name = 'User') => {
         The ${appName} Team
         
         © ${currentYear} ${appName}. All rights reserved.
-      `
+      `,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    logEmailActivity('password-reset', email, true);
+    logEmailActivity("password-reset", email, true);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logEmailActivity('password-reset', email, false, error);
+    logEmailActivity("password-reset", email, false, error);
     return { success: false, error: error.message };
   }
 };
@@ -479,9 +493,9 @@ const sendPasswordResetEmail = async (email, code, name = 'User') => {
 const sendNormalUserSignupEmail = async (email, name) => {
   try {
     const transporter = createTransporter();
-    const appName = 'RoamEase';
+    const appName = "RoamEase";
     const currentYear = new Date().getFullYear();
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
     const info = await transporter.sendMail({
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -555,13 +569,13 @@ const sendNormalUserSignupEmail = async (email, name) => {
         - Track your shipment in real-time
         
         © ${currentYear} ${appName}. All rights reserved.
-      `
+      `,
     });
 
-    logEmailActivity('normal-user-signup', email, true);
+    logEmailActivity("normal-user-signup", email, true);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logEmailActivity('normal-user-signup', email, false, error);
+    logEmailActivity("normal-user-signup", email, false, error);
     return { success: false, error: error.message };
   }
 };
@@ -570,9 +584,9 @@ const sendNormalUserSignupEmail = async (email, name) => {
 const sendLogisticsUserSignupEmail = async (email, companyName) => {
   try {
     const transporter = createTransporter();
-    const appName = 'RoamEase';
+    const appName = "RoamEase";
     const currentYear = new Date().getFullYear();
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
     const info = await transporter.sendMail({
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -648,13 +662,13 @@ const sendLogisticsUserSignupEmail = async (email, companyName) => {
         View subscription plans: ${frontendUrl}/logistics/subscriptions
         
         © ${currentYear} ${appName}. All rights reserved.
-      `
+      `,
     });
 
-    logEmailActivity('logistics-user-signup', email, true);
+    logEmailActivity("logistics-user-signup", email, true);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logEmailActivity('logistics-user-signup', email, false, error);
+    logEmailActivity("logistics-user-signup", email, false, error);
     return { success: false, error: error.message };
   }
 };
@@ -663,9 +677,9 @@ const sendLogisticsUserSignupEmail = async (email, companyName) => {
 const sendLogisticsVerificationEmail = async (email, companyName) => {
   try {
     const transporter = createTransporter();
-    const appName = 'RoamEase';
+    const appName = "RoamEase";
     const currentYear = new Date().getFullYear();
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
     const info = await transporter.sendMail({
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -759,30 +773,48 @@ const sendLogisticsVerificationEmail = async (email, companyName) => {
         - Ask for reviews after successful deliveries
         
         © ${currentYear} ${appName}. All rights reserved.
-      `
+      `,
     });
 
-    logEmailActivity('logistics-verification', email, true);
+    logEmailActivity("logistics-verification", email, true);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logEmailActivity('logistics-verification', email, false, error);
+    logEmailActivity("logistics-verification", email, false, error);
     return { success: false, error: error.message };
   }
 };
 
 // Send notification email
 const sendNotificationEmail = async (email, name, notification) => {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('Email configuration not found. Notification email data:', {
+  console.log("📧 Attempting to send notification email:", {
+    to: email,
+    title: notification.title,
+    type: notification.type,
+    timestamp: new Date().toISOString(),
+  });
+
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
+    console.log("❌ Email configuration not found. SMTP settings:", {
+      SMTP_HOST: process.env.SMTP_HOST ? "✅ Set" : "❌ Missing",
+      SMTP_USER: process.env.SMTP_USER ? "✅ Set" : "❌ Missing",
+      SMTP_PASS: process.env.SMTP_PASS ? "✅ Set" : "❌ Missing",
+    });
+    console.log("📧 Notification email data (NOT SENT):", {
       to: email,
       title: notification.title,
       message: notification.message,
       type: notification.type,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
     return {
-      success: true,
-      message: 'Email configuration not set up. Notification details logged to console.'
+      success: false,
+      error: "Email configuration not set up. Please configure SMTP settings.",
+      message:
+        "Email configuration not set up. Notification details logged to console.",
     };
   }
 
@@ -832,28 +864,29 @@ const sendNotificationEmail = async (email, name, notification) => {
             </div>
             
             <div class="content">
-              <div class="notification-card priority-${notification.priority || 'medium'}">
+              <div class="notification-card priority-${
+                notification.priority || "medium"
+              }">
                 <h2>${notification.title}</h2>
                 <p>${notification.message}</p>
                 
-                ${notification.metadata && Object.keys(notification.metadata).length > 0 ? `
-                  <div class="metadata">
-                    <h4>Details:</h4>
-                    <ul>
-                      ${Object.entries(notification.metadata).map(([key, value]) => 
-                        `<li><strong>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> ${value}</li>`
-                      ).join('')}
-                    </ul>
-                  </div>
-                ` : ''}
                 
-                ${notification.actions && notification.actions.length > 0 ? `
+                ${
+                  notification.actions && notification.actions.length > 0
+                    ? `
                   <div style="text-align: center; margin: 20px 0;">
-                    ${notification.actions.map(action => 
-                      `<a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}${action.url}" class="btn">${action.label}</a>`
-                    ).join('')}
+                    ${notification.actions
+                      .map(
+                        (action) =>
+                          `<a href="${
+                            process.env.FRONTEND_URL || "http://localhost:3000"
+                          }${action.url}" class="btn">${action.label}</a>`
+                      )
+                      .join("")}
                   </div>
-                ` : ''}
+                `
+                    : ""
+                }
               </div>
               
               <div class="footer">
@@ -874,38 +907,54 @@ const sendNotificationEmail = async (email, name, notification) => {
         
         ${notification.message}
         
-        ${notification.metadata && Object.keys(notification.metadata).length > 0 ? `
-        Details:
-        ${Object.entries(notification.metadata).map(([key, value]) => `${key}: ${value}`).join('\n')}
-        ` : ''}
         
-        ${notification.actions && notification.actions.length > 0 ? `
+        ${
+          notification.actions && notification.actions.length > 0
+            ? `
         Actions:
-        ${notification.actions.map(action => `${action.label}: ${process.env.FRONTEND_URL || 'http://localhost:3000'}${action.url}`).join('\n')}
-        ` : ''}
+        ${notification.actions
+          .map(
+            (action) =>
+              `${action.label}: ${
+                process.env.FRONTEND_URL || "http://localhost:3000"
+              }${action.url}`
+          )
+          .join("\n")}
+        `
+            : ""
+        }
         
         ---
         This notification was sent from RoamEase
         You can manage your notification preferences in your account settings.
-      `
+      `,
     });
 
-    console.log('✅ Notification email sent successfully:', {
+    console.log("✅ Notification email sent successfully:", {
       to: email,
       messageId: info.messageId,
       type: notification.type,
-      title: notification.title
+      title: notification.title,
+      timestamp: new Date().toISOString(),
     });
 
     return {
       success: true,
-      messageId: info.messageId
+      messageId: info.messageId,
+      message: "Email sent successfully",
     };
   } catch (error) {
-    console.error('❌ Error sending notification email:', error);
+    console.error("❌ Error sending notification email:", {
+      to: email,
+      type: notification.type,
+      title: notification.title,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
     return {
       success: false,
-      error: error.message
+      error: error.message,
+      message: "Failed to send email notification",
     };
   }
 };

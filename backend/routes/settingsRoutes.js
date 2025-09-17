@@ -18,6 +18,12 @@ router.use(protect);
 // Get user settings
 router.get('/', getUserSettings);
 
+// Update general settings (catch-all for general settings updates)
+router.put('/settings', updateGeneralPreferences);
+
+// Update profile settings
+router.put('/profile', updateGeneralPreferences);
+
 // Update notification preferences
 router.put('/notifications', updateNotificationPreferences);
 

@@ -13,17 +13,29 @@ const UsersList = () => {
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-      <h2 className="text-xl font-bold mb-6 text-gray-800">👥 Registered Users</h2>
+      <h2 className="text-xl font-bold mb-6 text-gray-800">
+        👥 Registered Users
+      </h2>
       {loading && <p>Loading...</p>}
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-lg overflow-hidden">
-          <thead className="bg-gradient-to-r from-gray-100 to-gray-200 shadow-sm">
+          <thead className="bg-blue-100 shadow-sm">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">#</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                #
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>

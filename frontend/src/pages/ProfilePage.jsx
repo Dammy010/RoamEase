@@ -1,122 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { useTheme } from '../contexts/ThemeContext';
-import { getProfilePictureUrl } from '../utils/imageUtils';
-import FullScreenImageViewer from '../components/shared/FullScreenImageViewer';
-import { ProfilePictureModal } from '../components/forms/ProfileForm';
-import { 
-  User, Mail, Phone, MapPin, Building, Calendar, 
-  Edit3, Save, Camera, Upload, CheckCircle, 
-  Award, Star, Package, Truck, Clock, Globe,
-  Shield, Settings, Bell, CreditCard, LogOut,
-  Eye, EyeOff, AlertTriangle, Trash2, RefreshCw
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { 
-  updateProfile, 
-  changePassword, 
-  deleteAccount, 
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { useTheme } from "../contexts/ThemeContext";
+import { getProfilePictureUrl } from "../utils/imageUtils";
+import FullScreenImageViewer from "../components/shared/FullScreenImageViewer";
+import { ProfilePictureModal } from "../components/forms/ProfileForm";
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Building,
+  Calendar,
+  Camera,
+  Upload,
+  CheckCircle,
+  Award,
+  Star,
+  Package,
+  Truck,
+  Clock,
+  Globe,
+  Shield,
+  Settings,
+  Bell,
+  CreditCard,
+  LogOut,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  changePassword,
+  deleteAccount,
   getProfileStats,
   clearProfileError,
-  uploadProfilePicture
-} from '../redux/slices/profileSlice';
-import { fetchProfile } from '../redux/slices/authSlice';
-import { useSelector as useSettingsSelector } from 'react-redux';
-import { getSocket } from '../services/socket';
+  uploadProfilePicture,
+} from "../redux/slices/profileSlice";
+import { fetchProfile } from "../redux/slices/authSlice";
+import { useSelector as useSettingsSelector } from "react-redux";
+import { getSocket } from "../services/socket";
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
   const authState = useSelector((state) => state.auth);
   const { user } = authState;
-  
-  const { 
-    profileData: profileState, 
-    stats, 
-    loading, 
+
+  const {
+    stats,
+    loading,
     statsLoading,
-    error, 
-    updateLoading, 
-    passwordLoading, 
-    uploadLoading, 
-    deleteLoading 
+    error,
+    passwordLoading,
+    uploadLoading,
+    deleteLoading,
   } = useSelector((state) => state.profile);
-  
+
   // Get privacy settings
-  const { privacy: privacySettings } = useSettingsSelector((state) => state.settings);
-  
-  const [isEditing, setIsEditing] = useState(false);
+  const { privacy: privacySettings } = useSettingsSelector(
+    (state) => state.settings
+  );
+
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
   const [showFullScreenImage, setShowFullScreenImage] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: user?.role === 'logistics' ? (user?.companyName || '') : (user?.name || ''),
-    email: user?.email || '',
-    phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
-    companyName: user?.companyName || '',
-    country: user?.country || '',
-    website: user?.website || '',
-    yearsInOperation: user?.yearsInOperation || '',
-    companySize: user?.companySize || '',
-    registrationNumber: user?.registrationNumber || ''
-  });
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
-    confirm: false
+    confirm: false,
   });
 
-  // Load profile data and stats on mount
+  // Load profile stats on mount
   useEffect(() => {
     if (user) {
-      setProfileData({
-        name: user?.role === 'logistics' ? (user?.companyName || '') : (user?.name || ''),
-        email: user?.email || '',
-        phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
-        companyName: user?.companyName || '',
-        country: user?.country || '',
-        website: user?.website || '',
-        yearsInOperation: user?.yearsInOperation || '',
-        companySize: user?.companySize || '',
-        registrationNumber: user?.registrationNumber || ''
-      });
-      
-      // Fetch profile statistics
       dispatch(getProfileStats());
     }
   }, [user, dispatch]);
 
-  // Refresh stats when user changes
-  useEffect(() => {
-    if (user && !statsLoading) {
-      dispatch(getProfileStats());
-    }
-  }, [user?._id, dispatch]);
-
   // Listen for verification updates
   useEffect(() => {
-    if (user?.role === 'logistics') {
+    if (user?.role === "logistics") {
       const socket = getSocket();
-      
+
       const handleVerificationUpdate = (updatedUser) => {
-        console.log('🔔 Verification update received:', updatedUser);
         if (updatedUser._id === user._id) {
           // Refresh the user profile to get updated verification status
           dispatch(fetchProfile());
         }
       };
 
-      socket.on('verification-updated', handleVerificationUpdate);
-      
+      socket.on("verification-updated", handleVerificationUpdate);
+
       return () => {
-        socket.off('verification-updated', handleVerificationUpdate);
+        socket.off("verification-updated", handleVerificationUpdate);
       };
     }
   }, [user, dispatch]);
@@ -128,106 +114,63 @@ const ProfilePage = () => {
     };
   }, [dispatch]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [name === 'phoneNumber' ? 'phone' : name]: value
-    }));
-  };
-
-  const handleSave = async () => {
-    try {
-      // Map phone to phoneNumber for backend
-      const profileDataToSend = {
-        ...profileData,
-        phoneNumber: profileData.phone
-      };
-      delete profileDataToSend.phone; // Remove the phone field
-      
-      // For logistics users, map name to companyName and phone to contactPhone
-      if (user?.role === 'logistics') {
-        profileDataToSend.companyName = profileData.name;
-        profileDataToSend.contactPhone = profileData.phone;
-        delete profileDataToSend.name; // Remove the name field for logistics
-        delete profileDataToSend.phoneNumber; // Remove phoneNumber for logistics
-      }
-      
-      const result = await dispatch(updateProfile(profileDataToSend));
-      if (updateProfile.fulfilled.match(result)) {
-        toast.success('Profile updated successfully');
-        setIsEditing(false);
-        // Refresh user profile to sync with updated data
-        dispatch(fetchProfile());
-      } else if (updateProfile.rejected.match(result)) {
-        toast.error(result.payload || 'Failed to update profile');
-      }
-    } catch (error) {
-      toast.error('An error occurred while updating profile');
-    }
-  };
-
-  const handleCancel = () => {
-    setProfileData({
-      name: user?.role === 'logistics' ? (user?.companyName || '') : (user?.name || ''),
-      email: user?.email || '',
-      phone: user?.role === 'logistics' ? (user?.contactPhone || '') : (user?.phoneNumber || ''),
-      companyName: user?.companyName || '',
-      country: user?.country || '',
-      website: user?.website || '',
-      yearsInOperation: user?.yearsInOperation || '',
-      companySize: user?.companySize || '',
-      registrationNumber: user?.registrationNumber || ''
-    });
-    setIsEditing(false);
-  };
-
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match');
+      toast.error("New passwords do not match");
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
     try {
-      const result = await dispatch(changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
-      }));
-      
+      const result = await dispatch(
+        changePassword({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        })
+      );
+
       if (changePassword.fulfilled.match(result)) {
-        toast.success('Password changed successfully');
+        toast.success("Password changed successfully");
         setShowPasswordForm(false);
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
       } else if (changePassword.rejected.match(result)) {
-        toast.error(result.payload || 'Failed to change password');
+        toast.error(result.payload || "Failed to change password");
       }
     } catch (error) {
-      toast.error('An error occurred while changing password');
+      toast.error("An error occurred while changing password");
     }
   };
 
-
   const handleDeleteAccount = async () => {
     if (!passwordData.currentPassword) {
-      toast.error('Please enter your current password to delete account');
+      toast.error("Please enter your current password to delete account");
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      )
+    ) {
       try {
-        const result = await dispatch(deleteAccount(passwordData.currentPassword));
+        const result = await dispatch(
+          deleteAccount(passwordData.currentPassword)
+        );
         if (deleteAccount.fulfilled.match(result)) {
-          toast.success('Account deleted successfully');
+          toast.success("Account deleted successfully");
           // User will be redirected by the auth system
         } else if (deleteAccount.rejected.match(result)) {
-          toast.error(result.payload || 'Failed to delete account');
+          toast.error(result.payload || "Failed to delete account");
         }
       } catch (error) {
-        toast.error('An error occurred while deleting account');
+        toast.error("An error occurred while deleting account");
       }
     }
   };
@@ -236,51 +179,53 @@ const ProfilePage = () => {
     try {
       const result = await dispatch(uploadProfilePicture(file));
       if (uploadProfilePicture.fulfilled.match(result)) {
-        toast.success('Profile picture updated successfully');
+        toast.success("Profile picture updated successfully");
         // Refresh user profile to get updated picture
         dispatch(fetchProfile());
         setShowProfilePictureModal(false);
       } else if (uploadProfilePicture.rejected.match(result)) {
-        toast.error(result.payload || 'Failed to update profile picture');
+        toast.error(result.payload || "Failed to update profile picture");
       }
     } catch (error) {
-      toast.error('An error occurred while uploading profile picture');
+      toast.error("An error occurred while uploading profile picture");
     }
   };
 
   const getInitials = (name) => {
     return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
   const getRoleIcon = (role) => {
-    return role === 'logistics' ? Truck : Package;
+    return role === "logistics" ? Truck : Package;
   };
 
   const getRoleColor = (role) => {
-    return role === 'logistics' ? 'from-blue-500 to-indigo-600' : 'from-green-500 to-emerald-600';
+    return role === "logistics" ? "bg-blue-500" : "bg-blue-500";
   };
 
   const getVerificationStatus = () => {
-    if (user?.role === 'logistics') {
+    if (user?.role === "logistics") {
       // Check both verificationStatus and isVerified fields
-      const isVerified = user?.verificationStatus === 'verified' || user?.isVerified === true;
-      return isVerified ? 'Verified' : 'Pending Verification';
+      const isVerified =
+        user?.verificationStatus === "verified" || user?.isVerified === true;
+      return isVerified ? "Verified" : "Pending Verification";
     }
-    return 'Verified';
+    return "Verified";
   };
 
   const getVerificationColor = () => {
-    if (user?.role === 'logistics') {
+    if (user?.role === "logistics") {
       // Check both verificationStatus and isVerified fields
-      const isVerified = user?.verificationStatus === 'verified' || user?.isVerified === true;
-      return isVerified ? 'text-green-600' : 'text-yellow-600';
+      const isVerified =
+        user?.verificationStatus === "verified" || user?.isVerified === true;
+      return isVerified ? "text-green-600" : "text-yellow-600";
     }
-    return 'text-green-600';
+    return "text-green-600";
   };
 
   // Show loading state if no user and loading
@@ -301,7 +246,9 @@ const ProfilePage = () => {
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Profile</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Error Loading Profile
+          </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -320,8 +267,12 @@ const ProfilePage = () => {
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Please Login</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">You need to be logged in to view your profile.</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Please Login
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            You need to be logged in to view your profile.
+          </p>
           <Link
             to="/login"
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -339,8 +290,12 @@ const ProfilePage = () => {
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Profile Data Incomplete</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">Please refresh the page or log in again.</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Profile Data Incomplete
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Please refresh the page or log in again.
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -359,7 +314,9 @@ const ProfilePage = () => {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Profile
+              </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">
                 Manage your profile information and account settings
               </p>
@@ -367,18 +324,11 @@ const ProfilePage = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/settings"
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                Settings
-              </Link>
-              <button
-                onClick={() => setIsEditing(!isEditing)}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
               >
-                <Edit3 className="w-4 h-4" />
-                {isEditing ? 'Cancel' : 'Edit Profile'}
-              </button>
+                <Settings className="w-4 h-4" />
+                Edit Profile in Settings
+              </Link>
             </div>
           </div>
         </div>
@@ -397,17 +347,24 @@ const ProfilePage = () => {
                       className="w-28 h-28 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700"
                       onClick={() => setShowFullScreenImage(true)}
                       onError={(e) => {
-                        console.error('Profile picture failed to load:', e.target.src);
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
+                        console.error(
+                          "Profile picture failed to load:",
+                          e.target.src
+                        );
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
                       }}
                     />
                   ) : null}
-                  <div 
-                    className={`w-28 h-28 bg-gradient-to-r ${getRoleColor(user?.role)} rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700 ${user?.profilePicture ? 'hidden' : ''}`}
+                  <div
+                    className={`w-28 h-28 ${getRoleColor(
+                      user?.role
+                    )} rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700 ${
+                      user?.profilePicture ? "hidden" : ""
+                    }`}
                     onClick={() => setShowFullScreenImage(true)}
                   >
-                    {getInitials(user?.name || user?.companyName || 'User')}
+                    {getInitials(user?.name || user?.companyName || "User")}
                   </div>
                   {uploadLoading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
@@ -419,17 +376,23 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-4">
-                  {user?.role === 'logistics' ? (user?.companyName || 'Company Name') : (user?.name || 'User Name')}
+                  {user?.role === "logistics"
+                    ? user?.companyName || "Company Name"
+                    : user?.name || "User Name"}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  {user?.role === 'logistics' ? 'Logistics Provider' : 'Shipper'}
+                  {user?.role === "logistics"
+                    ? "Logistics Provider"
+                    : "Shipper"}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-3">
-                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getVerificationColor()}`}>
+                  <div
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getVerificationColor()}`}
+                  >
                     <CheckCircle className="w-4 h-4" />
                     {getVerificationStatus()}
                   </div>
-                  {user?.role === 'logistics' && (
+                  {user?.role === "logistics" && (
                     <button
                       onClick={() => dispatch(fetchProfile())}
                       className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -442,33 +405,45 @@ const ProfilePage = () => {
               </div>
 
               {/* Quick Stats */}
-              {user?.role === 'logistics' && (
+              {user?.role === "logistics" && (
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Rating</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Rating
+                    </span>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
                       {statsLoading ? (
                         <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-8 rounded"></div>
                       ) : (
-                        <span className="font-semibold text-gray-900 dark:text-white">{stats.rating}</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {stats.rating}
+                        </span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Success Rate</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Success Rate
+                    </span>
                     {statsLoading ? (
                       <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-12 rounded"></div>
                     ) : (
-                      <span className="font-semibold text-gray-900 dark:text-white">{stats.successRate}%</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {stats.successRate}%
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Response Time</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Response Time
+                    </span>
                     {statsLoading ? (
                       <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-16 rounded"></div>
                     ) : (
-                      <span className="font-semibold text-gray-900 dark:text-white">{stats.responseTime}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {stats.responseTime}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -513,30 +488,28 @@ const ProfilePage = () => {
             {/* Personal Information */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Update your personal details and contact information</p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Personal Information
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Update your personal details and contact information
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {user?.role === 'logistics' ? 'Company Name' : 'Full Name'}
+                    {user?.role === "logistics" ? "Company Name" : "Full Name"}
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      name="name"
-                      value={profileData.name}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    />
+                  <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                    {user?.role === "logistics"
+                      ? user?.companyName || "N/A"
+                      : user?.name || "N/A"}
                   </div>
                 </div>
 
@@ -545,16 +518,8 @@ const ProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Email Address
                     </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="email"
-                        name="email"
-                        value={profileData.email}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      />
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.email || "N/A"}
                     </div>
                   </div>
                 )}
@@ -562,18 +527,14 @@ const ProfilePage = () => {
                 {privacySettings?.showPhone !== false && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {user?.role === 'logistics' ? 'Contact Phone' : 'Phone Number'}
+                      {user?.role === "logistics"
+                        ? "Contact Phone"
+                        : "Phone Number"}
                     </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="tel"
-                        name="phoneNumber"
-                        value={profileData.phone}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      />
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.role === "logistics"
+                        ? user?.contactPhone || "N/A"
+                        : user?.phoneNumber || "N/A"}
                     </div>
                   </div>
                 )}
@@ -584,32 +545,25 @@ const ProfilePage = () => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Country
                       </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          name="country"
-                          value={profileData.country}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        />
+                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                        {user?.country || "N/A"}
                       </div>
                     </div>
-
                   </>
                 )}
               </div>
             </div>
 
             {/* Company Information (for logistics) */}
-            {user?.role === 'logistics' && (
+            {user?.role === "logistics" && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                     <Building className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Company Information</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Company Information
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -617,16 +571,8 @@ const ProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Company Name
                     </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        name="companyName"
-                        value={profileData.companyName}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      />
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.companyName || "N/A"}
                     </div>
                   </div>
 
@@ -634,65 +580,46 @@ const ProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Registration Number
                     </label>
-                    <input
-                      type="text"
-                      name="registrationNumber"
-                      value={profileData.registrationNumber}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    />
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.registrationNumber || "N/A"}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Years in Operation
                     </label>
-                    <input
-                      type="number"
-                      name="yearsInOperation"
-                      value={profileData.yearsInOperation}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    />
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.yearsInOperation || "N/A"}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Company Size
                     </label>
-                    <select
-                      name="companySize"
-                      value={profileData.companySize}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Select size</option>
-                      <option value="1-10">1-10 employees</option>
-                      <option value="11-50">11-50 employees</option>
-                      <option value="51-200">51-200 employees</option>
-                      <option value="201-500">201-500 employees</option>
-                      <option value="500+">500+ employees</option>
-                    </select>
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.companySize || "N/A"}
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Website
                     </label>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="url"
-                        name="website"
-                        value={profileData.website}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        placeholder="https://example.com"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      />
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                      {user?.website ? (
+                        <a
+                          href={user.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {user.website}
+                        </a>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                   </div>
                 </div>
@@ -703,12 +630,16 @@ const ProfilePage = () => {
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                     <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Statistics</h3>
-                    <p className="text-gray-600 dark:text-gray-400">Your performance metrics and achievements</p>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      Statistics
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Your performance metrics and achievements
+                    </p>
                   </div>
                 </div>
                 <button
@@ -717,14 +648,18 @@ const ProfilePage = () => {
                   className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
                   title="Refresh statistics"
                 >
-                  <RefreshCw className={`w-5 h-5 ${statsLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`w-5 h-5 ${statsLoading ? "animate-spin" : ""}`}
+                  />
                 </button>
               </div>
 
               {error ? (
                 <div className="text-center py-8">
                   <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">Failed to load statistics</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Failed to load statistics
+                  </p>
                   <button
                     onClick={() => dispatch(getProfileStats())}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -732,13 +667,23 @@ const ProfilePage = () => {
                     Retry
                   </button>
                 </div>
-              ) : statsLoading && !stats.totalShipments && !stats.completedShipments ? (
+              ) : statsLoading &&
+                !stats.totalShipments &&
+                !stats.completedShipments ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600 dark:text-gray-400">Loading statistics...</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Loading statistics...
+                  </p>
                 </div>
               ) : (
-                <div className={`grid gap-6 ${user?.role === 'logistics' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'}`}>
+                <div
+                  className={`grid gap-6 ${
+                    user?.role === "logistics"
+                      ? "grid-cols-2 md:grid-cols-4"
+                      : "grid-cols-2"
+                  }`}
+                >
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                     {statsLoading ? (
                       <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
@@ -748,10 +693,12 @@ const ProfilePage = () => {
                       </div>
                     )}
                     <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      {user?.role === 'logistics' ? 'Total Bids' : 'Total Shipments'}
+                      {user?.role === "logistics"
+                        ? "Total Bids"
+                        : "Total Shipments"}
                     </div>
                   </div>
-                  
+
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                     {statsLoading ? (
                       <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
@@ -761,12 +708,14 @@ const ProfilePage = () => {
                       </div>
                     )}
                     <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      {user?.role === 'logistics' ? 'Accepted Bids' : 'Completed'}
+                      {user?.role === "logistics"
+                        ? "Accepted Bids"
+                        : "Completed"}
                     </div>
                   </div>
-                  
+
                   {/* Only show Rating and Success Rate for logistics users */}
-                  {user?.role === 'logistics' && (
+                  {user?.role === "logistics" && (
                     <>
                       <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                         {statsLoading ? (
@@ -779,9 +728,11 @@ const ProfilePage = () => {
                             </span>
                           </div>
                         )}
-                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Rating</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          Rating
+                        </div>
                       </div>
-                      
+
                       <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                         {statsLoading ? (
                           <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
@@ -790,7 +741,9 @@ const ProfilePage = () => {
                             {stats.successRate || 0}%
                           </div>
                         )}
-                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Success Rate</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          Success Rate
+                        </div>
                       </div>
                     </>
                   )}
@@ -798,40 +751,12 @@ const ProfilePage = () => {
               )}
             </div>
 
-            {/* Action Buttons */}
-            {isEditing && (
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={handleCancel}
-                  disabled={updateLoading}
-                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={updateLoading}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {updateLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Save Changes
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-
             {/* Password Change Form */}
             {showPasswordForm && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mt-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Change Password</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Change Password
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -839,16 +764,30 @@ const ProfilePage = () => {
                     </label>
                     <div className="relative">
                       <input
-                        type={showPasswords.current ? 'text' : 'password'}
+                        type={showPasswords.current ? "text" : "password"}
                         value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                        className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        onChange={(e) =>
+                          setPasswordData((prev) => ({
+                            ...prev,
+                            currentPassword: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       />
                       <button
-                        onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                        onClick={() =>
+                          setShowPasswords((prev) => ({
+                            ...prev,
+                            current: !prev.current,
+                          }))
+                        }
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {showPasswords.current ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -859,16 +798,30 @@ const ProfilePage = () => {
                     </label>
                     <div className="relative">
                       <input
-                        type={showPasswords.new ? 'text' : 'password'}
+                        type={showPasswords.new ? "text" : "password"}
                         value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                        className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        onChange={(e) =>
+                          setPasswordData((prev) => ({
+                            ...prev,
+                            newPassword: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       />
                       <button
-                        onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                        onClick={() =>
+                          setShowPasswords((prev) => ({
+                            ...prev,
+                            new: !prev.new,
+                          }))
+                        }
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {showPasswords.new ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -879,16 +832,30 @@ const ProfilePage = () => {
                     </label>
                     <div className="relative">
                       <input
-                        type={showPasswords.confirm ? 'text' : 'password'}
+                        type={showPasswords.confirm ? "text" : "password"}
                         value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        onChange={(e) =>
+                          setPasswordData((prev) => ({
+                            ...prev,
+                            confirmPassword: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       />
                       <button
-                        onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                        onClick={() =>
+                          setShowPasswords((prev) => ({
+                            ...prev,
+                            confirm: !prev.confirm,
+                          }))
+                        }
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {showPasswords.confirm ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -912,7 +879,7 @@ const ProfilePage = () => {
                           Updating...
                         </>
                       ) : (
-                        'Update Password'
+                        "Update Password"
                       )}
                     </button>
                   </div>
@@ -924,13 +891,17 @@ const ProfilePage = () => {
             <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800 p-6 mt-6">
               <div className="flex items-center gap-3 mb-4">
                 <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-                <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">Danger Zone</h3>
+                <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
+                  Danger Zone
+                </h3>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium text-red-900 dark:text-red-100">Delete Account</h4>
+                    <h4 className="font-medium text-red-900 dark:text-red-100">
+                      Delete Account
+                    </h4>
                     <p className="text-sm text-red-700 dark:text-red-300">
                       Permanently delete your account and all associated data
                     </p>
@@ -961,8 +932,8 @@ const ProfilePage = () => {
 
       {/* Profile Picture Modal */}
       {showProfilePictureModal && (
-        <ProfilePictureModal 
-          imageUrl={getProfilePictureUrl(user?.profilePicture)} 
+        <ProfilePictureModal
+          imageUrl={getProfilePictureUrl(user?.profilePicture)}
           onClose={() => setShowProfilePictureModal(false)}
           onUpload={handleProfilePictureUpload}
           uploadLoading={uploadLoading}
@@ -971,7 +942,7 @@ const ProfilePage = () => {
 
       {/* Full Screen Image Viewer */}
       {showFullScreenImage && (
-        <FullScreenImageViewer 
+        <FullScreenImageViewer
           isOpen={showFullScreenImage}
           onClose={() => setShowFullScreenImage(false)}
           imageUrl={getProfilePictureUrl(user?.profilePicture)}
@@ -987,19 +958,22 @@ const ProfilePageFallback = () => (
   <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
     <div className="text-center">
       <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Profile Page</h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-4">Loading your profile...</p>
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        Profile Page
+      </h2>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">
+        Loading your profile...
+      </p>
     </div>
   </div>
 );
-
 
 // Wrap the main component with error boundary
 const ProfilePageWithErrorBoundary = () => {
   try {
     return <ProfilePage />;
   } catch (error) {
-    console.error('ProfilePage Error:', error);
+    console.error("ProfilePage Error:", error);
     return <ProfilePageFallback />;
   }
 };

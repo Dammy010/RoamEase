@@ -139,7 +139,6 @@ export const ProfilePictureModal = ({ imageUrl, onClose, onUpload, uploadLoading
   );
 };
 
-
 const ProfileForm = ({ user }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
@@ -290,10 +289,7 @@ const ProfileForm = ({ user }) => {
       if (formData.newPassword) {
         data.append('password', formData.newPassword);
       }
-
-      console.log('Frontend: Dispatching updateProfile with FormData entries:');
       for (let pair of data.entries()) {
-          console.log(pair[0]+ ': ' + pair[1]); 
       }
 
       const resultAction = await dispatch(updateProfile(data));

@@ -1,10 +1,23 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useTheme } from '../../contexts/ThemeContext';
-import { fetchProfile } from '../../redux/slices/authSlice';
-import ProfileForm from '../../components/forms/ProfileForm';
-import { Truck, Shield, Settings, Edit3, Building, Globe, Award, Mail, Phone, Globe as WebsiteIcon, Calendar, Users, FileText } from "lucide-react";
-import { getLogisticsDisplayName } from '../../utils/logisticsUtils';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useTheme } from "../../contexts/ThemeContext";
+import { fetchProfile } from "../../redux/slices/authSlice";
+import {
+  Truck,
+  Shield,
+  Settings,
+  Edit3,
+  Building,
+  Globe,
+  Award,
+  Mail,
+  Phone,
+  Globe as WebsiteIcon,
+  Calendar,
+  Users,
+  FileText,
+} from "lucide-react";
+import { getLogisticsDisplayName } from "../../utils/logisticsUtils";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -19,7 +32,9 @@ const Profile = () => {
 
   if (loading && !user) {
     return (
-      <div className="p-6 min-h-screen flex items-center justify-center">        <div className="text-center">
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        {" "}
+        <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading profile...</p>
         </div>
@@ -61,23 +76,31 @@ const Profile = () => {
               )}
               {/* Debug info */}
               <div className="text-xs text-gray-400 mt-1">
-                Debug: companyName={user.companyName}, contactName={user.contactName}
+                Debug: companyName={user.companyName}, contactName=
+                {user.contactName}
               </div>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-green-500" />
                   <span className="text-sm text-green-600 font-medium">
-                    {user.verificationStatus === 'verified' ? 'Verified Partner' : 
-                     user.verificationStatus === 'pending' ? 'Pending Verification' : 'Unverified'}
+                    {user.verificationStatus === "verified"
+                      ? "Verified Partner"
+                      : user.verificationStatus === "pending"
+                      ? "Pending Verification"
+                      : "Unverified"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-blue-600">{user.country || 'N/A'}</span>
+                  <span className="text-sm text-blue-600">
+                    {user.country || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Award className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm text-yellow-600">{user.yearsInOperation || 'N/A'} years</span>
+                  <span className="text-sm text-yellow-600">
+                    {user.yearsInOperation || "N/A"} years
+                  </span>
                 </div>
               </div>
             </div>
@@ -87,25 +110,25 @@ const Profile = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {user.companySize || 'N/A'}
+                {user.companySize || "N/A"}
               </div>
               <div className="text-sm text-blue-700">Company Size</div>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600">
-                {user.fleetSize || 'N/A'}
+                {user.fleetSize || "N/A"}
               </div>
               <div className="text-sm text-green-700">Fleet Size</div>
             </div>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {user.registrationNumber || 'N/A'}
+                {user.registrationNumber || "N/A"}
               </div>
               <div className="text-sm text-purple-700">Reg. Number</div>
             </div>
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {user.contactName || 'N/A'}
+                {user.contactName || "N/A"}
               </div>
               <div className="text-sm text-orange-700">Contact Person</div>
             </div>
@@ -122,24 +145,39 @@ const Profile = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Years in Operation:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200">{user.yearsInOperation || 'N/A'} years</span>
+                <span className="text-sm text-gray-600">
+                  Years in Operation:
+                </span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.yearsInOperation || "N/A"} years
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <Users className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Company Size:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200">{user.companySize || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.companySize || "N/A"}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Registration Number:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200">{user.registrationNumber || 'N/A'}</span>
+                <span className="text-sm text-gray-600">
+                  Registration Number:
+                </span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.registrationNumber || "N/A"}
+                </span>
               </div>
               {user.website && (
                 <div className="flex items-center gap-3">
                   <WebsiteIcon className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-600">Website:</span>
-                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
+                  <a
+                    href={user.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-600 hover:underline"
+                  >
                     {user.website}
                   </a>
                 </div>
@@ -156,23 +194,31 @@ const Profile = () => {
               <div className="flex items-center gap-3">
                 <Users className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Contact Person:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactName || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.contactName || "N/A"}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Contact Email:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactEmail || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.contactEmail || "N/A"}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Contact Phone:</span>
-                <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactPhone || 'N/A'}</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.contactPhone || "N/A"}
+                </span>
               </div>
               {user.contactPosition && (
                 <div className="flex items-center gap-3">
                   <Building className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-600">Position:</span>
-                  <span className="font-medium text-gray-800 dark:text-gray-200">{user.contactPosition}</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                    {user.contactPosition}
+                  </span>
                 </div>
               )}
             </div>
@@ -189,7 +235,10 @@ const Profile = () => {
             <div className="space-y-2">
               {user.services && user.services.length > 0 ? (
                 user.services.map((service, index) => (
-                  <div key={index} className="bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-sm">
+                  <div
+                    key={index}
+                    className="bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-sm"
+                  >
                     {service}
                   </div>
                 ))
@@ -207,7 +256,10 @@ const Profile = () => {
             <div className="space-y-2">
               {user.regions && user.regions.length > 0 ? (
                 user.regions.map((region, index) => (
-                  <div key={index} className="bg-green-50 text-green-700 px-3 py-2 rounded-lg text-sm">
+                  <div
+                    key={index}
+                    className="bg-green-50 text-green-700 px-3 py-2 rounded-lg text-sm"
+                  >
                     {region}
                   </div>
                 ))
@@ -218,14 +270,74 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Form */}
+        {/* Company Information - Read Only */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
-          <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
-            <Edit3 className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Edit Company Profile</h2>
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <Building className="w-6 h-6 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                Company Information
+              </h2>
+            </div>
+            <button
+              onClick={() => (window.location.href = "/settings")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Edit in Settings
+            </button>
           </div>
           <div className="p-6">
-            <ProfileForm user={user} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Company Name
+                </label>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                  {user.companyName || "N/A"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Contact Person
+                </label>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                  {user.contactName || "N/A"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address
+                </label>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                  {user.email || "N/A"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Contact Phone
+                </label>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                  {user.contactPhone || "N/A"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Country
+                </label>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                  {user.country || "N/A"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Registration Number
+                </label>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
+                  {user.registrationNumber || "N/A"}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -233,50 +345,64 @@ const Profile = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Verification Status</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+              Verification Status
+            </h2>
           </div>
-          
+
           <div className="space-y-4">
-            <div className={`p-4 rounded-lg border ${
-              user.verificationStatus === 'verified' 
-                ? 'bg-green-50 border-green-200' 
-                : user.verificationStatus === 'pending'
-                ? 'bg-yellow-50 border-yellow-200'
-                : 'bg-red-50 border-red-200'
-            }`}>
+            <div
+              className={`p-4 rounded-lg border ${
+                user.verificationStatus === "verified"
+                  ? "bg-green-50 border-green-200"
+                  : user.verificationStatus === "pending"
+                  ? "bg-yellow-50 border-yellow-200"
+                  : "bg-red-50 border-red-200"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-gray-800 dark:text-gray-200">Verification Status</h3>
-                  <p className={`text-sm ${
-                    user.verificationStatus === 'verified' 
-                      ? 'text-green-600' 
-                      : user.verificationStatus === 'pending'
-                      ? 'text-yellow-600'
-                      : 'text-red-600'
-                  }`}>
-                    {user.verificationStatus === 'verified' 
-                      ? 'Your company has been verified and approved' 
-                      : user.verificationStatus === 'pending'
-                      ? 'Your verification is currently under review'
-                      : 'Your verification has been rejected'}
+                  <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                    Verification Status
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      user.verificationStatus === "verified"
+                        ? "text-green-600"
+                        : user.verificationStatus === "pending"
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {user.verificationStatus === "verified"
+                      ? "Your company has been verified and approved"
+                      : user.verificationStatus === "pending"
+                      ? "Your verification is currently under review"
+                      : "Your verification has been rejected"}
                   </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  user.verificationStatus === 'verified' 
-                    ? 'bg-green-100 text-green-800' 
-                    : user.verificationStatus === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {user.verificationStatus || 'Unknown'}
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    user.verificationStatus === "verified"
+                      ? "bg-green-100 text-green-800"
+                      : user.verificationStatus === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {user.verificationStatus || "Unknown"}
                 </span>
               </div>
             </div>
 
             {user.verificationNotes && (
               <div className="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Verification Notes</h4>
-                <p className="text-sm text-gray-600">{user.verificationNotes}</p>
+                <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                  Verification Notes
+                </h4>
+                <p className="text-sm text-gray-600">
+                  {user.verificationNotes}
+                </p>
               </div>
             )}
           </div>
@@ -286,14 +412,23 @@ const Profile = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Account Security</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+              Account Security
+            </h2>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800 dark:text-gray-200">Password</h3>
-                <p className="text-sm text-gray-600">Last changed: {user.passwordChangedAt ? new Date(user.passwordChangedAt).toLocaleDateString() : 'Never'}</p>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                  Password
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Last changed:{" "}
+                  {user.passwordChangedAt
+                    ? new Date(user.passwordChangedAt).toLocaleDateString()
+                    : "Never"}
+                </p>
               </div>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 Change Password
@@ -302,8 +437,12 @@ const Profile = () => {
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-800 dark:text-gray-200">Two-Factor Authentication</h3>
-                <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                  Two-Factor Authentication
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Add an extra layer of security to your account
+                </p>
               </div>
               <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
                 Enable 2FA
@@ -316,14 +455,18 @@ const Profile = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-6">
             <Settings className="w-6 h-6 text-red-600" />
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Account Actions</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+              Account Actions
+            </h2>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
               <div>
                 <h3 className="font-medium text-red-800">Delete Account</h3>
-                <p className="text-sm text-red-600">Permanently remove your company account and all data</p>
+                <p className="text-sm text-red-600">
+                  Permanently remove your company account and all data
+                </p>
               </div>
               <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                 Delete Account
@@ -333,7 +476,9 @@ const Profile = () => {
             <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <div>
                 <h3 className="font-medium text-yellow-800">Export Data</h3>
-                <p className="text-sm text-yellow-600">Download a copy of your company data</p>
+                <p className="text-sm text-yellow-600">
+                  Download a copy of your company data
+                </p>
               </div>
               <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
                 Export Data

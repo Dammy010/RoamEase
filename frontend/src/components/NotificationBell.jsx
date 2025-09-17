@@ -23,11 +23,8 @@ const NotificationBell = () => {
       const setupSocket = () => {
         const socket = getSocket();
         if (socket) {
-          console.log('🔔 Setting up notification listener on socket:', socket.id);
-          
           // Handle new notifications
           socket.on('new-notification', (notification) => {
-            console.log('🔔 Received new notification:', notification);
             dispatch(addNotification(notification));
             
             // Show browser notification if permission granted
@@ -42,13 +39,11 @@ const NotificationBell = () => {
           
           // Handle socket connection events
           socket.on('connect', () => {
-            console.log('🔔 Socket connected for notifications');
             // Refresh unread count when reconnected
             dispatch(getUnreadCount());
           });
           
           socket.on('disconnect', (reason) => {
-            console.log('🔔 Socket disconnected for notifications:', reason);
           });
           
           socket.on('connect_error', (error) => {
@@ -57,14 +52,12 @@ const NotificationBell = () => {
           
           return socket;
         } else {
-          console.log('⚠️ No socket available for notifications');
           return null;
         }
       };
 
       const socket = setupSocket();
     } else {
-      console.log('🔔 No authentication token, skipping notification setup');
     }
 
     // Request notification permission

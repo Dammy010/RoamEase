@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { 
-  FileText, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
-  XCircle, 
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import {
+  FileText,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
   Filter,
   Search,
   Download,
@@ -18,73 +18,121 @@ import {
   BarChart3,
   TrendingUp,
   MessageSquare,
-  Tag
-} from 'lucide-react';
-import { 
-  getAllReports, 
-  updateReport, 
-  deleteReport, 
+  Tag,
+} from "lucide-react";
+import {
+  getAllReports,
+  updateReport,
+  deleteReport,
   getReportStats,
-  clearReportError 
-} from '../../redux/slices/reportSlice';
-import ReportDetail from '../../components/reports/ReportDetail';
+  clearReportError,
+} from "../../redux/slices/reportSlice";
+import ReportDetail from "../../components/reports/ReportDetail";
 
 const ReportManagement = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { 
-    allReports, 
-    allReportsLoading, 
-    allReportsError, 
+  const {
+    allReports,
+    allReportsLoading,
+    allReportsError,
     allReportsPagination,
     stats,
     statsLoading,
     updateLoading,
-    deleteLoading
+    deleteLoading,
   } = useSelector((state) => state.reports);
 
   const [filters, setFilters] = useState({
-    status: '',
-    category: '',
-    priority: '',
-    reporterRole: '',
-    assignedTo: '',
-    search: ''
+    status: "",
+    category: "",
+    priority: "",
+    reporterRole: "",
+    assignedTo: "",
+    search: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showStats, setShowStats] = useState(true);
 
   const categories = [
-    { value: 'technical_issue', label: 'Technical Issue', color: 'bg-red-100 text-red-800' },
-    { value: 'service_complaint', label: 'Service Complaint', color: 'bg-orange-100 text-orange-800' },
-    { value: 'payment_issue', label: 'Payment Issue', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'delivery_problem', label: 'Delivery Problem', color: 'bg-purple-100 text-purple-800' },
-    { value: 'communication_issue', label: 'Communication Issue', color: 'bg-blue-100 text-blue-800' },
-    { value: 'account_issue', label: 'Account Issue', color: 'bg-indigo-100 text-indigo-800' },
-    { value: 'feature_request', label: 'Feature Request', color: 'bg-green-100 text-green-800' },
-    { value: 'bug_report', label: 'Bug Report', color: 'bg-pink-100 text-pink-800' },
-    { value: 'other', label: 'Other', color: 'bg-gray-100 text-gray-800' }
+    {
+      value: "technical_issue",
+      label: "Technical Issue",
+      color: "bg-red-100 text-red-800",
+    },
+    {
+      value: "service_complaint",
+      label: "Service Complaint",
+      color: "bg-orange-100 text-orange-800",
+    },
+    {
+      value: "payment_issue",
+      label: "Payment Issue",
+      color: "bg-yellow-100 text-yellow-800",
+    },
+    {
+      value: "delivery_problem",
+      label: "Delivery Problem",
+      color: "bg-purple-100 text-purple-800",
+    },
+    {
+      value: "communication_issue",
+      label: "Communication Issue",
+      color: "bg-blue-100 text-blue-800",
+    },
+    {
+      value: "account_issue",
+      label: "Account Issue",
+      color: "bg-indigo-100 text-indigo-800",
+    },
+    {
+      value: "feature_request",
+      label: "Feature Request",
+      color: "bg-green-100 text-green-800",
+    },
+    {
+      value: "bug_report",
+      label: "Bug Report",
+      color: "bg-pink-100 text-pink-800",
+    },
+    { value: "other", label: "Other", color: "bg-gray-100 text-gray-800" },
   ];
 
   const statusConfig = {
-    open: { label: 'Open', color: 'text-blue-600 bg-blue-100', icon: Clock },
-    in_progress: { label: 'In Progress', color: 'text-yellow-600 bg-yellow-100', icon: AlertCircle },
-    resolved: { label: 'Resolved', color: 'text-green-600 bg-green-100', icon: CheckCircle },
-    closed: { label: 'Closed', color: 'text-gray-600 bg-gray-100', icon: XCircle },
-    rejected: { label: 'Rejected', color: 'text-red-600 bg-red-100', icon: XCircle }
+    open: { label: "Open", color: "text-blue-600 bg-blue-100", icon: Clock },
+    in_progress: {
+      label: "In Progress",
+      color: "text-yellow-600 bg-yellow-100",
+      icon: AlertCircle,
+    },
+    resolved: {
+      label: "Resolved",
+      color: "text-green-600 bg-green-100",
+      icon: CheckCircle,
+    },
+    closed: {
+      label: "Closed",
+      color: "text-gray-600 bg-gray-100",
+      icon: XCircle,
+    },
+    rejected: {
+      label: "Rejected",
+      color: "text-red-600 bg-red-100",
+      icon: XCircle,
+    },
   };
 
   const priorityConfig = {
-    low: { label: 'Low', color: 'text-green-600' },
-    medium: { label: 'Medium', color: 'text-yellow-600' },
-    high: { label: 'High', color: 'text-orange-600' },
-    urgent: { label: 'Urgent', color: 'text-red-600' }
+    low: { label: "Low", color: "text-green-600" },
+    medium: { label: "Medium", color: "text-yellow-600" },
+    high: { label: "High", color: "text-orange-600" },
+    urgent: { label: "Urgent", color: "text-red-600" },
   };
 
   useEffect(() => {
     // Only load admin data if user is admin
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       loadReports();
       loadStats();
     }
@@ -93,7 +141,7 @@ const ReportManagement = () => {
   useEffect(() => {
     if (allReportsError) {
       toast.error(allReportsError);
-      dispatch(clearReportError('allReports'));
+      dispatch(clearReportError("allReports"));
     }
   }, [allReportsError, dispatch]);
 
@@ -101,7 +149,7 @@ const ReportManagement = () => {
     const params = {
       page: currentPage,
       limit: 10,
-      ...filters
+      ...filters,
     };
     dispatch(getAllReports(params));
   };
@@ -111,9 +159,9 @@ const ReportManagement = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
     setCurrentPage(1);
   };
@@ -126,44 +174,57 @@ const ReportManagement = () => {
   const handleUpdateReport = async (reportId, updateData) => {
     try {
       await dispatch(updateReport({ reportId, updateData })).unwrap();
-      toast.success('Report updated successfully');
+      toast.success("Report updated successfully");
       loadReports();
     } catch (error) {
-      console.error('Error updating report:', error);
+      console.error("Error updating report:", error);
     }
   };
 
   const handleDeleteReport = async (reportId) => {
-    if (window.confirm('Are you sure you want to delete this report?')) {
+    if (window.confirm("Are you sure you want to delete this report?")) {
       try {
         await dispatch(deleteReport(reportId)).unwrap();
-        toast.success('Report deleted successfully');
+        toast.success("Report deleted successfully");
         loadReports();
       } catch (error) {
-        console.error('Error deleting report:', error);
+        console.error("Error deleting report:", error);
       }
     }
   };
 
   const getCategoryInfo = (category) => {
-    return categories.find(cat => cat.value === category) || { label: 'Unknown', color: 'bg-gray-100 text-gray-800' };
+    return (
+      categories.find((cat) => cat.value === category) || {
+        label: "Unknown",
+        color: "bg-gray-100 text-gray-800",
+      }
+    );
   };
 
   const getStatusInfo = (status) => {
-    return statusConfig[status] || { label: 'Unknown', color: 'text-gray-600 bg-gray-100', icon: Clock };
+    return (
+      statusConfig[status] || {
+        label: "Unknown",
+        color: "text-gray-600 bg-gray-100",
+        icon: Clock,
+      }
+    );
   };
 
   const getPriorityInfo = (priority) => {
-    return priorityConfig[priority] || { label: 'Medium', color: 'text-yellow-600' };
+    return (
+      priorityConfig[priority] || { label: "Medium", color: "text-yellow-600" }
+    );
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -175,9 +236,11 @@ const ReportManagement = () => {
   };
 
   // Check if user is admin
-  if (user?.role !== 'admin') {
+  if (user?.role !== "admin") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">        <div className="text-center max-w-md mx-auto px-6">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        {" "}
+        <div className="text-center max-w-md mx-auto px-6">
           <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
           </div>
@@ -185,7 +248,8 @@ const ReportManagement = () => {
             Access Denied
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            You don't have permission to access this page. Admin access required.
+            You don't have permission to access this page. Admin access
+            required.
           </p>
           <button
             onClick={() => window.history.back()}
@@ -204,7 +268,7 @@ const ReportManagement = () => {
         {/* Header Section */}
         <div className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-8">
+            <div className="bg-blue-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
@@ -219,7 +283,7 @@ const ReportManagement = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
                   <button
@@ -227,7 +291,7 @@ const ReportManagement = () => {
                     className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg hover:bg-white/30 transition-colors backdrop-blur-sm"
                   >
                     <BarChart3 className="w-4 h-4" />
-                    {showStats ? 'Hide' : 'Show'} Statistics
+                    {showStats ? "Hide" : "Show"} Statistics
                   </button>
                   <button
                     onClick={loadStats}
@@ -248,11 +312,15 @@ const ReportManagement = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Total Reports</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Total Reports
+                  </p>
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
                     {stats.statusStats?.total || 0}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">All time</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    All time
+                  </p>
                 </div>
                 <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
                   <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -263,11 +331,15 @@ const ReportManagement = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Open Reports</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Open Reports
+                  </p>
                   <p className="text-3xl font-bold text-blue-600">
                     {stats.statusStats?.open || 0}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Awaiting action</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Awaiting action
+                  </p>
                 </div>
                 <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
                   <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -278,11 +350,15 @@ const ReportManagement = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">In Progress</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    In Progress
+                  </p>
                   <p className="text-3xl font-bold text-yellow-600">
                     {stats.statusStats?.in_progress || 0}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Being worked on</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Being worked on
+                  </p>
                 </div>
                 <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
                   <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -293,11 +369,15 @@ const ReportManagement = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Resolved</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Resolved
+                  </p>
                   <p className="text-3xl font-bold text-green-600">
                     {stats.statusStats?.resolved || 0}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Successfully closed</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Successfully closed
+                  </p>
                 </div>
                 <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
                   <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -311,9 +391,11 @@ const ReportManagement = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm mb-8">
           <div className="flex items-center gap-2 mb-6">
             <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Filters & Search</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Filters & Search
+            </h3>
           </div>
-          
+
           <form onSubmit={handleSearch} className="space-y-6">
             {/* Search Bar */}
             <div className="relative">
@@ -321,7 +403,7 @@ const ReportManagement = () => {
               <input
                 type="text"
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
                 placeholder="Search reports by title, description, or reporter..."
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
               />
@@ -336,7 +418,7 @@ const ReportManagement = () => {
                 </label>
                 <select
                   value={filters.status}
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  onChange={(e) => handleFilterChange("status", e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
                 >
                   <option value="">All Statuses</option>
@@ -355,7 +437,9 @@ const ReportManagement = () => {
                 </label>
                 <select
                   value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("category", e.target.value)
+                  }
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
                 >
                   <option value="">All Categories</option>
@@ -374,7 +458,9 @@ const ReportManagement = () => {
                 </label>
                 <select
                   value={filters.priority}
-                  onChange={(e) => handleFilterChange('priority', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("priority", e.target.value)
+                  }
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
                 >
                   <option value="">All Priorities</option>
@@ -393,7 +479,9 @@ const ReportManagement = () => {
                 </label>
                 <select
                   value={filters.reporterRole}
-                  onChange={(e) => handleFilterChange('reporterRole', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("reporterRole", e.target.value)
+                  }
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
                 >
                   <option value="">All Roles</option>
@@ -410,7 +498,9 @@ const ReportManagement = () => {
                 </label>
                 <select
                   value={filters.assignedTo}
-                  onChange={(e) => handleFilterChange('assignedTo', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("assignedTo", e.target.value)
+                  }
                   className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
                 >
                   <option value="">All Assignments</option>
@@ -428,7 +518,9 @@ const ReportManagement = () => {
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
                 <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Loading reports...</p>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                  Loading reports...
+                </p>
               </div>
             </div>
           ) : allReports.length === 0 ? (
@@ -445,12 +537,12 @@ const ReportManagement = () => {
               <button
                 onClick={() => {
                   setFilters({
-                    status: '',
-                    category: '',
-                    priority: '',
-                    reporterRole: '',
-                    assignedTo: '',
-                    search: ''
+                    status: "",
+                    category: "",
+                    priority: "",
+                    reporterRole: "",
+                    assignedTo: "",
+                    search: "",
                   });
                   setCurrentPage(1);
                 }}
@@ -492,7 +584,10 @@ const ReportManagement = () => {
                     const StatusIcon = statusInfo.icon;
 
                     return (
-                      <tr key={report._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr
+                        key={report._id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      >
                         <td className="px-6 py-5">
                           <div className="flex items-start">
                             <div className="flex-shrink-0">
@@ -507,7 +602,9 @@ const ReportManagement = () => {
                               <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
                                 {report.description}
                               </div>
-                              <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${categoryInfo.color}`}>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${categoryInfo.color}`}
+                              >
                                 {categoryInfo.label}
                               </span>
                             </div>
@@ -520,7 +617,9 @@ const ReportManagement = () => {
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {report.reporter?.name || report.reporter?.companyName || 'Unknown'}
+                                {report.reporter?.name ||
+                                  report.reporter?.companyName ||
+                                  "Unknown"}
                               </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                                 {report.reporterRole}
@@ -529,18 +628,25 @@ const ReportManagement = () => {
                           </div>
                         </td>
                         <td className="px-6 py-5 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${statusInfo.color}`}>
+                          <span
+                            className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${statusInfo.color}`}
+                          >
                             <StatusIcon className="w-3 h-3 mr-1.5" />
                             {statusInfo.label}
                           </span>
                         </td>
                         <td className="px-6 py-5 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${
-                            report.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
-                            report.priority === 'high' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400' :
-                            report.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                            'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                          }`}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${
+                              report.priority === "urgent"
+                                ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                                : report.priority === "high"
+                                ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                : report.priority === "medium"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                : "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                            }`}
+                          >
                             {priorityInfo.label}
                           </span>
                         </td>
@@ -574,40 +680,58 @@ const ReportManagement = () => {
                     );
                   })}
                 </tbody>
-            </table>
-          </div>
-        )}
+              </table>
+            </div>
+          )}
 
-            {/* Pagination */}
-            {allReportsPagination.pages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600">
-                <div className="text-sm text-gray-700 dark:text-gray-300">
-                  Showing <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> to <span className="font-medium">{Math.min(currentPage * 10, allReportsPagination.total)}</span> of <span className="font-medium">{allReportsPagination.total}</span> results
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Previous
-                  </button>
-                  
-                  <span className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white">
-                    Page {currentPage} of {allReportsPagination.pages}
-                  </span>
-                  
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, allReportsPagination.pages))}
-                    disabled={currentPage === allReportsPagination.pages}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
+          {/* Pagination */}
+          {allReportsPagination.pages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                Showing{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * 10 + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium">
+                  {Math.min(currentPage * 10, allReportsPagination.total)}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium">
+                  {allReportsPagination.total}
+                </span>{" "}
+                results
               </div>
-            )}
-          </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+
+                <span className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Page {currentPage} of {allReportsPagination.pages}
+                </span>
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(prev + 1, allReportsPagination.pages)
+                    )
+                  }
+                  disabled={currentPage === allReportsPagination.pages}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Report Detail Modal */}
         {selectedReport && (

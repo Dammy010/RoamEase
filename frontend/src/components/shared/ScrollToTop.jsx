@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronUp } from "lucide-react";
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -9,11 +9,12 @@ const ScrollToTop = () => {
   // Show button when page is scrolled down 300px and calculate scroll progress
   const toggleVisibility = () => {
     const scrollTop = window.pageYOffset;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const docHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercent = (scrollTop / docHeight) * 100;
-    
+
     setScrollProgress(scrollPercent);
-    
+
     if (scrollTop > 300) {
       setIsVisible(true);
     } else {
@@ -25,23 +26,23 @@ const ScrollToTop = () => {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       scrollToTop();
     }
   };
 
   useEffect(() => {
-    window.addEventListener('scroll', toggleVisibility);
-    
+    window.addEventListener("scroll", toggleVisibility);
+
     return () => {
-      window.removeEventListener('scroll', toggleVisibility);
+      window.removeEventListener("scroll", toggleVisibility);
     };
   }, []);
 
@@ -53,22 +54,26 @@ const ScrollToTop = () => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          whileHover={{ 
+          whileHover={{
             scale: 1.1,
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           }}
           whileTap={{ scale: 0.95 }}
           onClick={scrollToTop}
           onKeyDown={handleKeyDown}
-          className="fixed bottom-8 right-8 z-50 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-4 rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
+          className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
           aria-label="Scroll to top"
           title="Scroll to top"
         >
           <ChevronUp className="w-6 h-6" />
-          
+
           {/* Progress ring */}
           <div className="absolute inset-0 rounded-full">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <svg
+              className="w-full h-full transform -rotate-90"
+              viewBox="0 0 36 36"
+            >
               <path
                 className="text-white/20"
                 stroke="currentColor"
@@ -91,7 +96,7 @@ const ScrollToTop = () => {
               />
             </svg>
           </div>
-          
+
           {/* Tooltip */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}

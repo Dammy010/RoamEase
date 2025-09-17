@@ -105,7 +105,7 @@ const VerifyEmailPage = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-10 w-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+          <div className="mx-auto h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
             <Mail className="h-5 w-5 text-white" />
           </div>
           <h2 className="mt-4 text-xl font-bold text-gray-900">

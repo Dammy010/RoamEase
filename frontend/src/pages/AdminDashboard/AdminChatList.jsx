@@ -2,26 +2,28 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllConversationsForAdmin } from "../../redux/slices/adminSlice";
 import { useNavigate } from "react-router-dom";
-import { 
-  MessageSquare, 
-  Users, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Clock, 
-  User, 
+import {
+  MessageSquare,
+  Users,
+  Search,
+  Filter,
+  MoreVertical,
+  Clock,
+  User,
   Building2,
   ChevronRight,
   MessageCircle,
   Calendar,
   Eye,
-  Archive
+  Archive,
 } from "lucide-react";
 
 const AdminChatList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { allConversations, loading, error } = useSelector((state) => state.admin);
+  const { allConversations, loading, error } = useSelector(
+    (state) => state.admin
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [sortBy, setSortBy] = useState("updatedAt");
@@ -32,17 +34,23 @@ const AdminChatList = () => {
 
   // Filter and sort conversations
   const filteredConversations = allConversations
-    .filter(conversation => {
-      const matchesSearch = conversation.participants.some(p => 
-        (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.contactName || '').toLowerCase().includes(searchQuery.toLowerCase())
+    .filter((conversation) => {
+      const matchesSearch = conversation.participants.some(
+        (p) =>
+          (p.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.companyName || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          (p.contactName || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
-      
-      const matchesRole = filterRole === "all" || 
-        conversation.participants.some(p => p.role === filterRole);
-      
+
+      const matchesRole =
+        filterRole === "all" ||
+        conversation.participants.some((p) => p.role === filterRole);
+
       return matchesSearch && matchesRole;
     })
     .sort((a, b) => {
@@ -59,25 +67,26 @@ const AdminChatList = () => {
     });
 
   const getParticipantInfo = (participant) => {
-    if (participant.role === 'logistics') {
+    if (participant.role === "logistics") {
       // For logistics, prioritize companyName, then contactName, then name, then email
-      const displayName = participant.companyName || 
-                         participant.contactName || 
-                         participant.name || 
-                         participant.email || 
-                         'Unknown Company';
+      const displayName =
+        participant.companyName ||
+        participant.contactName ||
+        participant.name ||
+        participant.email ||
+        "Unknown Company";
       return {
         name: displayName,
-        type: 'Company',
+        type: "Company",
         icon: Building2,
-        color: 'text-blue-600'
+        color: "text-blue-600",
       };
     } else {
       return {
-        name: participant.name || participant.email || 'Unknown User',
-        type: 'User',
+        name: participant.name || participant.email || "Unknown User",
+        type: "User",
         icon: User,
-        color: 'text-green-600'
+        color: "text-green-600",
       };
     }
   };
@@ -85,8 +94,8 @@ const AdminChatList = () => {
   const formatTimeAgo = (date) => {
     const now = new Date();
     const diffInMinutes = Math.floor((now - new Date(date)) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'Just now';
+
+    if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
@@ -94,7 +103,9 @@ const AdminChatList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center">
+        {" "}
+        <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading conversations...</p>
         </div>
@@ -107,7 +118,9 @@ const AdminChatList = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error Loading Conversations</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+            Error Loading Conversations
+          </h2>
           <p className="text-gray-600">{error.message}</p>
         </div>
       </div>
@@ -121,15 +134,16 @@ const AdminChatList = () => {
         <div className="px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
                 <MessageCircle className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-blue-600 bg-clip-text text-transparent">
                   Chat Management
                 </h1>
                 <p className="text-gray-500">
-                  {allConversations.length} conversation{allConversations.length !== 1 ? 's' : ''} • Admin Panel
+                  {allConversations.length} conversation
+                  {allConversations.length !== 1 ? "s" : ""} • Admin Panel
                 </p>
               </div>
             </div>
@@ -178,40 +192,52 @@ const AdminChatList = () => {
 
       {/* Content */}
       <div className="p-6">
-      {allConversations.length === 0 ? (
+        {allConversations.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <MessageSquare className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Conversations Found</h3>
-            <p className="text-gray-500">There are no conversations to display at the moment.</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              No Conversations Found
+            </h3>
+            <p className="text-gray-500">
+              There are no conversations to display at the moment.
+            </p>
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Matching Conversations</h3>
-            <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              No Matching Conversations
+            </h3>
+            <p className="text-gray-500">
+              Try adjusting your search or filter criteria.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredConversations.map((conversation) => (
-            <div 
-              key={conversation._id} 
+              <div
+                key={conversation._id}
                 className="bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-200 dark:border-gray-700/50 overflow-hidden"
-              onClick={() => navigate(`/admin/chat/${conversation._id}`)}
-            >
+                onClick={() => navigate(`/admin/chat/${conversation._id}`)}
+              >
                 {/* Card Header */}
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
                         <MessageSquare className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">Conversation</h3>
-                        <p className="text-sm text-gray-500">ID: {conversation._id.slice(-8)}</p>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+                          Conversation
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          ID: {conversation._id.slice(-8)}
+                        </p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
@@ -228,17 +254,28 @@ const AdminChatList = () => {
                         const info = getParticipantInfo(participant);
                         const IconComponent = info.icon;
                         return (
-                          <div key={index} className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              participant.role === 'logistics' ? 'bg-blue-100' : 'bg-green-100'
-                            }`}>
-                              <IconComponent className={`w-4 h-4 ${info.color}`} />
+                          <div
+                            key={index}
+                            className="flex items-center space-x-3"
+                          >
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                participant.role === "logistics"
+                                  ? "bg-blue-100"
+                                  : "bg-green-100"
+                              }`}
+                            >
+                              <IconComponent
+                                className={`w-4 h-4 ${info.color}`}
+                              />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                                 {info.name}
                               </p>
-                              <p className="text-xs text-gray-500">{info.type}</p>
+                              <p className="text-xs text-gray-500">
+                                {info.type}
+                              </p>
                             </div>
                           </div>
                         );
@@ -257,7 +294,11 @@ const AdminChatList = () => {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>{new Date(conversation.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(
+                            conversation.createdAt
+                          ).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -273,11 +314,11 @@ const AdminChatList = () => {
                       </button>
                     </div>
                   </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -61,7 +61,3 @@ export const isVerifiedLogisticsPartner = (user) => {
   return user.verificationStatus === 'verified' || user.isVerified;
 };
 
-
-
-
-

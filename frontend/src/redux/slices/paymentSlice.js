@@ -2,38 +2,114 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 
-export const subscribeCompany = createAsyncThunk('payment/subscribe', async (data, thunkAPI) => {
-  try {
-    const res = await api.post('/payments/subscribe', data);
-    toast.success('Subscription successful');
-    return res.data;
-  } catch (err) {
-    toast.error('Subscription failed');
-    return thunkAPI.rejectWithValue(err.response.data);
+// Initialize payment with Paystack
+export const initializePayment = createAsyncThunk(
+  'payment/initialize',
+  async (paymentData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/payments/initialize', paymentData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to initialize payment');
+    }
   }
-});
+);
+
+// Verify payment with Paystack
+export const verifyPayment = createAsyncThunk(
+  'payment/verify',
+  async (reference, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/payments/verify', { reference });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to verify payment');
+    }
+  }
+);
+
+// Get payment history
+export const getPaymentHistory = createAsyncThunk(
+  'payment/getHistory',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/payments/history');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch payment history');
+    }
+  }
+);
 
 const paymentSlice = createSlice({
   name: 'payment',
   initialState: {
-    status: null,
+    payments: [],
+    currentPayment: null,
     loading: false,
+    error: null,
+    paymentLoading: false,
+    paymentError: null
   },
-  reducers: {},
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
+      state.paymentError = null;
+    },
+    setCurrentPayment: (state, action) => {
+      state.currentPayment = action.payload;
+    }
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(subscribeCompany.pending, (state) => {
+      // Initialize payment
+      .addCase(initializePayment.pending, (state) => {
+        state.paymentLoading = true;
+        state.paymentError = null;
+      })
+      .addCase(initializePayment.fulfilled, (state, action) => {
+        state.paymentLoading = false;
+        state.currentPayment = action.payload;
+      })
+      .addCase(initializePayment.rejected, (state, action) => {
+        state.paymentLoading = false;
+        state.paymentError = action.payload;
+      })
+      
+      // Verify payment
+      .addCase(verifyPayment.pending, (state) => {
+        state.paymentLoading = true;
+        state.paymentError = null;
+      })
+      .addCase(verifyPayment.fulfilled, (state, action) => {
+        state.paymentLoading = false;
+        if (action.payload.success) {
+          toast.success('Payment successful!');
+        } else {
+          toast.error('Payment failed');
+        }
+      })
+      .addCase(verifyPayment.rejected, (state, action) => {
+        state.paymentLoading = false;
+        state.paymentError = action.payload;
+        toast.error(action.payload || 'Payment verification failed');
+      })
+      
+      // Get payment history
+      .addCase(getPaymentHistory.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(subscribeCompany.fulfilled, (state, { payload }) => {
+      .addCase(getPaymentHistory.fulfilled, (state, action) => {
         state.loading = false;
-        state.status = payload.status;
+        state.payments = action.payload;
       })
-      .addCase(subscribeCompany.rejected, (state) => {
+      .addCase(getPaymentHistory.rejected, (state, action) => {
         state.loading = false;
-        state.status = 'failed';
+        state.error = action.payload;
       });
   },
 });
 
+export const { clearError, setCurrentPayment } = paymentSlice.actions;
 export default paymentSlice.reducer;

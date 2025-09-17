@@ -4,15 +4,12 @@ import api from "../../services/api";
 
 // ---------------- Hydrate from localStorage ----------------
 const accessToken = localStorage.getItem("token");
-console.log("DEBUG: authSlice - Initial accessToken from localStorage:", accessToken ? "Present" : "Not present");
 let user = null;
 
 try {
   const storedUser = localStorage.getItem("user");
-  console.log("DEBUG: authSlice - Raw storedUser from localStorage:", storedUser);
   if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
     user = JSON.parse(storedUser);
-    console.log("DEBUG: authSlice - Parsed user object:", user);
     // Ensure all required fields are present for logistics users
     if (user && user.role === "logistics") {
       user = {
@@ -21,9 +18,8 @@ try {
         contactName: user.contactName || "",
         country: user.country || "",
         verificationStatus: user.verificationStatus || "pending",
-        isVerified: user.isVerified || false
+        isVerified: user.isVerified || false,
       };
-      console.log("DEBUG: authSlice - Adjusted logistics user object:", user);
     }
   }
 } catch (err) {
@@ -34,181 +30,249 @@ try {
 // ---------------- Thunks ----------------
 
 // Login
-export const loginUser = createAsyncThunk("auth/login", async (data, thunkAPI) => {
-  try {
-    const res = await api.post("/auth/login", data);
-    
-    // Check if email verification is required
-    if (res.data.isVerified === false) {
-      const message = res.data.message || "Please verify your email address before logging in.";
-      toast.error(message);
-      return thunkAPI.rejectWithValue({ 
-        message,
-        needsVerification: true,
-        email: res.data.email,
-        code: "EMAIL_VERIFICATION_REQUIRED"
-      });
-    }
+export const loginUser = createAsyncThunk(
+  "auth/login",
+  async (data, thunkAPI) => {
+    try {
+      const res = await api.post("/auth/login", data);
 
-    const { _id, name, email, role, phoneNumber, profilePicture, ...restUser } = res.data; // Capture other user fields
-    
-    // Construct userData with all relevant fields
-    const userData = { _id, name, email, role, phoneNumber, profilePicture, ...restUser };
+      // Check if email verification is required
+      if (res.data.isVerified === false) {
+        const message =
+          res.data.message ||
+          "Please verify your email address before logging in.";
+        toast.error(message);
+        return thunkAPI.rejectWithValue({
+          message,
+          needsVerification: true,
+          email: res.data.email,
+          code: "EMAIL_VERIFICATION_REQUIRED",
+        });
+      }
 
-    // Debug logging for logistics users
-    if (role === "logistics") {
-      console.log("Frontend login - companyName:", userData.companyName);
-      console.log("Frontend login - contactName:", userData.contactName);
-      console.log("Frontend login - full userData:", userData);
-    }
-
-    localStorage.setItem("token", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-    localStorage.setItem("user", JSON.stringify(userData));
-
-    toast.success("Login successful");
-    return userData;
-  } catch (err) {
-    const message = err.response?.data?.message || "Login failed";
-    const needsVerification = err.response?.data?.isVerified === false;
-    const email = err.response?.data?.email;
-    
-    if (needsVerification) {
-      toast.error(message);
-      return thunkAPI.rejectWithValue({ 
-        message,
-        needsVerification: true,
+      const {
+        _id,
+        name,
         email,
-        code: "EMAIL_VERIFICATION_REQUIRED"
-      });
+        role,
+        phoneNumber,
+        profilePicture,
+        ...restUser
+      } = res.data; // Capture other user fields
+
+      // Construct userData with all relevant fields
+      const userData = {
+        _id,
+        name,
+        email,
+        role,
+        phoneNumber,
+        profilePicture,
+        ...restUser,
+      };
+
+      if (role === "logistics") {
+      }
+
+      localStorage.setItem("token", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      toast.success("Login successful");
+      return userData;
+    } catch (err) {
+      const message = err.response?.data?.message || "Login failed";
+      const needsVerification = err.response?.data?.isVerified === false;
+      const email = err.response?.data?.email;
+
+      if (needsVerification) {
+        toast.error(message);
+        return thunkAPI.rejectWithValue({
+          message,
+          needsVerification: true,
+          email,
+          code: "EMAIL_VERIFICATION_REQUIRED",
+        });
+      }
+
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ message });
     }
-    
-    toast.error(message);
-    return thunkAPI.rejectWithValue({ message });
   }
-});
+);
 
 // Signup
-export const signupUser = createAsyncThunk("auth/signup", async (data, thunkAPI) => {
-  try {
-    const headers = data instanceof FormData ? {} : { "Content-Type": "application/json" };
-    const res = await api.post("/auth/register", data, { headers });
+export const signupUser = createAsyncThunk(
+  "auth/signup",
+  async (data, thunkAPI) => {
+    try {
+      const headers =
+        data instanceof FormData ? {} : { "Content-Type": "application/json" };
+      const res = await api.post("/auth/register", data, { headers });
 
-    // Check if email verification is required
-    if (res.data.needsVerification || (res.data.message && res.data.message.includes("verify your account"))) {
-      const message = res.data.message;
-      toast.success(message);
-      return thunkAPI.rejectWithValue({ 
-        message,
-        needsVerification: true,
-        email: res.data.email,
-        code: "EMAIL_VERIFICATION_REQUIRED"
-      });
-    }
+      // Check if email verification is required
+      if (
+        res.data.needsVerification ||
+        (res.data.message && res.data.message.includes("verify your account"))
+      ) {
+        const message = res.data.message;
+        toast.success(message);
+        return thunkAPI.rejectWithValue({
+          message,
+          needsVerification: true,
+          email: res.data.email,
+          code: "EMAIL_VERIFICATION_REQUIRED",
+        });
+      }
 
-    const { _id, name, email, role, phoneNumber, profilePicture, ...restUser } = res.data; // Capture other user fields
-    const userData = { _id, name, email, role, phoneNumber, profilePicture, ...restUser };
-
-    localStorage.setItem("token", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-    localStorage.setItem("user", JSON.stringify(userData));
-
-    toast.success("Signup successful");
-    return userData;
-  } catch (err) {
-    const message = err.response?.data?.message || "Signup failed";
-    const needsVerification = err.response?.data?.message?.includes("verify your account");
-    const email = err.response?.data?.email;
-    
-    if (needsVerification) {
-      toast.success(message); // Show as success since verification email was sent
-      return thunkAPI.rejectWithValue({ 
-        message,
-        needsVerification: true,
+      const {
+        _id,
+        name,
         email,
-        code: "EMAIL_VERIFICATION_REQUIRED"
-      });
+        role,
+        phoneNumber,
+        profilePicture,
+        ...restUser
+      } = res.data; // Capture other user fields
+      const userData = {
+        _id,
+        name,
+        email,
+        role,
+        phoneNumber,
+        profilePicture,
+        ...restUser,
+      };
+
+      localStorage.setItem("token", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      toast.success("Signup successful");
+      return userData;
+    } catch (err) {
+      const message = err.response?.data?.message || "Signup failed";
+      const needsVerification = err.response?.data?.message?.includes(
+        "verify your account"
+      );
+      const email = err.response?.data?.email;
+
+      if (needsVerification) {
+        toast.success(message); // Show as success since verification email was sent
+        return thunkAPI.rejectWithValue({
+          message,
+          needsVerification: true,
+          email,
+          code: "EMAIL_VERIFICATION_REQUIRED",
+        });
+      }
+
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ message });
     }
-    
-    toast.error(message);
-    return thunkAPI.rejectWithValue({ message });
   }
-});
+);
 
 // Verify Email
-export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (code, thunkAPI) => {
-  try {
-    const res = await api.post(`/auth/verify`, { code });
-    toast.success("Email verified successfully! You can now log in.");
-    return res.data;
-  } catch (err) {
-    const message = err.response?.data?.message || "Verification failed";
-    toast.error(message);
-    return thunkAPI.rejectWithValue({ message });
+export const verifyEmail = createAsyncThunk(
+  "auth/verifyEmail",
+  async (code, thunkAPI) => {
+    try {
+      const res = await api.post(`/auth/verify`, { code });
+      toast.success("Email verified successfully! You can now log in.");
+      return res.data;
+    } catch (err) {
+      const message = err.response?.data?.message || "Verification failed";
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ message });
+    }
   }
-});
+);
 
 // Resend Verification Email
-export const resendVerificationEmail = createAsyncThunk("auth/resendVerificationEmail", async (email, thunkAPI) => {
-  try {
-    const res = await api.post("/auth/resend-verification", { email });
-    toast.success("Verification email sent! Please check your inbox.");
-    return res.data;
-  } catch (err) {
-    const message = err.response?.data?.message || "Failed to resend verification email";
-    toast.error(message);
-    return thunkAPI.rejectWithValue({ message });
+export const resendVerificationEmail = createAsyncThunk(
+  "auth/resendVerificationEmail",
+  async (email, thunkAPI) => {
+    try {
+      const res = await api.post("/auth/resend-verification", { email });
+      toast.success("Verification email sent! Please check your inbox.");
+      return res.data;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Failed to resend verification email";
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ message });
+    }
   }
-});
+);
 
 // Check Verification Status
-export const checkVerificationStatus = createAsyncThunk("auth/checkVerificationStatus", async (email, thunkAPI) => {
-  try {
-    const res = await api.get(`/auth/verification-status?email=${encodeURIComponent(email)}`);
-    return res.data;
-  } catch (err) {
-    const message = err.response?.data?.message || "Failed to check verification status";
-    return thunkAPI.rejectWithValue({ message });
+export const checkVerificationStatus = createAsyncThunk(
+  "auth/checkVerificationStatus",
+  async (email, thunkAPI) => {
+    try {
+      const res = await api.get(
+        `/auth/verification-status?email=${encodeURIComponent(email)}`
+      );
+      return res.data;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Failed to check verification status";
+      return thunkAPI.rejectWithValue({ message });
+    }
   }
-});
+);
 
 // Fetch Profile
-export const fetchProfile = createAsyncThunk("auth/fetchProfile", async (_, thunkAPI) => {
-  try {
-    console.log('🔍 fetchProfile: Fetching user profile...');
-    const res = await api.get("/auth/profile");
-    console.log('🔍 fetchProfile: Profile response:', res.data);
-    console.log('🔍 fetchProfile: Verification status:', res.data.verificationStatus);
-    return res.data;
-  } catch (err) {
-    const message = err.response?.data?.message || "Failed to load profile";
-    console.error('❌ fetchProfile: Error:', err);
-    toast.error(message);
-    return thunkAPI.rejectWithValue({ message });
+export const fetchProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, thunkAPI) => {
+    try {
+      const res = await api.get("/auth/profile");
+      return res.data;
+    } catch (err) {
+      const message = err.response?.data?.message || "Failed to load profile";
+      console.error("❌ fetchProfile: Error:", err);
+      toast.error(message);
+      return thunkAPI.rejectWithValue({ message });
+    }
   }
-});
+);
 
 // Update Profile
-export const updateProfile = createAsyncThunk("auth/updateProfile", async (formData, thunkAPI) => {
-  try {
-    const headers = formData instanceof FormData ? {} : { "Content-Type": "application/json" };
-    const res = await api.put("/auth/profile", formData, { headers });
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (formData, thunkAPI) => {
+    try {
+      const headers =
+        formData instanceof FormData
+          ? {}
+          : { "Content-Type": "application/json" };
+      const res = await api.put("/auth/profile", formData, { headers });
 
-    const { _id, name, email, role, phoneNumber, profilePicture, ...restUser } = res.data; // Capture all fields
-    const userData = { _id, name, email, role, phoneNumber, profilePicture, ...restUser };
+      // Get current user data from state
+      const currentState = thunkAPI.getState();
+      const currentUser = currentState.auth.user;
 
-    localStorage.setItem("token", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-    localStorage.setItem("user", JSON.stringify(userData));
+      // Merge only the updated fields with current user data
+      const updatedUser = { ...currentUser, ...res.data };
 
-    toast.success("Profile updated successfully");
-    return userData;
-  } catch (err) {
-    const message = err.response?.data?.message || "Update failed";
-    toast.error(message);
-    return thunkAPI.rejectWithValue({ message });
+      // Update localStorage efficiently
+      if (res.data.accessToken) {
+        localStorage.setItem("token", res.data.accessToken);
+      }
+      if (res.data.refreshToken) {
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+      }
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      return updatedUser;
+    } catch (err) {
+      const message = err.response?.data?.message || "Update failed";
+      return thunkAPI.rejectWithValue({ message });
+    }
   }
-});
+);
 
 // ---------------- Slice ----------------
 const authSlice = createSlice({
@@ -222,7 +286,6 @@ const authSlice = createSlice({
   },
   reducers: {
     logout: (state) => {
-      console.log("DEBUG: authSlice - Logout action dispatched");
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
@@ -235,7 +298,6 @@ const authSlice = createSlice({
       state.error = null;
     },
     updateProfilePicture: (state, action) => {
-      console.log("DEBUG: authSlice - updateProfilePicture action dispatched:", action.payload);
       if (state.user) {
         state.user.profilePicture = action.payload;
         // Update localStorage as well
@@ -251,7 +313,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, { payload }) => {
-        console.log("DEBUG: loginUser.fulfilled - Payload received:", payload);
         state.loading = false;
         state.user = payload;
         state.role = payload.role;
@@ -268,7 +329,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signupUser.fulfilled, (state, { payload }) => {
-        console.log("DEBUG: signupUser.fulfilled - Payload received:", payload);
         state.loading = false;
         state.error = null;
         state.user = payload;
@@ -299,12 +359,9 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchProfile.fulfilled, (state, { payload }) => {
-        console.log('🔍 fetchProfile.fulfilled: Updating user state with:', payload);
-        console.log('🔍 fetchProfile.fulfilled: Verification status:', payload.verificationStatus);
         state.loading = false;
         state.user = payload;
         state.role = payload.role;
-        console.log('🔍 fetchProfile.fulfilled: Updated state.user:', state.user);
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
@@ -337,7 +394,8 @@ const authSlice = createSlice({
       })
       .addCase(resendVerificationEmail.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Failed to resend verification email";
+        state.error =
+          action.payload?.message || "Failed to resend verification email";
       })
 
       // Check Verification Status
@@ -350,7 +408,8 @@ const authSlice = createSlice({
       })
       .addCase(checkVerificationStatus.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Failed to check verification status";
+        state.error =
+          action.payload?.message || "Failed to check verification status";
       });
   },
 });

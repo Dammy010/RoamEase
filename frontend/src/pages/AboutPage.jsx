@@ -50,7 +50,6 @@ const AboutPage = () => {
     { number: "99.5%", label: "On-Time Delivery" }
   ];
 
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
@@ -58,7 +57,7 @@ const AboutPage = () => {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white py-20"
+        className="relative bg-blue-600 text-white py-20"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <motion.h1
@@ -258,14 +257,13 @@ const AboutPage = () => {
         </div>
       </motion.section>
 
-
       {/* CTA Section */}
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-20 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white"
+        className="py-20 bg-blue-600 text-white"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <motion.h2

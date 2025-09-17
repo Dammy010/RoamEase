@@ -86,9 +86,6 @@ function App() {
   const { user } = useSelector((state) => state.auth);
   const { isDark } = useTheme();
   const location = useLocation();
-
-  console.log('App.jsx - Current User State:', user);
-
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -114,16 +111,13 @@ function App() {
       if (socket) {
         socket.connect();
         socket.emit('user-online', user._id);
-        console.log('Socket connected and user-online emitted:', user._id);
       } else {
-        console.log('Socket initialization failed - no valid token');
       }
     } else {
       // User logged out, disconnect socket
       const socket = getSocket();
       if (socket) {
         socket.disconnect();
-        console.log('Socket disconnected - user logged out');
       }
     }
 
@@ -132,7 +126,6 @@ function App() {
       const socket = getSocket();
       if (socket && socket.connected) {
         socket.disconnect();
-        console.log('Socket disconnected on component unmount');
       }
     };
   }, [user]);

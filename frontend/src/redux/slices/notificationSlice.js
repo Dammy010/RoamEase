@@ -8,9 +8,7 @@ export const getNotifications = createAsyncThunk(
   'notifications/getNotifications',
   async ({ page = 1, limit = 20, status = 'all' }, thunkAPI) => {
     try {
-      console.log('🔔 Fetching notifications:', { page, limit, status });
       const res = await api.get(`/notifications?page=${page}&limit=${limit}&status=${status}`);
-      console.log('🔔 Notifications response:', res.data);
       return res.data;
     } catch (err) {
       console.error('❌ Error fetching notifications:', err);
@@ -24,9 +22,7 @@ export const getUnreadCount = createAsyncThunk(
   'notifications/getUnreadCount',
   async (_, thunkAPI) => {
     try {
-      console.log('🔔 Fetching unread count...');
       const res = await api.get('/notifications/unread-count');
-      console.log('🔔 Unread count response:', res.data);
       return res.data;
     } catch (err) {
       console.error('❌ Error fetching unread count:', err);
@@ -221,10 +217,7 @@ const notificationSlice = createSlice({
         if (state.notifications.length > 100) {
           state.notifications = state.notifications.slice(0, 100);
         }
-        
-        console.log('✅ Notification added to state:', notificationWithDefaults.title);
       } else {
-        console.log('⚠️ Notification already exists, skipping duplicate');
       }
     },
     

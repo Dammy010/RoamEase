@@ -1,21 +1,23 @@
-import { Link, NavLink } from 'react-router-dom';
-import { useState } from 'react';
-import { Menu, X, Truck, User, LogIn, UserPlus } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import { Link, NavLink } from "react-router-dom";
+import { useState } from "react";
+import { Menu, X, Truck, User, LogIn, UserPlus } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const linkClass = ({ isActive }) =>
-    `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-      ? 'bg-blue-600 text-white shadow-md'
-      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400'
+    `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      isActive
+        ? "bg-blue-600 text-white shadow-md"
+        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
     }`;
 
   const mobileLinkClass = ({ isActive }) =>
-    `block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${isActive
-      ? 'bg-blue-600 text-white shadow-md'
-      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400'
+    `block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+      isActive
+        ? "bg-blue-600 text-white shadow-md"
+        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
     }`;
 
   const toggleMenu = () => {
@@ -28,7 +30,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
               <Truck className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
@@ -59,12 +61,18 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-3">
             {/* Theme Toggle */}
             <ThemeToggle />
-            
-            <NavLink to="/login" className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+
+            <NavLink
+              to="/login"
+              className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            >
               <LogIn className="w-4 h-4" />
               <span>Login</span>
             </NavLink>
-            <NavLink to="/signup" className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg">
+            <NavLink
+              to="/signup"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg"
+            >
               <UserPlus className="w-4 h-4" />
               <span>Sign Up</span>
             </NavLink>
@@ -95,26 +103,50 @@ const Navbar = () => {
               <NavLink to="/" className={mobileLinkClass} onClick={toggleMenu}>
                 Home
               </NavLink>
-              <NavLink to="/services" className={mobileLinkClass} onClick={toggleMenu}>
+              <NavLink
+                to="/services"
+                className={mobileLinkClass}
+                onClick={toggleMenu}
+              >
                 Services
               </NavLink>
-              <NavLink to="/about" className={mobileLinkClass} onClick={toggleMenu}>
+              <NavLink
+                to="/about"
+                className={mobileLinkClass}
+                onClick={toggleMenu}
+              >
                 About
               </NavLink>
-              <NavLink to="/help" className={mobileLinkClass} onClick={toggleMenu}>
+              <NavLink
+                to="/help"
+                className={mobileLinkClass}
+                onClick={toggleMenu}
+              >
                 Help Center
               </NavLink>
-              <NavLink to="/contact" className={mobileLinkClass} onClick={toggleMenu}>
+              <NavLink
+                to="/contact"
+                className={mobileLinkClass}
+                onClick={toggleMenu}
+              >
                 Contact
               </NavLink>
-              
+
               {/* Mobile Auth Links */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                <NavLink to="/login" className="flex items-center space-x-2 px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200" onClick={toggleMenu}>
+                <NavLink
+                  to="/login"
+                  className="flex items-center space-x-2 px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                  onClick={toggleMenu}
+                >
                   <LogIn className="w-5 h-5" />
                   <span>Login</span>
                 </NavLink>
-                <NavLink to="/signup" className="flex items-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 mt-2" onClick={toggleMenu}>
+                <NavLink
+                  to="/signup"
+                  className="flex items-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 mt-2"
+                  onClick={toggleMenu}
+                >
                   <UserPlus className="w-5 h-5" />
                   <span>Sign Up</span>
                 </NavLink>

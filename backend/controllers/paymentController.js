@@ -1,29 +1,31 @@
-const Stripe = require('stripe');
+const paystack = require('paystack')(process.env.PAYSTACK_SECRET_KEY);
 const Payment = require('../models/Payment');
 
-// Initialize Stripe with fallback for development
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
-  : null;
-
-// POST /api/payments/create-intent
-// body: { amount, currency?, shipmentId?, bidId?, meta? }
-exports.createPaymentIntent = async (req, res) => {
+// POST /api/payments/initialize
+// body: { amount, currency?, email, shipmentId?, bidId?, meta? }
+exports.initializePayment = async (req, res) => {
   try {
-    if (!stripe) {
+    if (!process.env.PAYSTACK_SECRET_KEY) {
       return res.status(503).json({ message: 'Payment service not configured' });
     }
 
-    const { amount, currency = 'usd', shipmentId, bidId, meta = {} } = req.body;
+    const { amount, currency = 'NGN', email, shipmentId, bidId, meta = {} } = req.body;
 
     if (!amount || amount <= 0) {
-      return res.status(400).json({ message: 'amount (in cents) is required and must be > 0' });
+      return res.status(400).json({ message: 'amount (in kobo) is required and must be > 0' });
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    if (!email) {
+      return res.status(400).json({ message: 'email is required' });
+    }
+
+    const reference = `pay_${Date.now()}_${req.user._id}`;
+
+    const paystackResponse = await paystack.transaction.initialize({
       amount,
+      email,
       currency,
-      automatic_payment_methods: { enabled: true },
+      reference,
       metadata: {
         userId: req.user._id.toString(),
         shipmentId: shipmentId || '',
@@ -32,46 +34,77 @@ exports.createPaymentIntent = async (req, res) => {
       }
     });
 
+    if (!paystackResponse.status) {
+      return res.status(400).json({ 
+        message: 'Failed to initialize payment', 
+        error: paystackResponse.message 
+      });
+    }
+
     await Payment.create({
       user: req.user._id,
       amount,
       currency,
-      stripePaymentIntentId: paymentIntent.id,
+      paystackReference: reference,
+      paystackAccessCode: paystackResponse.data.access_code,
       status: 'pending',
       shipment: shipmentId || undefined,
       bid: bidId || undefined,
       meta
     });
 
-    return res.json({ clientSecret: paymentIntent.client_secret });
+    return res.json({ 
+      authorizationUrl: paystackResponse.data.authorization_url,
+      accessCode: paystackResponse.data.access_code,
+      reference: paystackResponse.data.reference
+    });
   } catch (err) {
-    console.error('createPaymentIntent error:', err);
-    return res.status(500).json({ message: 'Failed to create payment intent', error: err.message });
+    console.error('initializePayment error:', err);
+    return res.status(500).json({ message: 'Failed to initialize payment', error: err.message });
   }
 };
 
-// POST /api/payments/confirm   (optional if client confirms with Stripe.js)
-// body: { paymentIntentId }
-exports.confirmPayment = async (req, res) => {
+// POST /api/payments/verify
+// body: { reference }
+exports.verifyPayment = async (req, res) => {
   try {
-    if (!stripe) {
+    if (!process.env.PAYSTACK_SECRET_KEY) {
       return res.status(503).json({ message: 'Payment service not configured' });
     }
 
-    const { paymentIntentId } = req.body;
-    if (!paymentIntentId) return res.status(400).json({ message: 'paymentIntentId is required' });
+    const { reference } = req.body;
+    if (!reference) return res.status(400).json({ message: 'reference is required' });
 
-    const pi = await stripe.paymentIntents.confirm(paymentIntentId);
-    await Payment.findOneAndUpdate(
-      { stripePaymentIntentId: paymentIntentId },
-      { status: pi.status },
+    const paystackResponse = await paystack.transaction.verify(reference);
+    
+    if (!paystackResponse.status) {
+      return res.status(400).json({ 
+        message: 'Payment verification failed', 
+        error: paystackResponse.message 
+      });
+    }
+
+    const payment = await Payment.findOneAndUpdate(
+      { paystackReference: reference },
+      { 
+        status: paystackResponse.data.status === 'success' ? 'success' : 'failed',
+        gatewayResponse: paystackResponse.data.gateway_response,
+        channel: paystackResponse.data.channel,
+        paidAt: paystackResponse.data.paid_at ? new Date(paystackResponse.data.paid_at) : null,
+        authorizationCode: paystackResponse.data.authorization?.authorization_code,
+        customerCode: paystackResponse.data.customer?.customer_code
+      },
       { new: true }
     );
 
-    return res.json({ success: true, payment: pi });
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment record not found' });
+    }
+
+    return res.json({ success: true, payment, paystackData: paystackResponse.data });
   } catch (err) {
-    console.error('confirmPayment error:', err);
-    return res.status(500).json({ message: 'Failed to confirm payment', error: err.message });
+    console.error('verifyPayment error:', err);
+    return res.status(500).json({ message: 'Failed to verify payment', error: err.message });
   }
 };
 

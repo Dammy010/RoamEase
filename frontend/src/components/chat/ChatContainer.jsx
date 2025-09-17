@@ -46,11 +46,11 @@ const ChatContainer = () => {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-blue-600 bg-clip-text text-transparent">
                   Messages
                 </h1>
                 <p className="text-sm text-gray-500">

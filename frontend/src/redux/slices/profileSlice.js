@@ -1,12 +1,12 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../services/api';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import api from "../../services/api";
 
 // Async thunks for profile management
 export const updateProfile = createAsyncThunk(
-  'profile/updateProfile',
+  "profile/updateProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/profile/profile', profileData);
+      const response = await api.put("/profile/profile", profileData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -15,10 +15,10 @@ export const updateProfile = createAsyncThunk(
 );
 
 export const changePassword = createAsyncThunk(
-  'profile/changePassword',
+  "profile/changePassword",
   async (passwordData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/profile/change-password', passwordData);
+      const response = await api.put("/profile/change-password", passwordData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -27,17 +27,21 @@ export const changePassword = createAsyncThunk(
 );
 
 export const uploadProfilePicture = createAsyncThunk(
-  'profile/uploadProfilePicture',
+  "profile/uploadProfilePicture",
   async (file, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      formData.append('profilePicture', file);
-      
-      const response = await api.post('/profile/upload-profile-picture', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      formData.append("profilePicture", file);
+
+      const response = await api.post(
+        "/profile/upload-profile-picture",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -46,11 +50,11 @@ export const uploadProfilePicture = createAsyncThunk(
 );
 
 export const deleteAccount = createAsyncThunk(
-  'profile/deleteAccount',
+  "profile/deleteAccount",
   async (password, { rejectWithValue }) => {
     try {
-      const response = await api.delete('/profile/delete-account', {
-        data: { password }
+      const response = await api.delete("/profile/delete-account", {
+        data: { password },
       });
       return response.data;
     } catch (error) {
@@ -60,10 +64,10 @@ export const deleteAccount = createAsyncThunk(
 );
 
 export const getProfileStats = createAsyncThunk(
-  'profile/getProfileStats',
+  "profile/getProfileStats",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/profile/profile-stats');
+      const response = await api.get("/profile/profile-stats");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -72,15 +76,15 @@ export const getProfileStats = createAsyncThunk(
 );
 
 const profileSlice = createSlice({
-  name: 'profile',
+  name: "profile",
   initialState: {
     profileData: null,
     stats: {
       totalShipments: 0,
       completedShipments: 0,
       rating: 0,
-      responseTime: '0 hours',
-      successRate: 0
+      responseTime: "0 hours",
+      successRate: 0,
     },
     loading: false,
     statsLoading: false,
@@ -88,7 +92,7 @@ const profileSlice = createSlice({
     updateLoading: false,
     passwordLoading: false,
     uploadLoading: false,
-    deleteLoading: false
+    deleteLoading: false,
   },
   reducers: {
     clearProfileError: (state) => {
@@ -102,7 +106,7 @@ const profileSlice = createSlice({
       if (state.profileData) {
         state.profileData[field] = value;
       }
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -120,7 +124,7 @@ const profileSlice = createSlice({
         state.updateLoading = false;
         state.error = action.payload;
       })
-      
+
       // Change Password
       .addCase(changePassword.pending, (state) => {
         state.passwordLoading = true;
@@ -134,7 +138,7 @@ const profileSlice = createSlice({
         state.passwordLoading = false;
         state.error = action.payload;
       })
-      
+
       // Upload Profile Picture
       .addCase(uploadProfilePicture.pending, (state) => {
         state.uploadLoading = true;
@@ -151,7 +155,7 @@ const profileSlice = createSlice({
         state.uploadLoading = false;
         state.error = action.payload;
       })
-      
+
       // Delete Account
       .addCase(deleteAccount.pending, (state) => {
         state.deleteLoading = true;
@@ -164,8 +168,8 @@ const profileSlice = createSlice({
           totalShipments: 0,
           completedShipments: 0,
           rating: 0,
-          responseTime: '0 hours',
-          successRate: 0
+          responseTime: "0 hours",
+          successRate: 0,
         };
         state.error = null;
       })
@@ -173,7 +177,7 @@ const profileSlice = createSlice({
         state.deleteLoading = false;
         state.error = action.payload;
       })
-      
+
       // Get Profile Stats
       .addCase(getProfileStats.pending, (state) => {
         state.statsLoading = true;
@@ -188,8 +192,9 @@ const profileSlice = createSlice({
         state.statsLoading = false;
         state.error = action.payload;
       });
-  }
+  },
 });
 
-export const { clearProfileError, setProfileData, updateProfileField } = profileSlice.actions;
+export const { clearProfileError, setProfileData, updateProfileField } =
+  profileSlice.actions;
 export default profileSlice.reducer;

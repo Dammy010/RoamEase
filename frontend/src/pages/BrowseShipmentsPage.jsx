@@ -1,33 +1,60 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useCurrency } from '../contexts/CurrencyContext';
-import { fetchPublicOpenShipments } from '../redux/slices/shipmentSlice';
-import { 
-  Package, Search, Filter, SortAsc, RefreshCw, MapPin, Calendar, Clock, 
-  Truck, Weight, Ruler, Shield, Eye, ChevronDown, ChevronUp, 
-  Wallet, MessageSquare, User, Phone, FileText, Image, 
-  AlertCircle, CheckCircle, Star, TrendingUp, Globe, ArrowLeft,
-  ExternalLink, LogIn, UserPlus
-} from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useCurrency } from "../contexts/CurrencyContext";
+import { fetchPublicOpenShipments } from "../redux/slices/shipmentSlice";
+import {
+  Package,
+  Search,
+  Filter,
+  SortAsc,
+  RefreshCw,
+  MapPin,
+  Calendar,
+  Clock,
+  Truck,
+  Weight,
+  Ruler,
+  Shield,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  Wallet,
+  MessageSquare,
+  User,
+  Phone,
+  FileText,
+  Image,
+  AlertCircle,
+  CheckCircle,
+  Star,
+  TrendingUp,
+  Globe,
+  ArrowLeft,
+  ExternalLink,
+  LogIn,
+  UserPlus,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 const BrowseShipmentsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
-  const { availableShipments, loading, error } = useSelector((state) => state.shipment);
+  const { availableShipments, loading, error } = useSelector(
+    (state) => state.shipment
+  );
   const { user } = useSelector((state) => state.auth);
 
   const [expandedShipments, setExpandedShipments] = useState(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     dispatch(fetchPublicOpenShipments());
   }, [dispatch]);
 
   const toggleShipmentDetails = (shipmentId) => {
-    setExpandedShipments(prev => {
+    setExpandedShipments((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(shipmentId)) {
         newSet.delete(shipmentId);
@@ -38,32 +65,34 @@ const BrowseShipmentsPage = () => {
     });
   };
 
-  const filteredShipments = availableShipments.filter(shipment => {
-    const matchesSearch = 
-      shipment.shipmentTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredShipments = availableShipments.filter((shipment) => {
+    const matchesSearch =
+      shipment.shipmentTitle
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       shipment.pickupCity?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       shipment.deliveryCity?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       shipment.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Only show open shipments
-    const isOpen = shipment.status === 'open';
+    const isOpen = shipment.status === "open";
 
     return matchesSearch && isOpen;
   });
 
   const sortedShipments = [...filteredShipments].sort((a, b) => {
     switch (sortBy) {
-      case 'newest':
+      case "newest":
         return new Date(b.createdAt) - new Date(a.createdAt);
-      case 'oldest':
+      case "oldest":
         return new Date(a.createdAt) - new Date(b.createdAt);
-      case 'price-high':
+      case "price-high":
         return (b.budget || 0) - (a.budget || 0);
-      case 'price-low':
+      case "price-low":
         return (a.budget || 0) - (b.budget || 0);
-      case 'pickup':
+      case "pickup":
         return a.pickupCity?.localeCompare(b.pickupCity) || 0;
-      case 'delivery':
+      case "delivery":
         return a.deliveryCity?.localeCompare(b.deliveryCity) || 0;
       default:
         return 0;
@@ -71,37 +100,47 @@ const BrowseShipmentsPage = () => {
   });
 
   const getLogisticsDisplayName = (user) => {
-    if (!user) return 'Unknown User';
-    return user.companyName || user.name || user.email || 'Unknown User';
+    if (!user) return "Unknown User";
+    return user.companyName || user.name || user.email || "Unknown User";
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'open': return 'bg-green-100 text-green-800';
-      case 'accepted': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-emerald-100 text-emerald-800';
-      default: return 'bg-gray-100 text-gray-800 dark:text-gray-200';
+      case "open":
+        return "bg-green-100 text-green-800";
+      case "accepted":
+        return "bg-blue-100 text-blue-800";
+      case "completed":
+        return "bg-purple-100 text-purple-800";
+      case "delivered":
+        return "bg-emerald-100 text-emerald-800";
+      default:
+        return "bg-gray-100 text-gray-800 dark:text-gray-200";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'open': return <CheckCircle className="w-4 h-4" />;
-      case 'accepted': return <Clock className="w-4 h-4" />;
-      case 'completed': return <CheckCircle className="w-4 h-4" />;
-      case 'delivered': return <CheckCircle className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
+      case "open":
+        return <CheckCircle className="w-4 h-4" />;
+      case "accepted":
+        return <Clock className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "delivered":
+        return <CheckCircle className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
     }
   };
 
@@ -110,7 +149,9 @@ const BrowseShipmentsPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300 text-lg">Loading shipments...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">
+            Loading shipments...
+          </p>
         </div>
       </div>
     );
@@ -119,18 +160,23 @@ const BrowseShipmentsPage = () => {
   return (
     <div className="min-h-screen py-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <Link
+                to="/"
+                className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="font-medium">Back to Home</span>
               </Link>
               <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Open Shipments</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Open Shipments
+              </h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {user ? (
                 <Link
@@ -171,12 +217,14 @@ const BrowseShipmentsPage = () => {
             Only Open Shipments
           </div>
           <p className="text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Browse shipments that are currently open for bidding. These are active opportunities waiting for logistics providers to place competitive bids.
+            Browse shipments that are currently open for bidding. These are
+            active opportunities waiting for logistics providers to place
+            competitive bids.
           </p>
         </div>
 
         {/* Search and Sort Section */}
-        <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -220,28 +268,37 @@ const BrowseShipmentsPage = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="bg-blue-500 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Open Shipments</p>
-                <p className="text-3xl font-bold">
-                  {availableShipments.filter(s => s.status === 'open').length}
+                <p className="text-green-100 text-sm font-medium">
+                  Open Shipments
                 </p>
-                <p className="text-green-100 text-sm mt-1">Available for bidding</p>
+                <p className="text-3xl font-bold">
+                  {availableShipments.filter((s) => s.status === "open").length}
+                </p>
+                <p className="text-green-100 text-sm mt-1">
+                  Available for bidding
+                </p>
               </div>
               <CheckCircle className="w-12 h-12 text-green-200" />
             </div>
           </div>
-          
-          <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+
+          <div className="bg-blue-500 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium">Active Routes</p>
+                <p className="text-purple-100 text-sm font-medium">
+                  Active Routes
+                </p>
                 <p className="text-3xl font-bold">
-                  {new Set(availableShipments
-                    .filter(s => s.status === 'open')
-                    .map(s => `${s.pickupCity} → ${s.deliveryCity}`)
-                  ).size}
+                  {
+                    new Set(
+                      availableShipments
+                        .filter((s) => s.status === "open")
+                        .map((s) => `${s.pickupCity} → ${s.deliveryCity}`)
+                    ).size
+                  }
                 </p>
                 <p className="text-purple-100 text-sm mt-1">Unique routes</p>
               </div>
@@ -263,22 +320,23 @@ const BrowseShipmentsPage = () => {
 
           {sortedShipments.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Package className="w-12 h-12 text-green-600" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {searchTerm ? 'No matching open shipments found' : 'No open shipments available'}
+                {searchTerm
+                  ? "No matching open shipments found"
+                  : "No open shipments available"}
               </h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                {searchTerm 
-                  ? 'Try adjusting your search criteria to find open shipments'
-                  : 'No shipments are currently available for bidding. Check back later for new opportunities.'
-                }
+                {searchTerm
+                  ? "Try adjusting your search criteria to find open shipments"
+                  : "No shipments are currently available for bidding. Check back later for new opportunities."}
               </p>
               <div className="space-y-4">
                 {searchTerm && (
                   <button
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => setSearchTerm("")}
                     className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
@@ -307,13 +365,18 @@ const BrowseShipmentsPage = () => {
             </div>
           ) : (
             sortedShipments.map((shipment) => (
-              <div key={shipment._id} className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div
+                key={shipment._id}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300"
+              >
                 {/* Shipment Header */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{shipment.shipmentTitle}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          {shipment.shipmentTitle}
+                        </h3>
                         <span className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 bg-green-100 text-green-800">
                           <CheckCircle className="w-4 h-4" />
                           Open for Bidding
@@ -322,9 +385,13 @@ const BrowseShipmentsPage = () => {
                       <div className="flex items-center gap-6 text-gray-600 dark:text-gray-300">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4" />
-                          <span className="font-medium">{shipment.pickupCity}</span>
+                          <span className="font-medium">
+                            {shipment.pickupCity}
+                          </span>
                           <span>→</span>
-                          <span className="font-medium">{shipment.deliveryCity}</span>
+                          <span className="font-medium">
+                            {shipment.deliveryCity}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
@@ -332,15 +399,17 @@ const BrowseShipmentsPage = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       {shipment.budget && (
                         <div className="text-right">
                           <p className="text-sm text-gray-600">Budget</p>
-                          <p className="text-2xl font-bold text-green-600">{formatCurrency(shipment.budget)}</p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {formatCurrency(shipment.budget)}
+                          </p>
                         </div>
                       )}
-                      
+
                       <button
                         onClick={() => toggleShipmentDetails(shipment._id)}
                         className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -359,7 +428,9 @@ const BrowseShipmentsPage = () => {
                     {shipment.weightSummary && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <Weight className="w-4 h-4" />
-                        <span className="text-sm">{shipment.weightSummary}</span>
+                        <span className="text-sm">
+                          {shipment.weightSummary}
+                        </span>
                       </div>
                     )}
                     {shipment.dimensions && (
@@ -371,13 +442,19 @@ const BrowseShipmentsPage = () => {
                     {shipment.pickupDate && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-sm">Pickup: {new Date(shipment.pickupDate).toLocaleDateString()}</span>
+                        <span className="text-sm">
+                          Pickup:{" "}
+                          {new Date(shipment.pickupDate).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                     {shipment.deliveryDate && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <Clock className="w-4 h-4" />
-                        <span className="text-sm">Delivery: {new Date(shipment.deliveryDate).toLocaleDateString()}</span>
+                        <span className="text-sm">
+                          Delivery:{" "}
+                          {new Date(shipment.deliveryDate).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -389,17 +466,19 @@ const BrowseShipmentsPage = () => {
                         <User className="w-5 h-5 text-indigo-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{getLogisticsDisplayName(shipment.user)}</p>
+                        <p className="font-medium text-gray-900">
+                          {getLogisticsDisplayName(shipment.user)}
+                        </p>
                         <p className="text-sm text-gray-600">Shipper</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       {!user ? (
                         <div className="flex items-center gap-2">
                           <Link
                             to="/login"
-                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl"
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl"
                           >
                             <LogIn className="w-4 h-4" />
                             Login to Bid
@@ -412,15 +491,15 @@ const BrowseShipmentsPage = () => {
                             Join as Provider
                           </Link>
                         </div>
-                      ) : user.role === 'logistics' ? (
+                      ) : user.role === "logistics" ? (
                         <Link
                           to="/logistics-dashboard/available-shipments"
-                          className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         >
                           <Wallet className="w-4 h-4" />
                           BID NOW
                         </Link>
-                      ) : user.role === 'user' ? (
+                      ) : user.role === "user" ? (
                         <Link
                           to="/dashboard"
                           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
@@ -439,32 +518,44 @@ const BrowseShipmentsPage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Description */}
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Description</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Description
+                        </h4>
                         <p className="text-gray-700 leading-relaxed">
-                          {shipment.description || 'No description provided'}
+                          {shipment.description || "No description provided"}
                         </p>
                       </div>
 
                       {/* Special Instructions */}
                       {shipment.specialInstructions && (
                         <div>
-                          <h4 className="font-semibold text-gray-900 mb-3">Special Instructions</h4>
-                          <p className="text-gray-700 leading-relaxed">{shipment.specialInstructions}</p>
+                          <h4 className="font-semibold text-gray-900 mb-3">
+                            Special Instructions
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed">
+                            {shipment.specialInstructions}
+                          </p>
                         </div>
                       )}
 
                       {/* Contact Information */}
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Contact Information</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Contact Information
+                        </h4>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-700">{getLogisticsDisplayName(shipment.user)}</span>
+                            <span className="text-gray-700">
+                              {getLogisticsDisplayName(shipment.user)}
+                            </span>
                           </div>
                           {shipment.user?.email && (
                             <div className="flex items-center gap-2">
                               <MessageSquare className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-700">{shipment.user.email}</span>
+                              <span className="text-gray-700">
+                                {shipment.user.email}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -472,20 +563,31 @@ const BrowseShipmentsPage = () => {
 
                       {/* Additional Details */}
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Additional Details</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Additional Details
+                        </h4>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Shipment ID:</span>
-                            <span className="font-mono text-sm text-gray-700">{shipment._id.slice(-8)}</span>
+                            <span className="font-mono text-sm text-gray-700">
+                              {shipment._id.slice(-8)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Created:</span>
-                            <span className="text-gray-700">{formatDate(shipment.createdAt)}</span>
+                            <span className="text-gray-700">
+                              {formatDate(shipment.createdAt)}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Status:</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(shipment.status)}`}>
-                              {shipment.status.charAt(0).toUpperCase() + shipment.status.slice(1)}
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                shipment.status
+                              )}`}
+                            >
+                              {shipment.status.charAt(0).toUpperCase() +
+                                shipment.status.slice(1)}
                             </span>
                           </div>
                         </div>

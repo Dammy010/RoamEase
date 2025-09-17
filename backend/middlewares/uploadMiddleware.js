@@ -60,7 +60,7 @@ const fileFilter = (req, file, cb) => {
   
   if (file.fieldname === 'profilePicture' || file.fieldname === 'photos') {
     // Accept only images for profile pictures and general photos
-    const allowedImages = /jpg|jpeg|png/i; // Case-insensitive
+    const allowedImages = /jpg|jpeg|png|avif|webp/i; // Case-insensitive - added AVIF and WebP support
     const extname = allowedImages.test(path.extname(file.originalname));
     const mimetype = allowedImages.test(file.mimetype); // Check mimetype too
     
@@ -75,7 +75,7 @@ const fileFilter = (req, file, cb) => {
       return cb(null, true);
     }
     console.log('❌ Upload Middleware: File rejected - not a valid image');
-    return cb(new Error('Only JPG, JPEG, PNG images are allowed for profile pictures and photos!'));
+    return cb(new Error('Only JPG, JPEG, PNG, AVIF, WebP images are allowed for profile pictures and photos!'));
   }
 
   // Accept images and documents for chat attachments

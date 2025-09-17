@@ -19,7 +19,6 @@ export const fetchBidsForShipment = createAsyncThunk(
   'bid/fetchBidsForShipment',
   async (shipmentId, { rejectWithValue }) => {
     try {
-      console.log("DEBUG: fetchBidsForShipment - Dispatching for shipmentId:", shipmentId);
       const response = await api.get(`/bids/shipment/${shipmentId}`, {
         headers: {
           'Cache-Control': 'no-cache',
@@ -27,7 +26,6 @@ export const fetchBidsForShipment = createAsyncThunk(
           'Expires': '0'
         }
       });
-      console.log("DEBUG: fetchBidsForShipment - API response data:", response.data);
       return response.data; // Array of bids
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -81,7 +79,6 @@ export const fetchBidsOnMyShipments = createAsyncThunk(
   'bid/fetchBidsOnMyShipments',
   async (_, { rejectWithValue }) => {
     try {
-      console.log("DEBUG: fetchBidsOnMyShipments - Dispatching API call to /bids/on-my-shipments");
       const response = await api.get('/bids/on-my-shipments', { 
         headers: {
           'Cache-Control': 'no-cache', // Prevent caching
@@ -89,7 +86,6 @@ export const fetchBidsOnMyShipments = createAsyncThunk(
           'Expires': '0' // For older HTTP/1.0 caches
         }
       });
-      console.log("DEBUG: fetchBidsOnMyShipments - API response data:", response.data);
       return response.data; // Array of bids
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -137,7 +133,6 @@ const bidSlice = createSlice({
   reducers: {
     // Mark bids as viewed when user visits manage bids page
     markBidsAsViewed: (state) => {
-      console.log('🧹 Marking bids as viewed');
       state.bidsViewed = true;
     },
     // Can add local reducers if needed for real-time updates or local state management

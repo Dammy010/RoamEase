@@ -59,8 +59,6 @@ const NewMessageInput = ({ conversationId }) => {
     for (const file of files) {
       try {
         setIsUploading(true);
-        console.log('Uploading file:', file.name, 'Type:', file.type, 'Size:', file.size);
-        
         // Create FormData for file upload
         const formData = new FormData();
         formData.append('file', file);
@@ -70,9 +68,6 @@ const NewMessageInput = ({ conversationId }) => {
         if (!token) {
           throw new Error('No authentication token found');
         }
-        
-        console.log('Uploading to:', `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/chat/upload`);
-        
         // Upload file to backend
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/chat/upload`, {
           method: 'POST',
@@ -81,9 +76,6 @@ const NewMessageInput = ({ conversationId }) => {
           },
           body: formData
         });
-        
-        console.log('Upload response status:', response.status);
-        
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Upload failed:', errorText);
@@ -91,8 +83,6 @@ const NewMessageInput = ({ conversationId }) => {
         }
         
         const result = await response.json();
-        console.log('Upload result:', result);
-        
         // Add uploaded file to attachments
         const newAttachment = {
           id: Date.now() + Math.random(),
@@ -103,8 +93,6 @@ const NewMessageInput = ({ conversationId }) => {
         };
         
         setAttachments(prev => [...prev, newAttachment]);
-        console.log('File added to attachments:', newAttachment);
-        
       } catch (error) {
         console.error('File upload error:', error);
         alert(`Failed to upload file: ${error.message}`);
@@ -130,7 +118,7 @@ const NewMessageInput = ({ conversationId }) => {
     <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200/50">
       {/* Attachments Preview */}
       {attachments.length > 0 && (
-        <div className="p-3 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-gray-200/30">
+        <div className="p-3 bg-blue-50 border-b border-gray-200/30">
           <div className="flex flex-wrap gap-2">
             {attachments.map((attachment) => (
               <div key={attachment.id} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-200">
@@ -230,7 +218,7 @@ const NewMessageInput = ({ conversationId }) => {
           disabled={(!text.trim() && attachments.length === 0) || isUploading}
           className={`p-3 rounded-xl text-white font-semibold shadow-lg transition-all duration-200 group ${
             (text.trim() || attachments.length > 0) && !isUploading
-              ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105"
+              ? "bg-blue-500 hover:bg-blue-600 hover:shadow-xl transform hover:scale-105"
               : "bg-gray-300 cursor-not-allowed"
           }`}
           title={isUploading ? "Uploading..." : "Send message"}

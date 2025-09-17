@@ -33,7 +33,7 @@ const LandingPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white px-4 sm:px-6 lg:px-16 gap-8 lg:gap-10"
+        className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-blue-600 text-white px-4 sm:px-6 lg:px-16 gap-8 lg:gap-10"
       >
         {/* Left Content */}
         <motion.div
@@ -46,8 +46,8 @@ const LandingPage = () => {
             Connect With Global Logistics Providers Instantly
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-200 max-w-2xl mb-6 sm:mb-8">
-            RoamEase is the online marketplace where shippers post requests and licensed
-            providers bid to fulfill them — no middlemen.
+            RoamEase is the online marketplace where shippers post requests and
+            licensed providers bid to fulfill them — no middlemen.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
             <motion.button
@@ -62,7 +62,7 @@ const LandingPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/signup")}
-              className="bg-yellow-400 text-gray-900 font-semibold py-3 px-6 sm:px-8 rounded-lg shadow-lg hover:bg-yellow-300 transition duration-300 text-sm sm:text-base"
+              className="bg-transparent border-2 border-white text-white font-semibold py-3 px-6 sm:px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300 text-sm sm:text-base"
             >
               Get Started Now
             </motion.button>
@@ -90,7 +90,7 @@ const LandingPage = () => {
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.8 }}
-        className="py-12 sm:py-16 text-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900"
+        className="py-12 sm:py-16 text-center bg-blue-50 dark:bg-gray-900"
       >
         <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-white px-4">
           Why Choose RoamEase?
@@ -138,12 +138,18 @@ const LandingPage = () => {
               animate={isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               whileHover={{ scale: 1.05 }}
-              className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg rounded-xl p-4 sm:p-6 text-left flex items-start gap-3 sm:gap-4 hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 dark:border-gray-700/50"
+              className="bg-white dark:bg-gray-800 backdrop-blur-sm shadow-lg rounded-xl p-4 sm:p-6 text-left flex items-start gap-3 sm:gap-4 hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 dark:border-gray-700/50"
             >
-              <div className="text-blue-600 dark:text-blue-400 text-2xl">{feature.icon}</div>
+              <div className="text-blue-600 dark:text-blue-400 text-2xl">
+                {feature.icon}
+              </div>
               <div>
-                <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">{feature.desc}</p>
+                <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+                  {feature.desc}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -156,9 +162,11 @@ const LandingPage = () => {
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-12 sm:py-16 text-center bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900"
+        className="py-12 sm:py-16 text-center bg-blue-600"
       >
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white px-4">How It Works</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white px-4">
+          How It Works
+        </h2>
         <p className="text-blue-100 mb-8 sm:mb-12 max-w-2xl mx-auto px-4 text-sm sm:text-base">
           Get started with RoamEase in four simple steps
         </p>
@@ -192,13 +200,17 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               viewport={{ once: true }}
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center text-center transition-transform bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover:shadow-2xl border border-white/50 dark:border-gray-700/50"
+              className="flex flex-col items-center text-center transition-transform bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl border border-white/50 dark:border-gray-700/50"
             >
-              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full p-3 sm:p-4 text-2xl sm:text-3xl mb-3 sm:mb-4 shadow-lg">
+              <div className="bg-blue-500 text-white rounded-full p-3 sm:p-4 text-2xl sm:text-3xl mb-3 sm:mb-4 shadow-lg">
                 {step.icon}
               </div>
-              <h3 className="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white">{step.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">{step.desc}</p>
+              <h3 className="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white">
+                {step.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+                {step.desc}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -210,7 +222,7 @@ const LandingPage = () => {
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-16 sm:py-20 bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900"
+        className="py-16 sm:py-20 bg-blue-50 dark:bg-gray-900"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
@@ -225,11 +237,13 @@ const LandingPage = () => {
               Simple, Transparent Pricing
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4">
-              Choose the perfect plan for your logistics needs. No hidden fees, no surprises.
+              Choose the perfect plan for your logistics needs. No hidden fees,
+              no surprises.
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-3xl mx-auto">
+            <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-3xl mx-auto">
               <p className="text-blue-800 dark:text-blue-200 font-medium text-center">
-                📋 <strong>For Logistics Providers:</strong> Subscription required before verification and bidding on shipments
+                📋 <strong>For Logistics Providers:</strong> Subscription
+                required before verification and bidding on shipments
               </p>
             </div>
           </motion.div>
@@ -242,17 +256,25 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               viewport={{ once: true }}
-              className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
+              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
             >
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FaShieldAlt className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Basic</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Perfect for small businesses</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Basic
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Perfect for small businesses
+                </p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">$29</span>
-                  <span className="text-gray-600 dark:text-gray-400">/month</span>
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                    ₦45,600
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    /month
+                  </span>
                 </div>
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-center text-gray-600 dark:text-gray-400">
@@ -277,7 +299,7 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-br from-white/95 to-blue-50/95 dark:from-gray-900/95 dark:to-blue-900/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border-2 border-blue-500/50 dark:border-blue-400/50 relative scale-105 hover:shadow-3xl transition-all duration-300"
+              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border-2 border-blue-500/50 dark:border-blue-400/50 relative scale-105 hover:shadow-3xl transition-all duration-300"
             >
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
@@ -285,14 +307,22 @@ const LandingPage = () => {
                 </span>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FaHandshake className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Premium</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Ideal for growing businesses</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Premium
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Ideal for growing businesses
+                </p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">$79</span>
-                  <span className="text-gray-600 dark:text-gray-400">/month</span>
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                    ₦65,600
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    /month
+                  </span>
                 </div>
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-center text-gray-600 dark:text-gray-400">
@@ -321,17 +351,25 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-br from-white/90 to-yellow-50/90 dark:from-gray-900/90 dark:to-yellow-900/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
+              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
             >
               <div className="text-center">
-                <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FaTruck className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Enterprise</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">For large-scale operations</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Enterprise
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  For large-scale operations
+                </p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">$199</span>
-                  <span className="text-gray-600 dark:text-gray-400">/month</span>
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                    ₦150,600
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    /month
+                  </span>
                 </div>
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-center text-gray-600 dark:text-gray-400">
@@ -367,7 +405,7 @@ const LandingPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/pricing")}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-8 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
+              className="bg-blue-600 text-white font-semibold py-4 px-8 rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
             >
               View Full Pricing Details
             </motion.button>
@@ -381,7 +419,7 @@ const LandingPage = () => {
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-12 sm:py-16 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white text-center"
+        className="py-12 sm:py-16 bg-blue-600 text-white text-center"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
@@ -404,7 +442,7 @@ const LandingPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/signup")}
-              className="bg-yellow-400 text-gray-900 font-semibold py-3 px-6 sm:px-8 rounded-lg hover:bg-yellow-300 transition duration-300 text-sm sm:text-base"
+              className="bg-transparent border-2 border-white text-white font-semibold py-3 px-6 sm:px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300 text-sm sm:text-base"
             >
               Get Started Now
             </motion.button>

@@ -67,6 +67,14 @@ const subscriptionSlice = createSlice({
     },
     setCurrentSubscription: (state, action) => {
       state.currentSubscription = action.payload;
+    },
+    clearState: (state) => {
+      state.subscriptions = [];
+      state.currentSubscription = null;
+      state.loading = false;
+      state.error = null;
+      state.paymentLoading = false;
+      state.paymentError = null;
     }
   },
   extraReducers: (builder) => {
@@ -150,5 +158,5 @@ const subscriptionSlice = createSlice({
   }
 });
 
-export const { clearError, setCurrentSubscription } = subscriptionSlice.actions;
+export const { clearError, setCurrentSubscription, clearState } = subscriptionSlice.actions;
 export default subscriptionSlice.reducer;

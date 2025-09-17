@@ -43,12 +43,9 @@
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* Gradient text */
+/* Solid blue text */
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #3b82f6; /* blue-500 */
 }
 
 /* Custom animations */

@@ -22,27 +22,20 @@ export const getProfilePictureUrl = (profilePicture) => {
   
   // Normalize the path - remove any leading slashes and normalize separators
   let cleanPath = profilePicture.replace(/\\/g, '/').replace(/^\/+/, '');
-  
-  console.log('🔍 getProfilePictureUrl - Original path:', profilePicture);
-  console.log('🔍 getProfilePictureUrl - Clean path:', cleanPath);
-  
   // If the path already includes 'uploads/profiles/', use it directly
   if (cleanPath.startsWith('uploads/profiles/')) {
     const finalUrl = `${backendBaseUrl}/${cleanPath}`;
-    console.log('🔍 getProfilePictureUrl - Final URL (uploads/profiles):', finalUrl);
     return finalUrl;
   }
   
   // If the path starts with 'uploads/' but not 'uploads/profiles/', assume it's in profiles
   if (cleanPath.startsWith('uploads/')) {
     const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath.replace('uploads/', '')}`;
-    console.log('🔍 getProfilePictureUrl - Final URL (uploads):', finalUrl);
     return finalUrl;
   }
   
   // If it's just a filename, assume it's in the profiles directory
   const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath}`;
-  console.log('🔍 getProfilePictureUrl - Final URL (filename):', finalUrl);
   return finalUrl;
 };
 

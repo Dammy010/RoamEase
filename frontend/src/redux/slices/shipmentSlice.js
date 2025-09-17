@@ -111,7 +111,6 @@ export const fetchShipmentDetailsById = createAsyncThunk(
   'shipment/fetchDetailsById',
   async (shipmentId, thunkAPI) => {
     try {
-      console.log("DEBUG: fetchShipmentDetailsById - Dispatching for shipmentId:", shipmentId);
       const res = await api.get(`/shipments/${shipmentId}`, {
         headers: {
           'Cache-Control': 'no-cache',
@@ -119,7 +118,6 @@ export const fetchShipmentDetailsById = createAsyncThunk(
           'Expires': '0'
         }
       });
-      console.log("DEBUG: fetchShipmentDetailsById - API response data:", res.data);
       return res.data; // { success, shipment }
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to fetch shipment details';

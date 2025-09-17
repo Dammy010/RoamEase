@@ -42,7 +42,6 @@ const MessageBubble = ({ message }) => {
             onClick={() => window.open(attachment.url, '_blank')}
             onError={(e) => {
               // Fallback to file display if image fails to load
-              console.log('Image failed to load:', attachment.url);
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'block';
             }}
@@ -95,7 +94,7 @@ const MessageBubble = ({ message }) => {
         <div
           className={`p-4 rounded-2xl break-words shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:shadow-xl ${
             isMine 
-              ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white border border-blue-400/20" 
+              ? "bg-blue-500 text-white border border-blue-400/20" 
               : "bg-white/90 text-gray-900 border border-gray-200/50"
           }`}
         >

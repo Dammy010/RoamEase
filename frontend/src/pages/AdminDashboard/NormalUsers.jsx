@@ -116,7 +116,6 @@ const NormalUsers = () => {
           onClose={handleCloseEditModal}
           onSave={(updatedUser) => {
             // Dispatch update user action
-            console.log('Updated user', updatedUser);
             handleCloseEditModal();
           }}
         />

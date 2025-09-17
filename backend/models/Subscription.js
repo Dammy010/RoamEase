@@ -8,7 +8,7 @@ const subscriptionSchema = new mongoose.Schema({
   },
   plan: { 
     type: String, 
-    enum: ['basic'], 
+    enum: ['basic', 'premium', 'enterprise'], 
     default: 'basic' 
   },
   billingCycle: { 
@@ -27,10 +27,11 @@ const subscriptionSchema = new mongoose.Schema({
   },
   currency: { 
     type: String, 
-    default: 'usd' 
+    default: 'NGN' 
   },
   paymentId: String,
-  stripeSubscriptionId: String,
+  paystackReference: String,
+  paystackSubscriptionCode: String,
   currentPeriodStart: Date,
   currentPeriodEnd: Date,
   expiresAt: Date,

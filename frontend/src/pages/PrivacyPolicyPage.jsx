@@ -324,13 +324,13 @@ We are committed to addressing your privacy concerns promptly and transparently.
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-blue-50 dark:from-gray-900 dark:to-gray-800">
       {/* Hero Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-16 px-4 sm:px-6 lg:px-8"
+        className="bg-blue-600 text-white py-16 px-4 sm:px-6 lg:px-8"
       >
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
@@ -470,7 +470,7 @@ We are committed to addressing your privacy concerns promptly and transparently.
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-8 md:p-12 text-white text-center mt-12"
+          className="bg-blue-600 rounded-3xl p-8 md:p-12 text-white text-center mt-12"
         >
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}

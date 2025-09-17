@@ -27,31 +27,31 @@ class BeautifulErrorHandler {
 
     // Handle different types of errors
     if (err.name === 'ValidationError') {
-      return this.handleValidationError(err, res);
+      return BeautifulErrorHandler.handleValidationError(err, res);
     }
 
     if (err.name === 'CastError') {
-      return this.handleCastError(err, res);
+      return BeautifulErrorHandler.handleCastError(err, res);
     }
 
     if (err.name === 'MongoError' || err.name === 'MongoServerError') {
-      return this.handleMongoError(err, res);
+      return BeautifulErrorHandler.handleMongoError(err, res);
     }
 
     if (err.name === 'JsonWebTokenError') {
-      return this.handleJWTError(err, res);
+      return BeautifulErrorHandler.handleJWTError(err, res);
     }
 
     if (err.name === 'TokenExpiredError') {
-      return this.handleTokenExpiredError(err, res);
+      return BeautifulErrorHandler.handleTokenExpiredError(err, res);
     }
 
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return this.handleFileSizeError(err, res);
+      return BeautifulErrorHandler.handleFileSizeError(err, res);
     }
 
     // Default error handling
-    return this.handleDefaultError(err, res);
+    return BeautifulErrorHandler.handleDefaultError(err, res);
   }
 
   /**

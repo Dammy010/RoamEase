@@ -119,7 +119,6 @@ const BidForm = ({ shipmentId, onSubmit, onCancel }) => {
           <p className="text-sm text-gray-500 mt-1">How long will it take to complete this shipment?</p>
         </div>
 
-
         {/* Message */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

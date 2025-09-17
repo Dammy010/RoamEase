@@ -25,7 +25,6 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
-      console.log("DEBUG: Axios Interceptor - Attaching token:", token ? "Token present" : "No token");
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -60,16 +59,10 @@ api.interceptors.response.use(
         if (!refreshToken) {
           throw new Error("No refresh token found");
         }
-
-        console.log("DEBUG: API Interceptor - Attempting token refresh...");
-
         // Call refresh endpoint
         const res = await axios.post("http://localhost:5000/api/auth/refresh", {
           token: refreshToken, // matches backend contract
         });
-
-        console.log("DEBUG: API Interceptor - Token refresh successful");
-
         const newAccessToken = res.data.accessToken;
 
         // Save new access token
@@ -81,7 +74,6 @@ api.interceptors.response.use(
           const { reconnectSocket } = await import('./socket');
           const newSocket = reconnectSocket();
           if (newSocket) {
-            console.log("Socket reconnected with new token");
           }
         } catch (socketError) {
           console.warn("Socket reconnection failed:", socketError.message);
@@ -109,7 +101,6 @@ api.interceptors.response.use(
             window.store.dispatch(logout());
           } else {
             // Fallback to direct redirect if store is not available
-            console.log("DEBUG: API Interceptor - Store not available, redirecting to login");
             window.location.href = "/login";
           }
         } catch (dispatchError) {

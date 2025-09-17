@@ -146,8 +146,6 @@ const ReportForm = ({ isOpen, onClose, relatedShipment = null, relatedBid = null
         relatedShipment: relatedShipment?._id || null,
         relatedBid: relatedBid?._id || null
       };
-
-      console.log('Report data being sent:', reportData);
       await dispatch(createReport(reportData)).unwrap();
       
       toast.success('Report submitted successfully!');
