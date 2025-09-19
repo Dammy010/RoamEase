@@ -314,15 +314,15 @@ const AvailableShipments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-8 sm:py-16">
             <div className="text-center">
-              <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 Loading Available Shipments
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 Finding the best opportunities for you...
               </p>
             </div>
@@ -334,24 +334,24 @@ const AvailableShipments = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="text-center py-16">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="text-red-500 text-3xl" />
+            <div className="text-center py-8 sm:py-16">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <AlertCircle className="text-red-500 text-2xl sm:text-3xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 Error Loading Shipments
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 max-w-md mx-auto">
                 {error}
               </p>
               <button
                 onClick={() => dispatch(fetchAvailableShipments())}
-                className="px-8 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
               >
-                <RefreshCw className="inline-block mr-2" size={20} />
+                <RefreshCw className="inline-block mr-2" size={16} />
                 Try Again
               </button>
             </div>
@@ -361,38 +361,41 @@ const AvailableShipments = () => {
     );
   }
   return (
-    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-blue-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
-          <div className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                  <Package className="text-white text-3xl" />
+        <div className="bg-blue-600 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden mb-6 sm:mb-8">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20">
+                  <Package className="text-white text-2xl sm:text-3xl" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
                     Available Shipments
                   </h1>
-                  <p className="text-indigo-100 text-lg">
+                  <p className="text-indigo-100 text-sm sm:text-base md:text-lg">
                     Discover and bid on shipments from shippers worldwide
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 {/* Verification Status Indicator */}
                 {!isUserVerified() ? (
                   <div
-                    className={`backdrop-blur-sm rounded-xl px-4 py-2 border ${
+                    className={`backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 border ${
                       user?.verificationStatus === "rejected"
                         ? "bg-red-500/20 border-red-300/30"
                         : "bg-orange-500/20 border-orange-300/30"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <AlertCircle size={16} className="text-white" />
-                      <span className="text-white font-semibold text-sm">
+                      <AlertCircle
+                        size={14}
+                        className="text-white sm:w-4 sm:h-4"
+                      />
+                      <span className="text-white font-semibold text-xs sm:text-sm">
                         {user?.verificationStatus === "rejected"
                           ? "Verification Rejected"
                           : "Verification Pending"}
@@ -400,18 +403,21 @@ const AvailableShipments = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-green-500/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-300/30">
+                  <div className="bg-green-500/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 border border-green-300/30">
                     <div className="flex items-center gap-2">
-                      <CheckCircle size={16} className="text-white" />
-                      <span className="text-white font-semibold text-sm">
+                      <CheckCircle
+                        size={14}
+                        className="text-white sm:w-4 sm:h-4"
+                      />
+                      <span className="text-white font-semibold text-xs sm:text-sm">
                         Verified
                       </span>
                     </div>
                   </div>
                 )}
 
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
-                  <span className="text-white font-semibold text-lg">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 border border-white/20">
+                  <span className="text-white font-semibold text-sm sm:text-base md:text-lg">
                     {availableShipments.length} opportunities
                   </span>
                 </div>
@@ -426,14 +432,14 @@ const AvailableShipments = () => {
                     });
                   }}
                   disabled={profileLoading || isRefreshingProfile}
-                  className={`px-4 py-2 backdrop-blur-sm text-white rounded-xl transition-all duration-300 flex items-center gap-2 border border-white/20 ${
+                  className={`px-3 py-2 sm:px-4 backdrop-blur-sm text-white rounded-lg sm:rounded-xl transition-all duration-300 flex items-center gap-2 border border-white/20 text-xs sm:text-sm ${
                     profileLoading || isRefreshingProfile
                       ? "bg-white/10 cursor-not-allowed opacity-50"
                       : "bg-white/20 hover:bg-white/30"
                   }`}
                   title="Refresh verification status"
                 >
-                  <Shield size={16} className="text-white" />
+                  <Shield size={14} className="text-white sm:w-4 sm:h-4" />
                   <span className="text-white font-medium">
                     {profileLoading || isRefreshingProfile
                       ? "Checking..."
@@ -442,9 +448,9 @@ const AvailableShipments = () => {
                 </button>
                 <button
                   onClick={() => dispatch(fetchAvailableShipments())}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-xs sm:text-sm"
                 >
-                  <RefreshCw size={16} className="text-white" />
+                  <RefreshCw size={14} className="text-white sm:w-4 sm:h-4" />
                   <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
@@ -453,28 +459,28 @@ const AvailableShipments = () => {
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={20}
+                  size={18}
                 />
                 <input
                   type="text"
                   placeholder="Search shipments by title, type, or location..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
                 />
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <select
                 value={filterBy}
                 onChange={(e) => setFilterBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                className="px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
               >
                 <option value="all">All Shipments</option>
                 <option value="withAttachments">With Attachments</option>
@@ -483,7 +489,7 @@ const AvailableShipments = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                className="px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-sm sm:text-base"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -494,9 +500,9 @@ const AvailableShipments = () => {
           </div>
 
           {/* Results Summary */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600 font-medium">
+          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-gray-600 font-medium text-sm sm:text-base">
                 Showing {filteredAndSortedShipments.length} of{" "}
                 {availableShipments.length} shipments
               </span>
@@ -507,22 +513,22 @@ const AvailableShipments = () => {
                     setFilterBy("all");
                     setSortBy("newest");
                   }}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium flex items-center gap-2"
+                  className="px-3 py-2 sm:px-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium flex items-center gap-2 text-xs sm:text-sm"
                 >
-                  <Filter size={16} />
+                  <Filter size={14} className="sm:w-4 sm:h-4" />
                   Clear Filters
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <TrendingUp size={16} />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+              <TrendingUp size={14} className="sm:w-4 sm:h-4" />
               <span>Real-time updates</span>
             </div>
           </div>
         </div>
 
         {filteredAndSortedShipments.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {filteredAndSortedShipments.map((shipment, index) => {
               const isExpanded = expandedShipments.has(shipment._id);
 
@@ -532,26 +538,26 @@ const AvailableShipments = () => {
                   className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
                 >
                   {/* Compact Header View */}
-                  <div className="p-8">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  <div className="p-4 sm:p-6 md:p-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
                       {/* Left Side - Basic Info */}
                       <div className="flex-1">
-                        <div className="flex items-start gap-4 mb-4">
+                        <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
                           <div className="relative">
-                            <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
                               📦
                             </div>
-                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 text-white text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
+                            <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
                               {index + 1}
                             </div>
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                               {shipment.shipmentTitle}
                             </h3>
-                            <div className="flex items-center gap-2 mb-3">
-                              <MapPin className="text-gray-400" size={16} />
-                              <span className="text-gray-600 font-medium text-lg">
+                            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                              <MapPin className="text-gray-400" size={14} />
+                              <span className="text-gray-600 font-medium text-sm sm:text-base md:text-lg">
                                 {shipment.routeSummary}
                               </span>
                             </div>
@@ -559,55 +565,55 @@ const AvailableShipments = () => {
                         </div>
 
                         {/* Quick Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <Package className="text-blue-600" size={16} />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+                          <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-blue-50 rounded-xl">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <Package className="text-blue-600" size={14} />
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">
                                 Type
                               </div>
-                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              <div className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 {shipment.typeOfGoods}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
-                            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                              <Weight className="text-green-600" size={16} />
+                          <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-green-50 rounded-xl">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                              <Weight className="text-green-600" size={14} />
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">
                                 Weight
                               </div>
-                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              <div className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 {shipment.weightSummary || "N/A"}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
-                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                              <Ruler className="text-purple-600" size={16} />
+                          <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-purple-50 rounded-xl">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                              <Ruler className="text-purple-600" size={14} />
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">
                                 Quantity
                               </div>
-                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              <div className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 {shipment.quantitySummary}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
-                            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                              <Truck className="text-orange-600" size={16} />
+                          <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-orange-50 rounded-xl">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                              <Truck className="text-orange-600" size={14} />
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 font-medium">
                                 Mode
                               </div>
-                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              <div className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 {shipment.modeOfTransport}
                               </div>
                             </div>
@@ -616,12 +622,12 @@ const AvailableShipments = () => {
                       </div>
 
                       {/* Right Side - Actions & Status */}
-                      <div className="flex flex-col items-end gap-4">
+                      <div className="flex flex-col items-end gap-3 sm:gap-4">
                         {/* Status Badges */}
-                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
                           {shipment.urgency && (
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                              className={`px-2 py-1 sm:px-3 rounded-full text-xs font-semibold border ${
                                 shipment.urgencyColor === "red"
                                   ? "bg-red-100 text-red-800 border-red-200"
                                   : shipment.urgencyColor === "orange"
@@ -632,21 +638,21 @@ const AvailableShipments = () => {
                               ⚡ {shipment.urgency} Priority
                             </span>
                           )}
-                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
+                          <span className="px-2 py-1 sm:px-3 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
                             {shipment.status}
                           </span>
-                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">
+                          <span className="px-2 py-1 sm:px-3 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">
                             Open for Bidding
                           </span>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           {(shipment.photos?.length > 0 ||
                             shipment.documents?.length > 0) &&
                             !isExpanded && (
-                              <div className="flex items-center gap-1 px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold border border-pink-200">
-                                <FileText size={12} />
+                              <div className="flex items-center gap-1 px-2 py-1 sm:px-3 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold border border-pink-200">
+                                <FileText size={10} className="sm:w-3 sm:h-3" />
                                 <span>
                                   {(shipment.photos?.length || 0) +
                                     (shipment.documents?.length || 0)}{" "}
@@ -661,7 +667,7 @@ const AvailableShipments = () => {
                                 ? "Hide detailed shipment information"
                                 : "View complete shipment details including photos and documents"
                             }
-                            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 ${
+                            className={`px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-xs sm:text-sm ${
                               isExpanded
                                 ? "bg-gray-600 text-white hover:bg-gray-700"
                                 : "bg-blue-500 text-white hover:bg-blue-600"
@@ -669,13 +675,22 @@ const AvailableShipments = () => {
                           >
                             {isExpanded ? (
                               <>
-                                <ChevronUp size={16} />
-                                Hide Details
+                                <ChevronUp
+                                  size={14}
+                                  className="sm:w-4 sm:h-4"
+                                />
+                                <span className="hidden sm:inline">
+                                  Hide Details
+                                </span>
+                                <span className="sm:hidden">Hide</span>
                               </>
                             ) : (
                               <>
-                                <Eye size={16} />
-                                View Details
+                                <Eye size={14} className="sm:w-4 sm:h-4" />
+                                <span className="hidden sm:inline">
+                                  View Details
+                                </span>
+                                <span className="sm:hidden">View</span>
                               </>
                             )}
                           </button>
@@ -683,16 +698,26 @@ const AvailableShipments = () => {
                             <div className="flex flex-col items-end">
                               <button
                                 disabled
-                                className={`px-6 py-3 text-white rounded-xl cursor-not-allowed font-semibold shadow-lg flex items-center gap-2 ${
+                                className={`px-4 py-2 sm:px-6 sm:py-3 text-white rounded-xl cursor-not-allowed font-semibold shadow-lg flex items-center gap-2 text-xs sm:text-sm ${
                                   user?.verificationStatus === "rejected"
                                     ? "bg-red-500"
                                     : "bg-orange-500"
                                 }`}
                               >
-                                <AlertCircle size={16} />
-                                {user?.verificationStatus === "rejected"
-                                  ? "Verification Rejected"
-                                  : "Verification Pending"}
+                                <AlertCircle
+                                  size={14}
+                                  className="sm:w-4 sm:h-4"
+                                />
+                                <span className="hidden sm:inline">
+                                  {user?.verificationStatus === "rejected"
+                                    ? "Verification Rejected"
+                                    : "Verification Pending"}
+                                </span>
+                                <span className="sm:hidden">
+                                  {user?.verificationStatus === "rejected"
+                                    ? "Rejected"
+                                    : "Pending"}
+                                </span>
                               </button>
                               <p className="text-xs text-gray-500 mt-1 text-right max-w-32">
                                 {user?.verificationStatus === "rejected"
@@ -712,30 +737,44 @@ const AvailableShipments = () => {
                                   onClick={() =>
                                     handleEditBidClick(shipment._id)
                                   }
-                                  className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                  className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-xs sm:text-sm"
                                   disabled={bidLoading}
                                 >
-                                  <Wallet size={16} />
-                                  Edit Bid
+                                  <Wallet size={14} className="sm:w-4 sm:h-4" />
+                                  <span className="hidden sm:inline">
+                                    Edit Bid
+                                  </span>
+                                  <span className="sm:hidden">Edit</span>
                                 </button>
                               ) : (
                                 <button
                                   onClick={() =>
                                     handlePlaceBidClick(shipment._id)
                                   }
-                                  className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                  className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-xs sm:text-sm"
                                   disabled={bidLoading}
                                 >
                                   {bidLoading &&
                                   selectedShipmentId === shipment._id ? (
                                     <>
-                                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                      Placing Bid...
+                                      <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      <span className="hidden sm:inline">
+                                        Placing Bid...
+                                      </span>
+                                      <span className="sm:hidden">
+                                        Placing...
+                                      </span>
                                     </>
                                   ) : (
                                     <>
-                                      <Wallet size={16} />
-                                      Place Bid
+                                      <Wallet
+                                        size={14}
+                                        className="sm:w-4 sm:h-4"
+                                      />
+                                      <span className="hidden sm:inline">
+                                        Place Bid
+                                      </span>
+                                      <span className="sm:hidden">Bid</span>
                                     </>
                                   )}
                                 </button>
@@ -747,34 +786,34 @@ const AvailableShipments = () => {
                     </div>
 
                     {/* Shipper Info */}
-                    <div className="mt-6 pt-6 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                    <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4">
                           <div className="flex items-center gap-2">
-                            <User className="text-gray-400" size={16} />
-                            <span className="text-gray-600 font-medium">
+                            <User className="text-gray-400" size={14} />
+                            <span className="text-gray-600 font-medium text-sm sm:text-base">
                               Shipper:
                             </span>
-                            <span className="font-semibold text-gray-800 dark:text-gray-200">
+                            <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm sm:text-base">
                               {getLogisticsDisplayName(shipment.user)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Globe className="text-gray-400" size={16} />
-                            <span className="text-gray-600">
+                            <Globe className="text-gray-400" size={14} />
+                            <span className="text-gray-600 text-sm sm:text-base">
                               {shipment.user.country}
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                           <div className="flex items-center gap-2">
-                            <Calendar className="text-gray-400" size={14} />
+                            <Calendar className="text-gray-400" size={12} />
                             <span>Posted: {shipment.formattedCreatedDate}</span>
                           </div>
                           {(shipment.photos?.length > 0 ||
                             shipment.documents?.length > 0) && (
                             <div className="flex items-center gap-1 text-pink-600">
-                              <FileText size={14} />
+                              <FileText className="sm:w-3 sm:h-3" size={12} />
                               <span>
                                 {shipment.photos?.length || 0} photos,{" "}
                                 {shipment.documents?.length || 0} docs

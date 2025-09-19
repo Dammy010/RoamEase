@@ -9,6 +9,7 @@ import {
   markShipmentAsDeliveredByUser,
 } from "../../redux/slices/shipmentSlice";
 import { toast } from "react-toastify";
+import ShipmentTracking from "../../components/shipment/ShipmentTracking";
 import {
   ArrowRight,
   Package,
@@ -73,6 +74,7 @@ const ShipmentDetail = () => {
 
   // Popup state
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -698,6 +700,17 @@ const ShipmentDetail = () => {
                   Manage Bids
                 </button>
 
+                {/* Track Shipment Button */}
+                {currentShipment?.status === "accepted" && (
+                  <button
+                    onClick={() => setShowTrackingModal(true)}
+                    className="w-full px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  >
+                    <Navigation size={18} />
+                    Track Shipment
+                  </button>
+                )}
+
                 {/* Mark as Received Button */}
                 {(currentShipment?.status === "delivered" || isShipper) && (
                   <button
@@ -845,6 +858,14 @@ const ShipmentDetail = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tracking Modal */}
+      {showTrackingModal && (
+        <ShipmentTracking
+          shipmentId={id}
+          onClose={() => setShowTrackingModal(false)}
+        />
       )}
     </div>
   );

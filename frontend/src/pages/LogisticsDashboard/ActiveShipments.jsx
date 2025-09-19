@@ -5,6 +5,8 @@ import { useCurrency } from "../../contexts/CurrencyContext";
 import { markShipmentAsDeliveredByLogistics } from "../../redux/slices/shipmentSlice";
 import { toast } from "react-toastify";
 import api from "../../services/api";
+import LogisticsLocationUpdater from "../../components/shipment/LogisticsLocationUpdater";
+import DriverProfileManager from "../../components/shipment/DriverProfileManager";
 import {
   Truck,
   Package,
@@ -159,16 +161,15 @@ const ActiveShipments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
-        {" "}
+      <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-8 sm:py-16">
             <div className="text-center">
-              <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 Loading Active Shipments
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 Fetching your current deliveries...
               </p>
             </div>
@@ -179,36 +180,36 @@ const ActiveShipments = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-blue-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
-          <div className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Truck className="text-white" size={24} />
+        <div className="bg-blue-600 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden mb-6 sm:mb-8">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Truck className="text-white sm:w-6 sm:h-6" size={20} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
                     Active Shipments
                   </h1>
-                  <p className="text-indigo-100 text-base">
+                  <p className="text-indigo-100 text-sm sm:text-base">
                     Manage your accepted bids and track deliveries
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
-                  <span className="text-white font-semibold text-base">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 border border-white/20">
+                  <span className="text-white font-semibold text-sm sm:text-base">
                     {activeShipments.length} active
                   </span>
                 </div>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-xs sm:text-sm"
                 >
-                  <RefreshCw size={16} className="text-white" />
+                  <RefreshCw className="text-white sm:w-4 sm:h-4" size={14} />
                   <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
@@ -218,14 +219,14 @@ const ActiveShipments = () => {
 
         {activeShipments.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Truck className="text-indigo-500 text-4xl" />
+            <div className="text-center py-8 sm:py-16">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Truck className="text-indigo-500 text-3xl sm:text-4xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 No Active Shipments
               </h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto">
                 You don't have any accepted bids or active shipments at the
                 moment. Start by browsing available shipments and placing bids!
               </p>
@@ -861,6 +862,33 @@ const ActiveShipments = () => {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Driver Profile Management Section */}
+        <div className="mt-8">
+          <DriverProfileManager />
+        </div>
+
+        {/* Location Tracking Section */}
+        {activeShipments.length > 0 && (
+          <div className="mt-8">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-green-500 p-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <MapPin size={20} />
+                  Location Tracking
+                </h2>
+                <p className="text-green-100 mt-1">
+                  Update your location for active shipments
+                </p>
+              </div>
+              <div className="p-6">
+                <LogisticsLocationUpdater
+                  shipmentId={activeShipments[0]?._id}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

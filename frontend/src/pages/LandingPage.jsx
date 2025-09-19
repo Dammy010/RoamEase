@@ -47,7 +47,7 @@ const LandingPage = () => {
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-200 max-w-2xl mb-6 sm:mb-8">
             RoamEase is the online marketplace where shippers post requests and
-            licensed providers bid to fulfill them — no middlemen.
+            licensed providers bid to fulfill them no middlemen.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
             <motion.button

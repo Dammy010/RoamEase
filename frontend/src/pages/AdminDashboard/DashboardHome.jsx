@@ -147,10 +147,10 @@ const AdminDashboardHome = () => {
   // Only show loading if we have no data and are loading
   if (loading && users.length === 0 && !analytics) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900 p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-gray-300 text-lg font-semibold">
+          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto mb-3 sm:mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base md:text-lg font-semibold">
             Loading dashboard data...
           </p>
         </div>
@@ -159,75 +159,86 @@ const AdminDashboardHome = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-6">
+        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/5 rounded-full translate-y-12 -translate-x-12 sm:translate-y-24 sm:-translate-x-24"></div>
 
-          <div className="relative p-8 md:p-12">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="relative p-4 sm:p-6 md:p-8 lg:p-12">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 lg:gap-8">
               {/* Left Content */}
               <div className="flex-1 text-white">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <Shield className="text-white text-lg" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <Shield className="text-white text-base sm:text-lg" />
                   </div>
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
                       Welcome back, {adminProfile.name}
                     </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="px-2 py-1 sm:px-3 bg-green-500/20 text-green-200 rounded-full text-xs sm:text-sm font-medium">
                         🔒 Admin Access
                       </span>
-                      <span className="px-3 py-1 bg-blue-500/20 text-blue-200 rounded-full text-sm font-medium">
+                      <span className="px-2 py-1 sm:px-3 bg-blue-500/20 text-blue-200 rounded-full text-xs sm:text-sm font-medium">
                         📊 {analytics?.users?.total || 0} Total Users
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-purple-100 text-base mb-6 max-w-2xl leading-relaxed">
+                <p className="text-purple-100 text-sm sm:text-base mb-4 sm:mb-6 max-w-2xl leading-relaxed">
                   Manage your platform efficiently. Monitor users, verify
                   logistics companies, and oversee system operations with
                   comprehensive admin controls.
                 </p>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   <button
                     onClick={() => navigate("/admin/verify-logistics")}
-                    className="px-4 py-2 bg-white text-purple-700 rounded-lg hover:bg-purple-50 transition-all duration-300 font-medium shadow-md flex items-center gap-2 text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white text-purple-700 rounded-lg hover:bg-purple-50 transition-all duration-300 font-medium shadow-md flex items-center gap-2 text-xs sm:text-sm"
                   >
-                    <ClipboardCheck size={16} />
-                    Manage Verifications
+                    <ClipboardCheck size={14} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">
+                      Manage Verifications
+                    </span>
+                    <span className="sm:hidden">Verify</span>
                   </button>
                   <button
                     onClick={() => navigate("/admin/users/total")}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-xs sm:text-sm"
                   >
-                    <Users size={16} />
-                    View All Users
+                    <Users size={14} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">View All Users</span>
+                    <span className="sm:hidden">Users</span>
                   </button>
                   <button
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     <RefreshCw
-                      size={16}
-                      className={isRefreshing ? "animate-spin" : ""}
+                      size={14}
+                      className={`sm:w-4 sm:h-4 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
                     />
-                    {isRefreshing ? "Refreshing..." : "Refresh Data"}
+                    <span className="hidden sm:inline">
+                      {isRefreshing ? "Refreshing..." : "Refresh Data"}
+                    </span>
+                    <span className="sm:hidden">
+                      {isRefreshing ? "..." : "Refresh"}
+                    </span>
                   </button>
                 </div>
               </div>
 
               {/* Right Content - Avatar and Notifications */}
-              <div className="flex-shrink-0 flex items-center gap-6">
+              <div className="flex-shrink-0 flex items-center gap-3 sm:gap-6">
                 {/* Notification Bell */}
                 <div className="relative">
                   <NotificationBell />
@@ -239,7 +250,7 @@ const AdminDashboardHome = () => {
                     <img
                       src={adminProfile.avatar}
                       alt="Admin Avatar"
-                      className="w-20 h-20 rounded-xl border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 sm:border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
                       onClick={() => setShowProfilePicModal(true)}
                       onError={(e) => {
                         console.error(
@@ -254,7 +265,7 @@ const AdminDashboardHome = () => {
 
                   {/* Fallback avatar */}
                   <div
-                    className={`w-20 h-20 rounded-xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold shadow-lg ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 sm:border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg ${
                       adminProfile.avatar ? "hidden" : "flex"
                     }`}
                     style={{ display: adminProfile.avatar ? "none" : "flex" }}
@@ -266,8 +277,8 @@ const AdminDashboardHome = () => {
                   </div>
 
                   {/* Admin Status Indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 border-4 border-white rounded-full flex items-center justify-center">
-                    <Shield size={12} className="text-white" />
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-red-500 border-2 sm:border-4 border-white rounded-full flex items-center justify-center">
+                    <Shield size={8} className="text-white sm:w-3 sm:h-3" />
                   </div>
                 </div>
               </div>
@@ -276,120 +287,128 @@ const AdminDashboardHome = () => {
         </section>
 
         {/* Stats Section */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <section className="mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Total Users Card */}
             <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
-                    <Users size={20} />
+              <div className="relative p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
+                    <Users size={16} className="sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-800">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">
                       {analytics?.users?.total || 0}
                     </p>
-                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Total</p>
                   </div>
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 mb-1">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1">
                   Total Users
                 </h3>
-                <p className="text-sm text-gray-600">All registered users</p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  All registered users
+                </p>
               </div>
             </div>
 
             {/* Verified Logistics Card */}
             <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
-                    <CheckCircle size={20} />
+              <div className="relative p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
+                    <CheckCircle size={16} className="sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-800">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">
                       {analytics?.logistics?.verified || 0}
                     </p>
-                    <p className="text-sm text-gray-500">Verified</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Verified</p>
                   </div>
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 mb-1">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1">
                   Verified Logistics
                 </h3>
-                <p className="text-sm text-gray-600">Approved companies</p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Approved companies
+                </p>
               </div>
             </div>
 
             {/* Pending Logistics Card */}
             <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
-                    <Clock size={20} />
+              <div className="relative p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
+                    <Clock size={16} className="sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-800">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">
                       {analytics?.logistics?.pending || 0}
                     </p>
-                    <p className="text-sm text-gray-500">Pending</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Pending</p>
                   </div>
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 mb-1">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1">
                   Pending Logistics
                 </h3>
-                <p className="text-sm text-gray-600">Awaiting verification</p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Awaiting verification
+                </p>
               </div>
             </div>
 
             {/* Disputes Card */}
             <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
-                    <AlertTriangle size={20} />
+              <div className="relative p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
+                    <AlertTriangle size={16} className="sm:w-5 sm:h-5" />
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-800">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800">
                       {disputes?.length || 0}
                     </p>
-                    <p className="text-sm text-gray-500">Active</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Active</p>
                   </div>
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 mb-1">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1">
                   Disputes
                 </h3>
-                <p className="text-sm text-gray-600">Requiring attention</p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Requiring attention
+                </p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Admin Modules Section */}
-        <section className="mb-8">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <section className="mb-6 sm:mb-8">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
-            <div className="bg-blue-600 p-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <Settings className="text-white text-lg" />
+            <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <Settings className="text-white text-base sm:text-lg" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-lg sm:text-xl font-bold text-white">
                       Admin Controls
                     </h2>
-                    <p className="text-purple-100 text-sm">
+                    <p className="text-purple-100 text-xs sm:text-sm">
                       Manage platform operations and user verifications
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
-                    <span className="text-white font-medium text-sm">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 sm:px-3">
+                    <span className="text-white font-medium text-xs sm:text-sm">
                       {modules.length} Modules
                     </span>
                   </div>
@@ -398,37 +417,37 @@ const AdminDashboardHome = () => {
             </div>
 
             {/* Content */}
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-4 sm:p-6 md:p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {modules.map((mod, idx) => (
                   <div
                     key={idx}
                     onClick={() => navigate(mod.path)}
-                    className="group relative cursor-pointer p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                    className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
                   >
                     {/* Notification Badge */}
                     {mod.count > 0 && (
-                      <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         {mod.count}
                       </div>
                     )}
 
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
-                        {mod.icon}
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                        <div className="scale-75 sm:scale-100">{mod.icon}</div>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors duration-300">
+                        <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors duration-300">
                           {mod.name}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">
                           {mod.description}
                         </p>
-                        <div className="flex items-center text-purple-600 font-medium text-sm group-hover:text-purple-700 transition-colors duration-300">
+                        <div className="flex items-center text-purple-600 font-medium text-xs sm:text-sm group-hover:text-purple-700 transition-colors duration-300">
                           <span>Access Module</span>
                           <ArrowRight
-                            size={16}
-                            className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                            size={14}
+                            className="ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300 sm:w-4 sm:h-4"
                           />
                         </div>
                       </div>
@@ -441,12 +460,14 @@ const AdminDashboardHome = () => {
         </section>
 
         {/* Status Bar */}
-        <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="mt-6 sm:mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-600">Dashboard Status</span>
+                <span className="text-xs sm:text-sm text-gray-600">
+                  Dashboard Status
+                </span>
               </div>
               <div className="text-sm text-gray-500">
                 Last updated: {lastUpdated.toLocaleTimeString()}

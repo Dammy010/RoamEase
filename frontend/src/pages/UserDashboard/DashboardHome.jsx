@@ -154,75 +154,83 @@ const UserDashboardHome = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
-        {" "}
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-6">
+        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/5 rounded-full translate-y-12 -translate-x-12 sm:translate-y-24 sm:-translate-x-24"></div>
 
-          <div className="relative p-6 md:p-8">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="relative p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 lg:gap-8">
               {/* Left Content */}
               <div className="flex-1 text-white">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <Package className="text-white w-5 h-5" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <Package className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
                       Welcome back, {userProfile.name}
                     </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="px-2 py-1 sm:px-3 sm:py-1 bg-green-500/20 text-green-200 rounded-full text-xs sm:text-sm font-medium">
                         ✓ Verified User
                       </span>
-                      <span className="px-3 py-1 bg-blue-500/20 text-blue-200 rounded-full text-sm font-medium">
+                      <span className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/20 text-blue-200 rounded-full text-xs sm:text-sm font-medium">
                         📦 {shipments.length + history.length} Total Shipments
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-blue-100 text-sm mb-4 max-w-2xl leading-relaxed">
+                <p className="text-blue-100 text-xs sm:text-sm mb-4 max-w-2xl leading-relaxed">
                   Manage your shipments efficiently. Track deliveries, place
                   orders, and monitor your logistics operations with our
                   comprehensive platform.
                 </p>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
                   <button
                     onClick={handleRefresh}
                     disabled={loading}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                      className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                        loading ? "animate-spin" : ""
+                      }`}
                     />
-                    {loading ? "Refreshing..." : "Refresh Data"}
+                    <span className="hidden sm:inline">
+                      {loading ? "Refreshing..." : "Refresh Data"}
+                    </span>
+                    <span className="sm:hidden">
+                      {loading ? "..." : "Refresh"}
+                    </span>
                   </button>
                   <button
                     onClick={() => navigate("/user/post-shipment")}
-                    className="px-4 py-2 bg-white text-indigo-700 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium shadow-md flex items-center gap-2 text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white text-indigo-700 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium shadow-md flex items-center justify-center gap-2 text-xs sm:text-sm"
                   >
-                    <PlusCircle className="w-4 h-4" />
-                    Post New Shipment
+                    <PlusCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Post New Shipment</span>
+                    <span className="sm:hidden">New Shipment</span>
                   </button>
                   <button
                     onClick={() => navigate("/user/my-shipments")}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 text-xs sm:text-sm"
                   >
-                    <Eye className="w-4 h-4" />
-                    View All Shipments
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">View All Shipments</span>
+                    <span className="sm:hidden">All Shipments</span>
                   </button>
                 </div>
               </div>
 
               {/* Right Content - Avatar and Notifications */}
-              <div className="flex-shrink-0 flex items-center gap-6">
+              <div className="flex-shrink-0 flex items-center gap-3 sm:gap-6">
                 {/* Notification Bell */}
                 <div className="relative">
                   <NotificationBell />
@@ -234,7 +242,7 @@ const UserDashboardHome = () => {
                     <img
                       src={userProfile.avatar}
                       alt="User Avatar"
-                      className="w-20 h-20 rounded-xl border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 sm:border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
                       onClick={() => setShowProfilePicModal(true)}
                       onError={(e) => {
                         console.error(
@@ -249,7 +257,7 @@ const UserDashboardHome = () => {
 
                   {/* Fallback avatar */}
                   <div
-                    className={`w-20 h-20 rounded-xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold shadow-lg ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 sm:border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg ${
                       userProfile.avatar ? "hidden" : "flex"
                     }`}
                     style={{ display: userProfile.avatar ? "none" : "flex" }}
@@ -259,8 +267,8 @@ const UserDashboardHome = () => {
                   </div>
 
                   {/* Online Status Indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-green-500 border-2 sm:border-4 border-white rounded-full flex items-center justify-center">
+                    <div className="w-1 h-1 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                   </div>
                 </div>
               </div>
@@ -268,33 +276,33 @@ const UserDashboardHome = () => {
           </div>
         </section>
         {/* Stats Section */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Total Shipments Card */}
-            <div className="group relative cursor-pointer p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
               {/* Count Badge */}
               {shipments.length + history.length > 0 && (
-                <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   {shipments.length + history.length}
                 </div>
               )}
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <Package size={20} />
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Package size={16} className="sm:w-5 sm:h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                     Total Shipments
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">
                     All your posted shipments
                   </p>
-                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                  <div className="flex items-center text-indigo-600 font-medium text-xs sm:text-sm group-hover:text-indigo-700 transition-colors duration-300">
                     <span>View All</span>
                     <ArrowRight
-                      size={16}
-                      className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                      size={12}
+                      className="ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300 sm:w-4 sm:h-4"
                     />
                   </div>
                 </div>
@@ -302,30 +310,30 @@ const UserDashboardHome = () => {
             </div>
 
             {/* Active Shipments Card */}
-            <div className="group relative cursor-pointer p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
               {/* Count Badge */}
               {shipments.length > 0 && (
-                <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   {shipments.length}
                 </div>
               )}
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <Truck size={20} />
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Truck size={16} className="sm:w-5 sm:h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                     Active Shipments
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">
                     Currently in progress
                   </p>
-                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                  <div className="flex items-center text-indigo-600 font-medium text-xs sm:text-sm group-hover:text-indigo-700 transition-colors duration-300">
                     <span>View All</span>
                     <ArrowRight
-                      size={16}
-                      className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                      size={12}
+                      className="ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300 sm:w-4 sm:h-4"
                     />
                   </div>
                 </div>
@@ -333,30 +341,30 @@ const UserDashboardHome = () => {
             </div>
 
             {/* History Card */}
-            <div className="group relative cursor-pointer p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
               {/* Count Badge */}
               {history.length > 0 && (
-                <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   {history.length}
                 </div>
               )}
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <Clock size={20} />
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Clock size={16} className="sm:w-5 sm:h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                     Shipment History
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">
                     Delivered shipments
                   </p>
-                  <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                  <div className="flex items-center text-indigo-600 font-medium text-xs sm:text-sm group-hover:text-indigo-700 transition-colors duration-300">
                     <span>View All</span>
                     <ArrowRight
-                      size={16}
-                      className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                      size={12}
+                      className="ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300 sm:w-4 sm:h-4"
                     />
                   </div>
                 </div>
@@ -365,115 +373,122 @@ const UserDashboardHome = () => {
           </div>
         </section>
         {/* Shipments Section */}
-        <section className="mb-8">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <section className="mb-6 sm:mb-8">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
-            <div className="bg-blue-600 p-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                    <Package className="text-white text-xl" />
+            <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center">
+                    <Package className="text-white text-lg sm:text-xl" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
                       Your Shipments
                     </h2>
-                    <p className="text-indigo-100">
+                    <p className="text-indigo-100 text-sm sm:text-base">
                       Track and manage your logistics operations
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                    <span className="text-white font-semibold">
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4">
+                    <span className="text-white font-semibold text-sm sm:text-base">
                       {shipments.length + history.length} Total
                     </span>
                   </div>
                   <button
                     onClick={() => navigate("/user/post-shipment")}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm sm:text-base"
                   >
-                    <PlusCircle size={16} />
-                    New Shipment
+                    <PlusCircle size={14} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">New Shipment</span>
+                    <span className="sm:hidden">New</span>
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-8">
+            <div className="p-4 sm:p-6 md:p-8">
               {shipments.length === 0 && history.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">📦</span>
+                <div className="text-center py-8 sm:py-16">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <span className="text-2xl sm:text-4xl">📦</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">
                     No Shipments Yet
                   </h3>
-                  <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                  <p className="text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">
                     You haven't posted any shipments yet. Start by creating your
                     first shipment request!
                   </p>
                   <button
                     onClick={() => navigate("/user/post-shipment")}
-                    className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                    className="px-4 py-2 sm:px-8 sm:py-4 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg text-sm sm:text-base"
                   >
                     Post Your First Shipment
                   </button>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   {/* Active Shipments */}
                   {shipments.length > 0 && (
                     <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           Active Shipments ({shipments.length})
                         </h3>
                         <button
                           onClick={() => navigate("/user/my-shipments")}
-                          className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                          className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 text-sm sm:text-base"
                         >
                           View All
-                          <ArrowRight size={16} />
+                          <ArrowRight size={14} className="sm:w-4 sm:h-4" />
                         </button>
                       </div>
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         {shipments.slice(0, 3).map((shipment, index) => (
                           <div
                             key={shipment._id}
-                            className="group relative bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+                            className="group relative bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
+                            <div className="flex items-start sm:items-center justify-between gap-3">
+                              <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
                                 <div className="relative">
-                                  <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
                                     📦
                                   </div>
-                                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                                     {index + 1}
                                   </div>
                                 </div>
-                                <div className="flex-1">
-                                  <h4 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-indigo-600 transition-colors duration-300">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-1 group-hover:text-indigo-600 transition-colors duration-300 truncate">
                                     {shipment.shipmentTitle}
                                   </h4>
-                                  <p className="text-sm text-gray-600 mb-2">
+                                  <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
                                     {shipment.pickupCity},{" "}
                                     {shipment.pickupCountry} →{" "}
                                     {shipment.deliveryCity},{" "}
                                     {shipment.deliveryCountry}
                                   </p>
-                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                                     <span className="flex items-center gap-1">
-                                      <Calendar size={12} />
+                                      <Calendar
+                                        size={10}
+                                        className="sm:w-3 sm:h-3"
+                                      />
                                       {new Date(
                                         shipment.preferredPickupDate
                                       ).toLocaleDateString()}
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <Calendar size={12} />
+                                      <Calendar
+                                        size={10}
+                                        className="sm:w-3 sm:h-3"
+                                      />
                                       {new Date(
                                         shipment.preferredDeliveryDate
                                       ).toLocaleDateString()}
@@ -481,9 +496,9 @@ const UserDashboardHome = () => {
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-4">
+                              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
                                 <div
-                                  className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
+                                  className={`px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-sm ${
                                     shipment.status === "open"
                                       ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
                                       : shipment.status === "accepted"
@@ -500,10 +515,11 @@ const UserDashboardHome = () => {
                                   onClick={() =>
                                     navigateToShipmentDetail(shipment._id)
                                   }
-                                  className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-xl hover:bg-indigo-200 transition-colors flex items-center gap-2"
+                                  className="px-3 py-1 sm:px-4 sm:py-2 bg-indigo-100 text-indigo-700 rounded-lg sm:rounded-xl hover:bg-indigo-200 transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                 >
-                                  <Eye size={16} />
-                                  View
+                                  <Eye size={12} className="sm:w-4 sm:h-4" />
+                                  <span className="hidden sm:inline">View</span>
+                                  <span className="sm:hidden">👁</span>
                                 </button>
                               </div>
                             </div>

@@ -7,7 +7,18 @@ const mongoose = require("mongoose");
 const ResponseHelper = require("../utils/responseHelper");
 const Logger = require("../utils/logger");
 const ValidationHelper = require("../utils/validationHelper");
-const { generateVerificationToken, generateVerificationCode, generateResetToken, sendVerificationEmail, sendResendVerificationEmail, sendPasswordResetEmail, sendNormalUserSignupEmail, sendLogisticsUserSignupEmail, sendLogisticsVerificationEmail, getEmailAnalytics } = require("../utils/emailService");
+const {
+  generateVerificationToken,
+  generateVerificationCode,
+  generateResetToken,
+  sendVerificationEmail,
+  sendResendVerificationEmail,
+  sendPasswordResetEmail,
+  sendNormalUserSignupEmail,
+  sendLogisticsUserSignupEmail,
+  sendLogisticsVerificationEmail,
+  getEmailAnalytics,
+} = require("../utils/emailService");
 
 // ===== HELPERS =====
 
@@ -58,36 +69,56 @@ const registerUser = async (req, res) => {
 
     // Only destructure registrationNumber for logistics users
     let registrationNumber;
-    if (role === 'logistics') {
+    if (role === "logistics") {
       registrationNumber = req.body.registrationNumber;
     }
 
     // Debug logging
-    console.log('🔍 Registration debug:', {
+    console.log("🔍 Registration debug:", {
       role,
       registrationNumber,
       registrationNumberType: typeof registrationNumber,
-      registrationNumberEmpty: registrationNumber === '',
+      registrationNumberEmpty: registrationNumber === "",
       registrationNumberNull: registrationNumber === null,
       registrationNumberUndefined: registrationNumber === undefined,
-      hasRegistrationNumberInBody: 'registrationNumber' in req.body,
+      hasRegistrationNumberInBody: "registrationNumber" in req.body,
       registrationNumberInBody: req.body.registrationNumber,
-      fullRequestBody: req.body
+      fullRequestBody: req.body,
     });
 
     // Additional debugging for normal users
-    if (role === 'user') {
-      console.log('🔍 NORMAL USER DEBUG:');
-      console.log('  - registrationNumber in req.body:', 'registrationNumber' in req.body);
-      console.log('  - registrationNumber value:', req.body.registrationNumber);
-      console.log('  - All req.body keys:', Object.keys(req.body));
-      
+    if (role === "user") {
+      console.log("🔍 NORMAL USER DEBUG:");
+      console.log(
+        "  - registrationNumber in req.body:",
+        "registrationNumber" in req.body
+      );
+      console.log("  - registrationNumber value:", req.body.registrationNumber);
+      console.log("  - All req.body keys:", Object.keys(req.body));
+
       // Safety check: remove ALL logistics fields from req.body for normal users
-      const logisticsFields = ['registrationNumber', 'companyName', 'yearsInOperation', 'companySize', 'contactName', 'contactEmail', 'contactPosition', 'contactPhone', 'services', 'regions', 'fleetSize', 'website', 'agreements', 'terms'];
-      
-      logisticsFields.forEach(field => {
+      const logisticsFields = [
+        "registrationNumber",
+        "companyName",
+        "yearsInOperation",
+        "companySize",
+        "contactName",
+        "contactEmail",
+        "contactPosition",
+        "contactPhone",
+        "services",
+        "regions",
+        "fleetSize",
+        "website",
+        "agreements",
+        "terms",
+      ];
+
+      logisticsFields.forEach((field) => {
         if (field in req.body) {
-          console.log(`🔧 BACKEND SAFETY: Removing ${field} from req.body for normal user`);
+          console.log(
+            `🔧 BACKEND SAFETY: Removing ${field} from req.body for normal user`
+          );
           delete req.body[field];
         }
       });
@@ -101,7 +132,7 @@ const registerUser = async (req, res) => {
     }
 
     // Only require name and phoneNumber for non-logistics users
-    if (role !== 'logistics') {
+    if (role !== "logistics") {
       if (!name) {
         return res.status(400).json({ message: "Name is required" });
       }
@@ -112,7 +143,10 @@ const registerUser = async (req, res) => {
       // Country is optional for normal users
     }
 
-    if (role === "logistics" && (!registrationNumber || registrationNumber.trim() === '')) {
+    if (
+      role === "logistics" &&
+      (!registrationNumber || registrationNumber.trim() === "")
+    ) {
       return res.status(400).json({
         message: "Registration number is required for logistics users",
       });
@@ -121,7 +155,8 @@ const registerUser = async (req, res) => {
     // Check database connection
     if (mongoose.connection.readyState !== 1) {
       return res.status(503).json({
-        message: "Database not available. Please check your MongoDB connection.",
+        message:
+          "Database not available. Please check your MongoDB connection.",
         fallback: true,
       });
     }
@@ -150,7 +185,7 @@ const registerUser = async (req, res) => {
     };
 
     // Add name and phoneNumber for non-logistics users
-    if (role !== 'logistics') {
+    if (role !== "logistics") {
       userData.name = name || "";
       userData.phoneNumber = phoneNumber || "";
       // Country is optional for normal users
@@ -184,18 +219,28 @@ const registerUser = async (req, res) => {
     } else {
       // For normal users, explicitly ensure registrationNumber is not included
       // This prevents any accidental inclusion that might cause unique constraint issues
-      if (userData.hasOwnProperty('registrationNumber')) {
+      if (userData.hasOwnProperty("registrationNumber")) {
         delete userData.registrationNumber;
       }
-      
+
       // Also check for any other logistics-specific fields that might cause issues
       const logisticsOnlyFields = [
-        'companyName', 'yearsInOperation', 'registrationNumber', 
-        'companySize', 'contactName', 'contactPosition', 'contactPhone',
-        'services', 'regions', 'fleetSize', 'website', 'agreements', 'terms'
+        "companyName",
+        "yearsInOperation",
+        "registrationNumber",
+        "companySize",
+        "contactName",
+        "contactPosition",
+        "contactPhone",
+        "services",
+        "regions",
+        "fleetSize",
+        "website",
+        "agreements",
+        "terms",
       ];
-      
-      logisticsOnlyFields.forEach(field => {
+
+      logisticsOnlyFields.forEach((field) => {
         if (userData.hasOwnProperty(field)) {
           delete userData[field];
         }
@@ -205,21 +250,23 @@ const registerUser = async (req, res) => {
     // Normal users don't have this field, avoiding unique constraint issues
 
     // Final safety check: ensure registrationNumber is never included for normal users
-    if (role !== 'logistics' && 'registrationNumber' in userData) {
-      console.log('🔧 FINAL SAFETY: Removing registrationNumber from userData for normal user');
+    if (role !== "logistics" && "registrationNumber" in userData) {
+      console.log(
+        "🔧 FINAL SAFETY: Removing registrationNumber from userData for normal user"
+      );
       delete userData.registrationNumber;
     }
 
     // CRITICAL: For normal users, explicitly ensure registrationNumber is undefined
-    if (role !== 'logistics') {
+    if (role !== "logistics") {
       userData.registrationNumber = undefined;
     }
 
-    console.log('🔍 UserData before create:', {
+    console.log("🔍 UserData before create:", {
       role: userData.role,
-      hasRegistrationNumber: 'registrationNumber' in userData,
+      hasRegistrationNumber: "registrationNumber" in userData,
       registrationNumberValue: userData.registrationNumber,
-      userDataKeys: Object.keys(userData)
+      userDataKeys: Object.keys(userData),
     });
 
     // Save user with error handling for duplicate registration numbers
@@ -228,17 +275,19 @@ const registerUser = async (req, res) => {
       user = await User.create(userData);
     } catch (error) {
       if (error.code === 11000 && error.keyPattern?.registrationNumber) {
-        console.log('🔧 DUPLICATE REGISTRATION NUMBER: Attempting to clean up and retry...');
-        
+        console.log(
+          "🔧 DUPLICATE REGISTRATION NUMBER: Attempting to clean up and retry..."
+        );
+
         // Clean up any existing users with empty registration numbers
         await User.updateMany(
-          { registrationNumber: '' },
+          { registrationNumber: "" },
           { $unset: { registrationNumber: 1 } }
         );
-        
+
         // Retry creating the user
         user = await User.create(userData);
-        console.log('✅ User created successfully after cleanup');
+        console.log("✅ User created successfully after cleanup");
       } else {
         throw error; // Re-throw if it's not a duplicate registration number error
       }
@@ -246,18 +295,28 @@ const registerUser = async (req, res) => {
 
     // Send verification email
     try {
-      console.log('📧 Attempting to send verification email to:', user.email);
+      console.log("📧 Attempting to send verification email to:", user.email);
       // Use appropriate name field based on user role
-      const displayName = role === 'logistics' ? (user.contactName || user.companyName || 'Logistics Partner') : (user.name || 'User');
-      const emailResult = await sendVerificationEmail(user.email, verificationCode, displayName);
+      const displayName =
+        role === "logistics"
+          ? user.contactName || user.companyName || "Logistics Partner"
+          : user.name || "User";
+      const emailResult = await sendVerificationEmail(
+        user.email,
+        verificationCode,
+        displayName
+      );
       if (emailResult.success) {
-        console.log('✅ Verification email sent successfully to:', user.email);
+        console.log("✅ Verification email sent successfully to:", user.email);
       } else {
-        console.error('❌ Failed to send verification email:', emailResult.error);
+        console.error(
+          "❌ Failed to send verification email:",
+          emailResult.error
+        );
         // Don't fail registration if email fails, just log it
       }
     } catch (emailError) {
-      console.error('❌ Error sending verification email:', emailError.message);
+      console.error("❌ Error sending verification email:", emailError.message);
       // Don't fail registration if email fails, just log it
     }
 
@@ -265,20 +324,30 @@ const registerUser = async (req, res) => {
 
     // Create notifications for user registration
     try {
-      console.log('📦 Creating notifications for user registration:', user._id);
-      
+      console.log("📦 Creating notifications for user registration:", user._id);
+
       // 1. Notification for admin users about new registration
-      const adminUsers = await User.find({ role: 'admin' }).select('_id name');
+      const adminUsers = await User.find({ role: "admin" }).select("_id name");
       if (adminUsers.length > 0) {
-        const adminNotifications = adminUsers.map(adminUser => ({
+        const adminNotifications = adminUsers.map((adminUser) => ({
           recipient: adminUser._id,
-          type: role === 'logistics' ? 'new_logistics_registered' : 'new_user_registered',
-          title: role === 'logistics' ? 'New Logistics Registration' : 'New User Registration',
-          message: `A new ${role} user "${displayName}" has registered and ${role === 'logistics' ? 'requires verification' : 'is ready to use the platform'}.`,
-          priority: role === 'logistics' ? 'high' : 'medium',
+          type:
+            role === "logistics"
+              ? "new_logistics_registered"
+              : "new_user_registered",
+          title:
+            role === "logistics"
+              ? "New Logistics Registration"
+              : "New User Registration",
+          message: `A new ${role} user "${displayName}" has registered and ${
+            role === "logistics"
+              ? "requires verification"
+              : "is ready to use the platform"
+          }.`,
+          priority: role === "logistics" ? "high" : "medium",
           relatedEntity: {
-            type: 'user',
-            id: user._id
+            type: "user",
+            id: user._id,
           },
           metadata: {
             userId: user._id,
@@ -286,23 +355,29 @@ const registerUser = async (req, res) => {
             userRole: role,
             userEmail: user.email,
             registeredAt: new Date(),
-            needsVerification: role === 'logistics'
+            needsVerification: role === "logistics",
           },
           actions: [
             {
-              label: role === 'logistics' ? 'Review Application' : 'View User',
-              action: 'view',
-              url: role === 'logistics' ? `/admin/logistics/${user._id}` : `/admin/users/${user._id}`,
-              method: 'GET'
-            }
-          ]
+              label: role === "logistics" ? "Review Application" : "View User",
+              action: "view",
+              url:
+                role === "logistics"
+                  ? `/admin/logistics/${user._id}`
+                  : `/admin/users/${user._id}`,
+              method: "GET",
+            },
+          ],
         }));
 
         await NotificationService.createBulkNotifications(adminNotifications);
-        console.log('✅ Admin notifications created for user registration');
+        console.log("✅ Admin notifications created for user registration");
       }
     } catch (notificationError) {
-      console.error('❌ Error creating registration notifications:', notificationError);
+      console.error(
+        "❌ Error creating registration notifications:",
+        notificationError
+      );
       // Don't fail registration if notification creation fails
     }
 
@@ -313,7 +388,8 @@ const registerUser = async (req, res) => {
       role: user.role,
       profilePicture: normalizePath(user.profilePicture),
       isVerified: user.isVerified,
-      message: "Registration successful! Please check your email to verify your account.",
+      message:
+        "Registration successful! Please check your email to verify your account.",
       needsVerification: true, // Add this flag for frontend
       // Don't send tokens until email is verified
       // accessToken: generateAccessToken(user._id),
@@ -321,7 +397,7 @@ const registerUser = async (req, res) => {
     };
 
     // Add name, phoneNumber, and country for non-logistics users
-    if (user.role !== 'logistics') {
+    if (user.role !== "logistics") {
       responseData.name = user.name;
       responseData.phoneNumber = user.phoneNumber;
       responseData.country = user.country;
@@ -377,7 +453,8 @@ const loginUser = async (req, res) => {
     // DB check
     if (mongoose.connection.readyState !== 1) {
       return res.status(503).json({
-        message: "Database not available. Please check your MongoDB connection.",
+        message:
+          "Database not available. Please check your MongoDB connection.",
         fallback: true,
       });
     }
@@ -446,7 +523,8 @@ const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ message: "Refresh token required" });
 
     jwt.verify(token, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
-      if (err) return res.status(403).json({ message: "Invalid refresh token" });
+      if (err)
+        return res.status(403).json({ message: "Invalid refresh token" });
       const accessToken = generateAccessToken(decoded.id);
       res.json({ accessToken });
     });
@@ -475,10 +553,15 @@ const getProfile = async (req, res) => {
           user.documents.insuranceCertificate
         );
       if (user.documents.governmentId)
-        user.documents.governmentId = normalizePath(user.documents.governmentId);
+        user.documents.governmentId = normalizePath(
+          user.documents.governmentId
+        );
     }
 
-    res.json(user);
+    res.json({
+      success: true,
+      user: user,
+    });
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ message: "Failed to fetch profile" });
@@ -513,6 +596,9 @@ const updateProfile = async (req, res) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
+    user.phone = req.body.phone || user.phone;
+    user.address = req.body.address || user.address;
+    user.bio = req.body.bio || user.bio;
 
     if (req.files?.profilePicture?.[0]) {
       user.profilePicture = normalizePath(req.files.profilePicture[0].path);
@@ -521,7 +607,8 @@ const updateProfile = async (req, res) => {
     if (user.role === "logistics") {
       user.companyName = req.body.companyName || user.companyName;
       user.country = req.body.country || user.country;
-      user.yearsInOperation = req.body.yearsInOperation || user.yearsInOperation;
+      user.yearsInOperation =
+        req.body.yearsInOperation || user.yearsInOperation;
       user.registrationNumber =
         req.body.registrationNumber || user.registrationNumber;
       user.companySize = req.body.companySize || user.companySize;
@@ -553,7 +640,9 @@ const updateProfile = async (req, res) => {
     }
 
     const updatedUser = await user.save();
-    const userToReturn = await User.findById(updatedUser._id).select("-password");
+    const userToReturn = await User.findById(updatedUser._id).select(
+      "-password"
+    );
 
     if (userToReturn.profilePicture)
       userToReturn.profilePicture = normalizePath(userToReturn.profilePicture);
@@ -573,25 +662,32 @@ const updateProfile = async (req, res) => {
     }
 
     res.json({
-      _id: userToReturn._id,
-      name: userToReturn.name,
-      email: userToReturn.email,
-      role: userToReturn.role,
-      phoneNumber: userToReturn.phoneNumber,
-      profilePicture: userToReturn.profilePicture,
-      companyName: userToReturn.companyName,
-      country: userToReturn.country,
-      yearsInOperation: userToReturn.yearsInOperation,
-      registrationNumber: userToReturn.registrationNumber,
-      companySize: userToReturn.companySize,
-      contactName: userToReturn.contactName,
-      contactPosition: userToReturn.contactPosition,
-      contactPhone: userToReturn.contactPhone,
-      services: userToReturn.services,
-      regions: userToReturn.regions,
-      fleetSize: userToReturn.fleetSize,
-      website: userToReturn.website,
-      documents: userToReturn.documents,
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        _id: userToReturn._id,
+        name: userToReturn.name,
+        email: userToReturn.email,
+        role: userToReturn.role,
+        phoneNumber: userToReturn.phoneNumber,
+        phone: userToReturn.phone,
+        address: userToReturn.address,
+        bio: userToReturn.bio,
+        profilePicture: userToReturn.profilePicture,
+        companyName: userToReturn.companyName,
+        country: userToReturn.country,
+        yearsInOperation: userToReturn.yearsInOperation,
+        registrationNumber: userToReturn.registrationNumber,
+        companySize: userToReturn.companySize,
+        contactName: userToReturn.contactName,
+        contactPosition: userToReturn.contactPosition,
+        contactPhone: userToReturn.contactPhone,
+        services: userToReturn.services,
+        regions: userToReturn.regions,
+        fleetSize: userToReturn.fleetSize,
+        website: userToReturn.website,
+        documents: userToReturn.documents,
+      },
       accessToken: generateAccessToken(updatedUser._id),
       refreshToken: generateRefreshToken(updatedUser._id),
     });
@@ -607,30 +703,32 @@ const verifyEmail = async (req, res) => {
     const { code } = req.body;
 
     if (!code) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Verification code is required",
-        code: "CODE_REQUIRED"
+        code: "CODE_REQUIRED",
       });
     }
 
     // Code format validation (should be 6 digits)
     if (!/^\d{6}$/.test(code)) {
-      return res.status(400).json({ 
-        message: "Invalid verification code format. Please enter a 6-digit code.",
-        code: "INVALID_CODE_FORMAT"
+      return res.status(400).json({
+        message:
+          "Invalid verification code format. Please enter a 6-digit code.",
+        code: "INVALID_CODE_FORMAT",
       });
     }
 
     // Find user with the verification code
     const user = await User.findOne({
       verificationCode: code,
-      verificationCodeExpires: { $gt: Date.now() } // Code not expired
+      verificationCodeExpires: { $gt: Date.now() }, // Code not expired
     });
 
     if (!user) {
-      return res.status(400).json({ 
-        message: "Invalid or expired verification code. Please request a new verification email.",
-        code: "INVALID_OR_EXPIRED_CODE"
+      return res.status(400).json({
+        message:
+          "Invalid or expired verification code. Please request a new verification email.",
+        code: "INVALID_OR_EXPIRED_CODE",
       });
     }
 
@@ -639,7 +737,7 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({
         message: "Email is already verified",
         code: "ALREADY_VERIFIED",
-        isVerified: true
+        isVerified: true,
       });
     }
 
@@ -654,39 +752,58 @@ const verifyEmail = async (req, res) => {
 
     // Send congratulatory verification email based on user role
     try {
-      console.log('📧 Attempting to send congratulatory verification email to:', user.email);
+      console.log(
+        "📧 Attempting to send congratulatory verification email to:",
+        user.email
+      );
       let congratulatoryEmailResult;
-      
-      if (user.role === 'logistics') {
-        const companyName = user.companyName || 'Logistics Partner';
-        congratulatoryEmailResult = await sendLogisticsVerificationEmail(user.email, companyName);
+
+      if (user.role === "logistics") {
+        const companyName = user.companyName || "Logistics Partner";
+        congratulatoryEmailResult = await sendLogisticsVerificationEmail(
+          user.email,
+          companyName
+        );
       } else {
-        const userName = user.name || 'User';
-        congratulatoryEmailResult = await sendNormalUserSignupEmail(user.email, userName);
+        const userName = user.name || "User";
+        congratulatoryEmailResult = await sendNormalUserSignupEmail(
+          user.email,
+          userName
+        );
       }
-      
+
       if (congratulatoryEmailResult.success) {
-        console.log('✅ Congratulatory verification email sent successfully to:', user.email);
+        console.log(
+          "✅ Congratulatory verification email sent successfully to:",
+          user.email
+        );
       } else {
-        console.error('❌ Failed to send congratulatory verification email:', congratulatoryEmailResult.error);
+        console.error(
+          "❌ Failed to send congratulatory verification email:",
+          congratulatoryEmailResult.error
+        );
         // Don't fail verification if email fails, just log it
       }
     } catch (congratulatoryEmailError) {
-      console.error('❌ Error sending congratulatory verification email:', congratulatoryEmailError.message);
+      console.error(
+        "❌ Error sending congratulatory verification email:",
+        congratulatoryEmailError.message
+      );
       // Don't fail verification if email fails, just log it
     }
 
     res.json({
-      message: "Email verified successfully! You can now log in to your account.",
+      message:
+        "Email verified successfully! You can now log in to your account.",
       isVerified: true,
       email: user.email,
-      name: user.name
+      name: user.name,
     });
   } catch (error) {
     console.error("Verify email error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -698,18 +815,18 @@ const resendVerificationEmail = async (req, res) => {
 
     // Enhanced validation
     if (!email) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Email is required",
-        field: "email"
+        field: "email",
       });
     }
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Please provide a valid email address",
-        field: "email"
+        field: "email",
       });
     }
 
@@ -717,29 +834,35 @@ const resendVerificationEmail = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "No account found with this email address",
-        code: "USER_NOT_FOUND"
+        code: "USER_NOT_FOUND",
       });
     }
 
     // Check if already verified
     if (user.isVerified) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Email is already verified",
         isVerified: true,
-        code: "ALREADY_VERIFIED"
+        code: "ALREADY_VERIFIED",
       });
     }
 
     // Check if code is still valid (not expired)
     const now = new Date();
-    if (user.verificationCode && user.verificationCodeExpires && user.verificationCodeExpires > now) {
-      const timeLeft = Math.ceil((user.verificationCodeExpires - now) / (1000 * 60)); // minutes
-      return res.status(429).json({ 
+    if (
+      user.verificationCode &&
+      user.verificationCodeExpires &&
+      user.verificationCodeExpires > now
+    ) {
+      const timeLeft = Math.ceil(
+        (user.verificationCodeExpires - now) / (1000 * 60)
+      ); // minutes
+      return res.status(429).json({
         message: `Please wait ${timeLeft} minutes before requesting a new verification email`,
         code: "TOO_MANY_REQUESTS",
-        retryAfter: timeLeft
+        retryAfter: timeLeft,
       });
     }
 
@@ -755,33 +878,43 @@ const resendVerificationEmail = async (req, res) => {
     // Send verification email
     try {
       // Use appropriate name field based on user role
-      const displayName = user.role === 'logistics' ? (user.contactName || user.companyName || 'Logistics Partner') : (user.name || 'User');
-      const emailResult = await sendResendVerificationEmail(user.email, verificationCode, displayName);
+      const displayName =
+        user.role === "logistics"
+          ? user.contactName || user.companyName || "Logistics Partner"
+          : user.name || "User";
+      const emailResult = await sendResendVerificationEmail(
+        user.email,
+        verificationCode,
+        displayName
+      );
       if (!emailResult.success) {
-        console.error('Failed to send resend verification email:', emailResult.error);
-        return res.status(500).json({ 
+        console.error(
+          "Failed to send resend verification email:",
+          emailResult.error
+        );
+        return res.status(500).json({
           message: "Failed to send verification email. Please try again later.",
-          code: "EMAIL_SEND_FAILED"
+          code: "EMAIL_SEND_FAILED",
         });
       }
     } catch (emailError) {
-      console.error('Error sending resend verification email:', emailError);
-      return res.status(500).json({ 
+      console.error("Error sending resend verification email:", emailError);
+      return res.status(500).json({
         message: "Failed to send verification email. Please try again later.",
-        code: "EMAIL_SEND_FAILED"
+        code: "EMAIL_SEND_FAILED",
       });
     }
 
     res.json({
       message: "Verification email sent successfully! Please check your email.",
       email: user.email,
-      expiresIn: "24 hours"
+      expiresIn: "24 hours",
     });
   } catch (error) {
     console.error("Resend verification email error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -792,47 +925,52 @@ const checkVerificationStatus = async (req, res) => {
     const { email } = req.query;
 
     if (!email) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Email parameter is required",
-        field: "email"
+        field: "email",
       });
     }
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Please provide a valid email address",
-        field: "email"
+        field: "email",
       });
     }
 
     // Find user by email
-    const user = await User.findOne({ email }).select('email isVerified verificationCodeExpires');
+    const user = await User.findOne({ email }).select(
+      "email isVerified verificationCodeExpires"
+    );
 
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "No account found with this email address",
-        code: "USER_NOT_FOUND"
+        code: "USER_NOT_FOUND",
       });
     }
 
     const now = new Date();
-    const hasValidCode = user.verificationCodeExpires && user.verificationCodeExpires > now;
-    const timeLeft = hasValidCode ? Math.ceil((user.verificationCodeExpires - now) / (1000 * 60)) : 0;
+    const hasValidCode =
+      user.verificationCodeExpires && user.verificationCodeExpires > now;
+    const timeLeft = hasValidCode
+      ? Math.ceil((user.verificationCodeExpires - now) / (1000 * 60))
+      : 0;
 
     res.json({
       email: user.email,
       isVerified: user.isVerified,
       hasValidCode,
       timeLeft: timeLeft > 0 ? `${timeLeft} minutes` : null,
-      canResend: !hasValidCode || timeLeft <= 0
+      canResend: !hasValidCode || timeLeft <= 0,
     });
   } catch (error) {
     console.error("Check verification status error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -841,10 +979,10 @@ const checkVerificationStatus = async (req, res) => {
 const getEmailAnalyticsData = async (req, res) => {
   try {
     // Only allow admin users to access analytics
-    if (req.user?.role !== 'admin') {
+    if (req.user?.role !== "admin") {
       return res.status(403).json({
         message: "Access denied. Admin privileges required.",
-        code: "ADMIN_REQUIRED"
+        code: "ADMIN_REQUIRED",
       });
     }
 
@@ -852,9 +990,9 @@ const getEmailAnalyticsData = async (req, res) => {
     res.json(analytics);
   } catch (error) {
     console.error("Get email analytics error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -866,18 +1004,18 @@ const forgotPassword = async (req, res) => {
 
     // Enhanced validation
     if (!email) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Email is required",
-        field: "email"
+        field: "email",
       });
     }
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Please provide a valid email address",
-        field: "email"
+        field: "email",
       });
     }
 
@@ -887,8 +1025,9 @@ const forgotPassword = async (req, res) => {
     if (!user) {
       // Don't reveal if user exists or not for security
       return res.json({
-        message: "If an account with that email exists, we've sent a password reset link.",
-        email: email
+        message:
+          "If an account with that email exists, we've sent a password reset link.",
+        email: email,
       });
     }
 
@@ -903,32 +1042,41 @@ const forgotPassword = async (req, res) => {
 
     // Send password reset email
     try {
-      const emailResult = await sendPasswordResetEmail(user.email, resetCode, user.name);
+      const emailResult = await sendPasswordResetEmail(
+        user.email,
+        resetCode,
+        user.name
+      );
       if (!emailResult.success) {
-        console.error('Failed to send password reset email:', emailResult.error);
-        return res.status(500).json({ 
-          message: "Failed to send password reset email. Please try again later.",
-          code: "EMAIL_SEND_FAILED"
+        console.error(
+          "Failed to send password reset email:",
+          emailResult.error
+        );
+        return res.status(500).json({
+          message:
+            "Failed to send password reset email. Please try again later.",
+          code: "EMAIL_SEND_FAILED",
         });
       }
     } catch (emailError) {
-      console.error('Error sending password reset email:', emailError);
-      return res.status(500).json({ 
+      console.error("Error sending password reset email:", emailError);
+      return res.status(500).json({
         message: "Failed to send password reset email. Please try again later.",
-        code: "EMAIL_SEND_FAILED"
+        code: "EMAIL_SEND_FAILED",
       });
     }
 
     res.json({
-      message: "If an account with that email exists, we've sent a password reset link.",
+      message:
+        "If an account with that email exists, we've sent a password reset link.",
       email: user.email,
-      expiresIn: "1 hour"
+      expiresIn: "1 hour",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -939,43 +1087,44 @@ const validateResetCode = async (req, res) => {
     const { code } = req.body;
 
     if (!code) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Reset code is required",
-        code: "CODE_REQUIRED"
+        code: "CODE_REQUIRED",
       });
     }
 
     // Code format validation (should be 6 digits)
     if (!/^\d{6}$/.test(code)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Invalid reset code format. Please enter a 6-digit code.",
-        code: "INVALID_CODE_FORMAT"
+        code: "INVALID_CODE_FORMAT",
       });
     }
 
     // Find user with the reset code
     const user = await User.findOne({
       resetPasswordCode: code,
-      resetPasswordCodeExpires: { $gt: Date.now() } // Code not expired
+      resetPasswordCodeExpires: { $gt: Date.now() }, // Code not expired
     });
 
     if (!user) {
-      return res.status(400).json({ 
-        message: "Invalid or expired reset code. Please request a new password reset.",
-        code: "INVALID_OR_EXPIRED_CODE"
+      return res.status(400).json({
+        message:
+          "Invalid or expired reset code. Please request a new password reset.",
+        code: "INVALID_OR_EXPIRED_CODE",
       });
     }
 
     res.json({
       message: "Reset code is valid",
       success: true,
-      email: user.email
+      email: user.email,
     });
   } catch (error) {
     console.error("Validate reset code error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -987,51 +1136,52 @@ const resetPassword = async (req, res) => {
 
     // Validation
     if (!code) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Reset code is required",
-        code: "CODE_REQUIRED"
+        code: "CODE_REQUIRED",
       });
     }
 
     if (!password || !confirmPassword) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Password and confirm password are required",
-        fields: ["password", "confirmPassword"]
+        fields: ["password", "confirmPassword"],
       });
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Passwords do not match",
-        field: "confirmPassword"
+        field: "confirmPassword",
       });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Password must be at least 6 characters",
-        field: "password"
+        field: "password",
       });
     }
 
     // Code format validation (should be 6 digits)
     if (!/^\d{6}$/.test(code)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Invalid reset code format. Please enter a 6-digit code.",
-        code: "INVALID_CODE_FORMAT"
+        code: "INVALID_CODE_FORMAT",
       });
     }
 
     // Find user with the reset code
     const user = await User.findOne({
       resetPasswordCode: code,
-      resetPasswordCodeExpires: { $gt: Date.now() } // Code not expired
+      resetPasswordCodeExpires: { $gt: Date.now() }, // Code not expired
     });
 
     if (!user) {
-      return res.status(400).json({ 
-        message: "Invalid or expired reset code. Please request a new password reset.",
-        code: "INVALID_OR_EXPIRED_CODE"
+      return res.status(400).json({
+        message:
+          "Invalid or expired reset code. Please request a new password reset.",
+        code: "INVALID_OR_EXPIRED_CODE",
       });
     }
 
@@ -1048,14 +1198,15 @@ const resetPassword = async (req, res) => {
     console.log(`✅ Password reset successfully for user: ${user.email}`);
 
     res.json({
-      message: "Password reset successfully! You can now log in with your new password.",
-      success: true
+      message:
+        "Password reset successfully! You can now log in with your new password.",
+      success: true,
     });
   } catch (error) {
     console.error("Reset password error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Something went wrong. Please try again.",
-      code: "INTERNAL_ERROR"
+      code: "INTERNAL_ERROR",
     });
   }
 };
@@ -1064,11 +1215,11 @@ const resetPassword = async (req, res) => {
 const uploadProfilePicture = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No profile picture file provided'
+        message: "No profile picture file provided",
       });
     }
 
@@ -1077,25 +1228,27 @@ const uploadProfilePicture = async (req, res) => {
       userId,
       { profilePicture: req.file.filename },
       { new: true }
-    ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpires');
+    ).select(
+      "-password -verificationToken -resetPasswordToken -resetPasswordExpires"
+    );
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.json({
       success: true,
-      message: 'Profile picture uploaded successfully',
-      profilePicture: user.profilePicture
+      message: "Profile picture uploaded successfully",
+      profilePicture: user.profilePicture,
     });
   } catch (error) {
-    console.error('Upload profile picture error:', error);
+    console.error("Upload profile picture error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during profile picture upload'
+      message: "Server error during profile picture upload",
     });
   }
 };
@@ -1110,24 +1263,26 @@ const deleteProfilePicture = async (req, res) => {
       userId,
       { $unset: { profilePicture: 1 } },
       { new: true }
-    ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpires');
+    ).select(
+      "-password -verificationToken -resetPasswordToken -resetPasswordExpires"
+    );
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.json({
       success: true,
-      message: 'Profile picture deleted successfully'
+      message: "Profile picture deleted successfully",
     });
   } catch (error) {
-    console.error('Delete profile picture error:', error);
+    console.error("Delete profile picture error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during profile picture deletion'
+      message: "Server error during profile picture deletion",
     });
   }
 };

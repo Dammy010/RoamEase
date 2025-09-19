@@ -229,15 +229,15 @@ const MyBids = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-8 sm:py-16">
             <div className="text-center">
-              <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 Loading Your Bids
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 Fetching your bid information...
               </p>
             </div>
@@ -249,24 +249,24 @@ const MyBids = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-8 sm:py-16">
             <div className="text-center">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="text-red-500 text-3xl" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <AlertCircle className="text-red-500 text-2xl sm:text-3xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                 Error Loading Bids
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 max-w-md mx-auto">
                 {error}
               </p>
               <button
                 onClick={() => dispatch(fetchMyBids())}
-                className="px-8 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
               >
-                <RefreshCw className="inline-block mr-2" size={20} />
+                <RefreshCw className="inline-block mr-2" size={16} />
                 Try Again
               </button>
             </div>
@@ -277,43 +277,48 @@ const MyBids = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-blue-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
-          <div className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+        <div className="bg-blue-600 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden mb-6 sm:mb-8">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={() => navigate(-1)}
-                  className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20 hover:bg-white/30 transition-all duration-300"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20 hover:bg-white/30 transition-all duration-300"
                 >
-                  <ArrowLeft className="text-white" size={24} />
+                  <ArrowLeft
+                    className="text-white sm:w-6 sm:h-6"
+                    size={20}
+                  />
                 </button>
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20">
                   <Wallet
-                    className="text-indigo-600 dark:text-indigo-200"
-                    size={32}
+                    className="text-indigo-600 dark:text-indigo-200 sm:w-8 sm:h-8"
+                    size={24}
                   />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">My Bids</h1>
-                  <p className="text-indigo-100 text-lg">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
+                    My Bids
+                  </h1>
+                  <p className="text-indigo-100 text-sm sm:text-base md:text-lg">
                     Track and manage your shipment bids
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
-                  <span className="text-white font-semibold text-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 border border-white/20">
+                  <span className="text-white font-semibold text-sm sm:text-base md:text-lg">
                     {myBids.length} bids
                   </span>
                 </div>
                 <button
                   onClick={() => dispatch(fetchMyBids())}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-xs sm:text-sm"
                 >
-                  <RefreshCw size={16} className="text-white" />
+                  <RefreshCw className="text-white sm:w-4 sm:h-4" size={14} />
                   <span className="text-white font-medium">Refresh</span>
                 </button>
               </div>
@@ -323,7 +328,7 @@ const MyBids = () => {
 
         {/* Bids List */}
         {myBids.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {myBids.map((bid, index) => {
               const isExpanded = expandedBids.has(bid._id);
 
@@ -339,16 +344,16 @@ const MyBids = () => {
                   className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
                 >
                   {/* Compact Header View */}
-                  <div className="p-8">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  <div className="p-4 sm:p-6 md:p-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
                       {/* Left Side - Basic Info */}
                       <div className="flex-1">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Package className="text-white" size={24} />
+                        <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Package className="text-white" size={20} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
                               {getSafeValue(
                                 bid.shipment?.shipmentTitle,
                                 "Untitled Shipment"

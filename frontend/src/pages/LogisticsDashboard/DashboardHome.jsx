@@ -155,33 +155,33 @@ const LogisticsDashboardHome = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-6">
+        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/5 rounded-full translate-y-12 -translate-x-12 sm:translate-y-24 sm:-translate-x-24"></div>
 
-          <div className="relative p-6 md:p-8">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="relative p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 lg:gap-8">
               {/* Left Content */}
               <div className="flex-1 text-white">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <FaTruck className="text-white w-5 h-5" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <FaTruck className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
                       Welcome back, {logisticsUser.name}
                     </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="px-2 py-1 sm:px-3 sm:py-1 bg-green-500/20 text-green-200 rounded-full text-xs sm:text-sm font-medium">
                         ✓ {logisticsUser.role}
                       </span>
                       {user?.role === "logistics" && user?.companyName && (
-                        <span className="px-3 py-1 bg-blue-500/20 text-blue-200 rounded-full text-sm font-medium">
+                        <span className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/20 text-blue-200 rounded-full text-xs sm:text-sm font-medium">
                           🏢 {user.companyName}
                         </span>
                       )}
@@ -189,43 +189,50 @@ const LogisticsDashboardHome = () => {
                   </div>
                 </div>
 
-                <p className="text-blue-100 text-sm mb-4 max-w-2xl leading-relaxed">
+                <p className="text-blue-100 text-xs sm:text-sm mb-4 max-w-2xl leading-relaxed">
                   Manage your logistics operations efficiently. Track shipments,
                   place bids, and grow your business with our comprehensive
                   platform.
                 </p>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
                   <button
                     onClick={handleRefreshDashboard}
                     disabled={countsLoading}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 ${
+                      className={`w-3 h-3 sm:w-4 sm:h-4 ${
                         countsLoading ? "animate-spin" : ""
                       }`}
                     />
-                    {countsLoading ? "Refreshing..." : "Refresh Data"}
+                    <span className="hidden sm:inline">
+                      {countsLoading ? "Refreshing..." : "Refresh Data"}
+                    </span>
+                    <span className="sm:hidden">
+                      {countsLoading ? "..." : "Refresh"}
+                    </span>
                   </button>
                   <button
                     onClick={handleRefreshProfile}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 text-xs sm:text-sm"
                   >
-                    <FaRedo className="w-4 h-4" />
-                    Refresh Profile
+                    <FaRedo className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Refresh Profile</span>
+                    <span className="sm:hidden">Profile</span>
                   </button>
                   <button
                     onClick={() => navigate("/logistics/available-shipments")}
-                    className="px-4 py-2 bg-white text-indigo-700 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium shadow-md text-sm"
+                    className="px-3 py-2 sm:px-4 bg-white text-indigo-700 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium shadow-md text-xs sm:text-sm"
                   >
-                    Browse Shipments
+                    <span className="hidden sm:inline">Browse Shipments</span>
+                    <span className="sm:hidden">Browse</span>
                   </button>
                 </div>
               </div>
 
               {/* Right Content - Avatar and Notifications */}
-              <div className="flex-shrink-0 flex items-center gap-6">
+              <div className="flex-shrink-0 flex items-center gap-3 sm:gap-6">
                 {/* Notification Bell */}
                 <div className="relative">
                   <NotificationBell />
@@ -237,7 +244,7 @@ const LogisticsDashboardHome = () => {
                     <img
                       src={logisticsUser.avatar}
                       alt="Logistics Partner Avatar"
-                      className="w-20 h-20 rounded-xl border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 sm:border-4 border-white/30 object-cover cursor-pointer shadow-lg hover:scale-105 transition-transform duration-300"
                       onClick={() => setShowProfilePicModal(true)}
                       onError={(e) => {
                         console.error(
@@ -252,7 +259,7 @@ const LogisticsDashboardHome = () => {
 
                   {/* Fallback avatar */}
                   <div
-                    className={`w-20 h-20 rounded-xl border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold shadow-lg ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 sm:border-4 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg ${
                       logisticsUser.avatar ? "hidden" : "flex"
                     }`}
                     style={{ display: logisticsUser.avatar ? "none" : "flex" }}
@@ -263,8 +270,8 @@ const LogisticsDashboardHome = () => {
                   </div>
 
                   {/* Online Status Indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-green-500 border-2 sm:border-4 border-white rounded-full flex items-center justify-center">
+                    <div className="w-1 h-1 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                   </div>
                 </div>
               </div>
@@ -273,46 +280,46 @@ const LogisticsDashboardHome = () => {
         </section>
 
         {/* Modules Section */}
-        <section className="mt-8">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">
+        <section className="mt-6 sm:mt-8">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
               Quick Actions
             </h2>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 text-xs sm:text-sm">
               Access your most important features and tools
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {modules.map((mod, idx) => (
               <div
                 key={idx}
                 onClick={() => navigate(mod.path)}
-                className="group relative cursor-pointer p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="group relative cursor-pointer p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
               >
                 {/* Count Badge */}
                 {mod.notification > 0 && (
-                  <div className="absolute top-4 right-4 w-8 h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                     {mod.notification}
                   </div>
                 )}
 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
-                    {mod.icon}
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                    <div className="scale-75 sm:scale-100">{mod.icon}</div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
                       {mod.name}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">
                       {mod.description}
                     </p>
-                    <div className="flex items-center text-indigo-600 font-medium text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                    <div className="flex items-center text-indigo-600 font-medium text-xs sm:text-sm group-hover:text-indigo-700 transition-colors duration-300">
                       <span>Access Module</span>
                       <ArrowRight
-                        size={16}
-                        className="ml-2 group-hover:translate-x-1 transition-transform duration-300"
+                        size={12}
+                        className="ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300 sm:w-4 sm:h-4"
                       />
                     </div>
                   </div>
@@ -323,27 +330,27 @@ const LogisticsDashboardHome = () => {
         </section>
 
         {/* Delivery History Section */}
-        <section className="mt-12">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <section className="mt-8 sm:mt-12">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
-            <div className="bg-blue-600 p-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                    <FaHistory className="text-white text-xl" />
+            <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center">
+                    <FaHistory className="text-white text-lg sm:text-xl" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-lg sm:text-xl font-bold text-white">
                       Recent Delivery History
                     </h2>
-                    <p className="text-indigo-100">
+                    <p className="text-indigo-100 text-sm sm:text-base">
                       Track your completed deliveries and performance
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                    <span className="text-white font-semibold">
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4">
+                    <span className="text-white font-semibold text-sm sm:text-base">
                       {historyLoading
                         ? "Loading..."
                         : `${history.length} deliveries`}
@@ -351,92 +358,97 @@ const LogisticsDashboardHome = () => {
                   </div>
                   <button
                     onClick={() => dispatch(fetchLogisticsHistory())}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm sm:text-base"
                   >
-                    <FaRedo size={14} />
-                    Refresh
+                    <FaRedo size={12} className="sm:w-3 sm:h-3" />
+                    <span className="hidden sm:inline">Refresh</span>
+                    <span className="sm:hidden">↻</span>
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-8">
+            <div className="p-4 sm:p-6 md:p-8">
               {historyLoading ? (
-                <div className="flex items-center justify-center py-12">
+                <div className="flex items-center justify-center py-8 sm:py-12">
                   <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600 text-lg">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+                    <p className="text-gray-600 text-sm sm:text-lg">
                       Loading delivery history...
                     </p>
                   </div>
                 </div>
               ) : historyError ? (
-                <div className="text-center py-12">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-red-500 text-xl">⚠️</span>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-red-500 text-lg sm:text-xl">⚠️</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
                     Error Loading History
                   </h3>
-                  <p className="text-gray-600 mb-6">{historyError}</p>
+                  <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
+                    {historyError}
+                  </p>
                   <button
                     onClick={() => dispatch(fetchLogisticsHistory())}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg"
+                    className="px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 text-white rounded-lg sm:rounded-xl hover:bg-indigo-700 transition-colors shadow-lg text-sm sm:text-base"
                   >
                     Try Again
                   </button>
                 </div>
               ) : history.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">📦</span>
+                <div className="text-center py-8 sm:py-16">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <span className="text-2xl sm:text-4xl">📦</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">
                     No Delivery History Yet
                   </h3>
-                  <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                  <p className="text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">
                     You haven't completed any deliveries yet. Start by browsing
                     available shipments and place your first bid!
                   </p>
                   <button
                     onClick={() => navigate("/logistics/available-shipments")}
-                    className="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                    className="px-4 py-2 sm:px-8 sm:py-4 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg text-sm sm:text-base"
                   >
                     Browse Available Shipments
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {history.slice(0, 5).map((shipment, index) => (
                     <div
                       key={shipment._id}
-                      className="group relative bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+                      className="group relative bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                      <div className="flex items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
                           <div className="relative">
-                            <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
                               📦
                             </div>
-                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                               {index + 1}
                             </div>
                           </div>
-                          <div className="flex-1">
-                            <h4 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-indigo-600 transition-colors duration-300">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-1 group-hover:text-indigo-600 transition-colors duration-300 truncate">
                               {shipment.shipmentTitle}
                             </h4>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
                               {shipment.pickupCity}, {shipment.pickupCountry} →{" "}
                               {shipment.deliveryCity},{" "}
                               {shipment.deliveryCountry}
                             </p>
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                               <span className="flex items-center gap-1">
                                 <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
-                                {shipment.user?.companyName ||
-                                  shipment.user?.name}
+                                <span className="truncate">
+                                  {shipment.user?.companyName ||
+                                    shipment.user?.name}
+                                </span>
                               </span>
                               <span className="flex items-center gap-1">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
@@ -447,9 +459,9 @@ const LogisticsDashboardHome = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6">
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-6">
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-green-600 mb-1">
+                            <div className="text-lg sm:text-2xl font-bold text-green-600 mb-1">
                               {formatCurrency(
                                 shipment.bid?.price || 0,
                                 shipment.bid?.currency || "USD",
@@ -461,7 +473,7 @@ const LogisticsDashboardHome = () => {
                             </div>
                           </div>
                           <div
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
+                            className={`px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold shadow-sm ${
                               shipment.status === "completed" ||
                               shipment.status === "delivered"
                                 ? "bg-green-100 text-green-800 border border-green-200"

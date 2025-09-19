@@ -194,50 +194,55 @@ const MyShipments = () => {
 
   return (
     <>
-      <div className="min-h-screen p-6 bg-white dark:bg-gray-900">
+      <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="bg-blue-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
-            <div className="p-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+          <div className="bg-blue-600 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden mb-6 sm:mb-8">
+            <div className="p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <button
                     onClick={() => navigate("/user/dashboard")}
-                    className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                    className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
                   >
-                    <ArrowRight className="rotate-180 text-white" size={20} />
+                    <ArrowRight
+                      className="rotate-180 text-white sm:w-5 sm:h-5"
+                      size={16}
+                    />
                   </button>
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                    <Package className="text-white" size={24} />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/20">
+                    <Package className="text-white sm:w-6 sm:h-6" size={20} />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-white">
+                    <h1 className="text-lg sm:text-xl font-bold text-white">
                       My Shipments
                     </h1>
-                    <p className="text-indigo-100 text-lg">
+                    <p className="text-indigo-100 text-sm sm:text-lg">
                       Manage and track all your shipments
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
-                    <span className="text-white font-semibold text-lg">
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 border border-white/20">
+                    <span className="text-white font-semibold text-sm sm:text-lg">
                       {shipments?.length || 0} shipments
                     </span>
                   </div>
                   <button
                     onClick={() => dispatch(fetchUserShipments())}
-                    className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                    className="px-3 py-2 sm:px-4 bg-white/20 backdrop-blur-sm text-white rounded-lg sm:rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
                   >
-                    <RefreshCw size={16} className="text-white" />
-                    <span className="text-white font-medium">Refresh</span>
+                    <RefreshCw size={14} className="text-white sm:w-4 sm:h-4" />
+                    <span className="text-white font-medium text-sm sm:text-base">
+                      Refresh
+                    </span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
             {/* Loading */}
             {loading && (
               <p className="text-gray-600 text-sm animate-pulse">
@@ -252,54 +257,54 @@ const MyShipments = () => {
 
             {shipments.length === 0 ? (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="text-indigo-500 text-2xl" />
+                <div className="text-center py-8 sm:py-16">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Package className="text-indigo-500 text-xl sm:text-2xl" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200 mb-2 sm:mb-3">
                     No Shipments Yet
                   </h3>
-                  <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                  <p className="text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">
                     Start by posting your first shipment to connect with
                     logistics providers worldwide!
                   </p>
                   <button
                     onClick={() => navigate("/user/post-shipment")}
-                    className="px-8 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="px-4 py-2 sm:px-8 sm:py-4 bg-blue-500 text-white rounded-lg sm:rounded-xl hover:bg-blue-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
                   >
                     Post Your First Shipment
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {shipments.map((shipment, index) => (
                   <div
                     key={shipment._id}
-                    className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                    className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
                   >
                     {/* Compact Header View */}
-                    <div className="p-8">
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div className="p-4 sm:p-6 md:p-8">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
                         {/* Left Side - Shipment Info */}
                         <div className="flex-1">
-                          <div className="flex items-start gap-4 mb-4">
+                          <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
                             <div className="relative">
-                              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold text-sm sm:text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
                                 📦
                               </div>
-                              <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 text-white text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
+                              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
                                 {index + 1}
                               </div>
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 transition-colors duration-300">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 transition-colors duration-300 truncate">
                                   {shipment.shipmentTitle}
                                 </h3>
                                 <button
                                   onClick={() => toggleExpanded(shipment._id)}
-                                  className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1"
+                                  className="px-2 py-1 sm:px-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1 text-xs sm:text-sm self-start sm:self-center"
                                   title={
                                     expandedShipments.has(shipment._id)
                                       ? "Hide details"
@@ -309,25 +314,34 @@ const MyShipments = () => {
                                   {expandedShipments.has(shipment._id) ? (
                                     <>
                                       <ArrowLeft
-                                        className="rotate-90"
-                                        size={14}
+                                        className="rotate-90 sm:w-3 sm:h-3"
+                                        size={12}
                                       />
-                                      Hide
+                                      <span className="hidden sm:inline">
+                                        Hide
+                                      </span>
+                                      <span className="sm:hidden">-</span>
                                     </>
                                   ) : (
                                     <>
                                       <ArrowLeft
-                                        className="-rotate-90"
-                                        size={14}
+                                        className="-rotate-90 sm:w-3 sm:h-3"
+                                        size={12}
                                       />
-                                      Details
+                                      <span className="hidden sm:inline">
+                                        Details
+                                      </span>
+                                      <span className="sm:hidden">+</span>
                                     </>
                                   )}
                                 </button>
                               </div>
                               <div className="flex items-center gap-2 mb-3">
-                                <MapPin className="text-gray-400" size={16} />
-                                <span className="text-gray-600 font-medium text-lg">
+                                <MapPin
+                                  className="text-gray-400 sm:w-4 sm:h-4"
+                                  size={14}
+                                />
+                                <span className="text-gray-600 font-medium text-sm sm:text-lg truncate">
                                   {shipment.pickupCity} →{" "}
                                   {shipment.deliveryCity}
                                 </span>
@@ -336,16 +350,19 @@ const MyShipments = () => {
                           </div>
 
                           {/* Shipment Details */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
-                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <Calendar className="text-blue-600" size={16} />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-blue-50 rounded-lg sm:rounded-xl">
+                              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Calendar
+                                  className="text-blue-600 sm:w-4 sm:h-4"
+                                  size={14}
+                                />
                               </div>
                               <div>
                                 <div className="text-xs text-gray-500 font-medium">
                                   Pickup Date
                                 </div>
-                                <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                <div className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
                                   {shipment.preferredPickupDate
                                     ? new Date(
                                         shipment.preferredPickupDate
@@ -354,18 +371,18 @@ const MyShipments = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
-                              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-green-50 rounded-lg sm:rounded-xl">
+                              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center">
                                 <Calendar
-                                  className="text-green-600"
-                                  size={16}
+                                  className="text-green-600 sm:w-4 sm:h-4"
+                                  size={14}
                                 />
                               </div>
                               <div>
                                 <div className="text-xs text-gray-500 font-medium">
                                   Delivery Date
                                 </div>
-                                <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                <div className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
                                   {shipment.preferredDeliveryDate
                                     ? new Date(
                                         shipment.preferredDeliveryDate
@@ -374,11 +391,11 @@ const MyShipments = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
-                              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-purple-50 rounded-lg sm:rounded-xl">
+                              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <Package
-                                  className="text-purple-600"
-                                  size={16}
+                                  className="text-purple-600 sm:w-4 sm:h-4"
+                                  size={14}
                                 />
                               </div>
                               <div>

@@ -34,10 +34,14 @@ Logger.startupBanner();
 
 // Warnings for weak/fallback secrets
 if (process.env.JWT_SECRET.includes("fallback")) {
-  Logger.warn("⚠️  WARNING: Using fallback JWT_SECRET. Set proper secret in .env!");
+  Logger.warn(
+    "⚠️  WARNING: Using fallback JWT_SECRET. Set proper secret in .env!"
+  );
 }
 if (process.env.JWT_REFRESH_SECRET.includes("fallback")) {
-  Logger.warn("⚠️  WARNING: Using fallback JWT_REFRESH_SECRET. Set proper secret in .env!");
+  Logger.warn(
+    "⚠️  WARNING: Using fallback JWT_REFRESH_SECRET. Set proper secret in .env!"
+  );
 }
 
 // Init express + server
@@ -89,6 +93,11 @@ app.get("/api/test-connectivity", (req, res) => {
   res.status(200).json({ message: "Backend is reachable!" });
 });
 
+// Root route
+app.get("/", (req, res) => {
+  res.send("ROAMEASE backend is running ✅");
+});
+
 // Log requests
 app.use((req, res, next) => {
   console.log(`Incoming Request: ${req.method} ${req.url}`);
@@ -131,8 +140,12 @@ app.use(BeautifulErrorHandler.handleError);
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   Logger.success(`🚀 Server running on port ${PORT}`);
-  Logger.info(`📡 API endpoints: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api`);
-  Logger.info(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  Logger.info(
+    `📡 API endpoints: ${
+      process.env.BASE_URL || `http://localhost:${PORT}`
+    }/api`
+  );
+  Logger.info(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
 // Graceful shutdown
