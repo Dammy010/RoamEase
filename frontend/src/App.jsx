@@ -54,7 +54,6 @@ import ShipmentDetail from "./pages/UserDashboard/ShipmentDetail";
 import AcceptRejectBidPage from "./pages/UserDashboard/AcceptRejectBidPage"; // New: Import AcceptRejectBidPage
 import UserManageBidsPage from "./pages/UserDashboard/UserManageBidsPage"; // New: Import UserManageBidsPage
 import DeliverShipmentPage from "./pages/UserDashboard/DeliverShipmentPage"; // New: Import DeliverShipmentPage
-import TestTracking from "./pages/TestTracking"; // New: Import TestTracking
 import RateShipment from "./pages/UserDashboard/RateShipment"; // New: Import RateShipment
 import DeliveredShipments from "./pages/UserDashboard/DeliveredShipments"; // New: Import DeliveredShipments
 
@@ -84,6 +83,7 @@ import AdminProfile from "./pages/AdminDashboard/Profile";
 import AllUsersListPage from "./pages/AdminDashboard/AllUsersListPage";
 import NormalUsers from "./pages/AdminDashboard/NormalUsers";
 import ReportManagement from "./pages/AdminDashboard/ReportManagement";
+import AdminSubscriptions from "./pages/AdminDashboard/Subscriptions";
 import NotificationPage from "./pages/NotificationPage";
 import ReportsPage from "./pages/ReportsPage";
 
@@ -272,6 +272,10 @@ function App() {
                   />
                   <Route path="/admin/reports" element={<ReportManagement />} />
                   <Route
+                    path="/admin/subscriptions"
+                    element={<AdminSubscriptions />}
+                  />
+                  <Route
                     path="/admin/platform-analytics"
                     element={<PlatformAnalytics />}
                   />
@@ -289,7 +293,6 @@ function App() {
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/reports" element={<ReportsPage />} />
-                  <Route path="/test-tracking" element={<TestTracking />} />
                 </Route>
 
                 {/* Public pages accessible to authenticated users */}

@@ -10,7 +10,7 @@ const connectDB = async () => {
       maxIdleTimeMS: 30000,
       connectTimeoutMS: 30000, // Increased from 10000 to 30000
       retryWrites: true,
-      w: 'majority'
+      w: "majority",
     };
 
     // Use .env MONGO_URI (fallback to localhost if not set)
@@ -19,7 +19,9 @@ const connectDB = async () => {
       options
     );
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
+    console.log(
+      `✅ MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`
+    );
     connectDB.hasLoggedError = false;
   } catch (error) {
     if (!connectDB.hasLoggedError) {

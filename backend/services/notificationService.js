@@ -124,6 +124,11 @@ class NotificationService {
       "shipment_delivered",
       "payment_failed",
       "dispute_created",
+      // Tracking status change notifications - always send via email
+      "tracking_started",
+      "tracking_stopped",
+      "tracking_location_update",
+      "tracking_milestone_reached",
       // Admin notification types - always send via email
       "new_user_registered",
       "new_logistics_registered",
@@ -360,7 +365,10 @@ class NotificationService {
           });
         }
       } catch (socketError) {
-        console.log("⚠️ Socket.io not available for real-time notifications:", socketError.message);
+        console.log(
+          "⚠️ Socket.io not available for real-time notifications:",
+          socketError.message
+        );
         // Continue without Socket.io - notifications are still created in database
       }
 
@@ -829,6 +837,111 @@ class NotificationService {
     }));
 
     return await this.createBulkNotifications(notifications);
+  }
+
+  /**
+   * Tracking-related notifications
+   */
+  static async notifyTrackingStarted(shipment, user) {
+    return await this.createNotification({
+      recipient: user._id,
+      type: "tracking_started",
+      title: "Shipment Tracking Started",
+      message: `Real-time tracking has started for your shipment "${shipment.shipmentTitle}". You can now monitor its progress in real-time.`,
+      relatedEntity: { type: "shipment", id: shipment._id },
+      priority: "high",
+      metadata: {
+        shipmentId: shipment._id,
+        shipmentTitle: shipment.shipmentTitle,
+        trackingStartedAt: shipment.trackingStartedAt,
+        trackingNumber: shipment.trackingNumber,
+      },
+      actions: [
+        {
+          label: "Track Shipment",
+          action: "view",
+          url: `/shipments/${shipment._id}/tracking`,
+        },
+      ],
+    });
+  }
+
+  static async notifyTrackingStopped(shipment, user) {
+    return await this.createNotification({
+      recipient: user._id,
+      type: "tracking_stopped",
+      title: "Shipment Tracking Stopped",
+      message: `Real-time tracking has stopped for your shipment "${shipment.shipmentTitle}". The shipment may have reached its destination or tracking was paused by the logistics company.`,
+      relatedEntity: { type: "shipment", id: shipment._id },
+      priority: "medium",
+      metadata: {
+        shipmentId: shipment._id,
+        shipmentTitle: shipment.shipmentTitle,
+        trackingStoppedAt: shipment.trackingEndedAt,
+        trackingNumber: shipment.trackingNumber,
+      },
+      actions: [
+        {
+          label: "View Shipment",
+          action: "view",
+          url: `/shipments/${shipment._id}`,
+        },
+      ],
+    });
+  }
+
+  static async notifyTrackingLocationUpdate(shipment, user, locationData) {
+    return await this.createNotification({
+      recipient: user._id,
+      type: "tracking_location_update",
+      title: "Shipment Location Update",
+      message: `Your shipment "${
+        shipment.shipmentTitle
+      }" has been updated with a new location: ${
+        locationData.address || `${locationData.lat}, ${locationData.lng}`
+      }.`,
+      relatedEntity: { type: "shipment", id: shipment._id },
+      priority: "low",
+      metadata: {
+        shipmentId: shipment._id,
+        shipmentTitle: shipment.shipmentTitle,
+        location: locationData,
+        trackingNumber: shipment.trackingNumber,
+        updateTime: new Date(),
+      },
+      actions: [
+        {
+          label: "View on Map",
+          action: "view",
+          url: `/shipments/${shipment._id}/tracking`,
+        },
+      ],
+    });
+  }
+
+  static async notifyTrackingMilestoneReached(shipment, user, milestone) {
+    return await this.createNotification({
+      recipient: user._id,
+      type: "tracking_milestone_reached",
+      title: "Shipment Milestone Reached",
+      message: `Your shipment "${shipment.shipmentTitle}" has reached a milestone: ${milestone.description}.`,
+      relatedEntity: { type: "shipment", id: shipment._id },
+      priority: "medium",
+      metadata: {
+        shipmentId: shipment._id,
+        shipmentTitle: shipment.shipmentTitle,
+        milestone: milestone,
+        trackingNumber: shipment.trackingNumber,
+        reachedAt: new Date(),
+      },
+      actions: [
+        {
+          label: "View Progress",
+          action: "view",
+          url: `/shipments/${shipment._id}/tracking`,
+        },
+      ],
+    });
   }
 }
 

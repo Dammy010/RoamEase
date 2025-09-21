@@ -186,7 +186,26 @@ const ShipmentTracking = ({ shipmentId, onClose }) => {
   // Format time
   const formatTime = (timestamp) => {
     if (!timestamp) return "Unknown";
-    return new Date(timestamp).toLocaleTimeString();
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+
+    // If it's today, show time with "ago" format
+    if (diffInMinutes < 1440) {
+      // Less than 24 hours
+      if (diffInMinutes < 1) return "Just now";
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    }
+
+    // If it's older, show date and time
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   // Copy tracking link

@@ -115,13 +115,13 @@ router.get("/:id/tracking", protect, getShipmentTracking); // Get tracking data
 router.post(
   "/:id/start-tracking",
   protect,
-  allowRoles("logistics"),
+  allowRoles("user", "logistics", "admin"),
   startTracking
 ); // Start tracking
 router.post(
   "/:id/stop-tracking",
   protect,
-  allowRoles("logistics"),
+  allowRoles("user", "logistics", "admin"),
   stopTracking
 ); // Stop tracking
 

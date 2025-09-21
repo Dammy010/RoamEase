@@ -93,6 +93,7 @@ const shipmentSchema = new mongoose.Schema(
     isTrackingActive: { type: Boolean, default: false }, // Whether tracking is currently active
     trackingStartedAt: { type: Date }, // When tracking started
     trackingEndedAt: { type: Date }, // When tracking ended
+    milestoneReached: { type: Number, default: 0 }, // Last milestone distance reached (in km)
   },
   { timestamps: true }
 );

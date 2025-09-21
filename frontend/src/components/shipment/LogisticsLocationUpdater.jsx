@@ -288,7 +288,30 @@ const LogisticsLocationUpdater = ({ shipmentId }) => {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Last Update</span>
               <span className="text-sm font-medium">
-                {new Date(lastLocation.timestamp).toLocaleTimeString()}
+                {(() => {
+                  if (!lastLocation.timestamp) return "Unknown";
+                  const date = new Date(lastLocation.timestamp);
+                  const now = new Date();
+                  const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+
+                  // If it's today, show time with "ago" format
+                  if (diffInMinutes < 1440) {
+                    // Less than 24 hours
+                    if (diffInMinutes < 1) return "Just now";
+                    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+                    if (diffInMinutes < 1440)
+                      return `${Math.floor(diffInMinutes / 60)}h ago`;
+                  }
+
+                  // If it's older, show date and time
+                  return date.toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  });
+                })()}
               </span>
             </div>
           </div>

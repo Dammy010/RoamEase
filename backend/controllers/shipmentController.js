@@ -1764,6 +1764,129 @@ const reverseGeocode = async (lat, lng) => {
   }
 };
 
+// Helper function to determine if a location change is significant
+const isSignificantLocationChange = (locationHistory, newLocation) => {
+  if (locationHistory.length < 2) {
+    return false; // Need at least 2 locations to compare
+  }
+
+  // Get the last location from history
+  const lastLocation = locationHistory[locationHistory.length - 1];
+
+  // Calculate distance between last location and new location
+  const distance = calculateDistance(
+    lastLocation.lat,
+    lastLocation.lng,
+    newLocation.lat,
+    newLocation.lng
+  );
+
+  // Consider it significant if:
+  // 1. Distance is more than 5 km
+  // 2. Speed is significantly different (indicating change in transport mode)
+  // 3. Address has changed significantly
+  const significantDistance = distance > 5; // 5 km
+  const significantSpeedChange =
+    Math.abs(newLocation.speed - lastLocation.speed) > 20; // 20 km/h difference
+  const addressChanged = lastLocation.address !== newLocation.address;
+
+  return significantDistance || significantSpeedChange || addressChanged;
+};
+
+// Helper function to calculate distance between two coordinates (Haversine formula)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in kilometers
+};
+
+// Helper function to check for milestone achievements
+const checkForMilestone = (shipment, locationData) => {
+  // Check if this is the first location update (tracking just started)
+  if (shipment.locationHistory.length === 1) {
+    return {
+      type: "tracking_started",
+      description: "Real-time tracking has begun for your shipment",
+      location:
+        locationData.address || `${locationData.lat}, ${locationData.lng}`,
+      timestamp: locationData.timestamp,
+    };
+  }
+
+  // Check if shipment is near destination (within 10km)
+  if (
+    shipment.destination &&
+    shipment.destination.lat &&
+    shipment.destination.lng
+  ) {
+    const distanceToDestination = calculateDistance(
+      locationData.lat,
+      locationData.lng,
+      shipment.destination.lat,
+      shipment.destination.lng
+    );
+
+    if (distanceToDestination <= 10 && distanceToDestination > 5) {
+      return {
+        type: "near_destination",
+        description: "Your shipment is approaching its destination",
+        location:
+          locationData.address || `${locationData.lat}, ${locationData.lng}`,
+        distanceToDestination: Math.round(distanceToDestination),
+        timestamp: locationData.timestamp,
+      };
+    }
+
+    if (distanceToDestination <= 5) {
+      return {
+        type: "at_destination",
+        description: "Your shipment has arrived at its destination",
+        location:
+          locationData.address || `${locationData.lat}, ${locationData.lng}`,
+        timestamp: locationData.timestamp,
+      };
+    }
+  }
+
+  // Check if shipment has traveled a significant distance (100km milestones)
+  if (shipment.origin && shipment.origin.lat && shipment.origin.lng) {
+    const distanceFromOrigin = calculateDistance(
+      shipment.origin.lat,
+      shipment.origin.lng,
+      locationData.lat,
+      locationData.lng
+    );
+
+    // Check for 100km milestones
+    const milestoneDistance = Math.floor(distanceFromOrigin / 100) * 100;
+    const previousMilestone = shipment.milestoneReached || 0;
+
+    if (milestoneDistance > previousMilestone && milestoneDistance >= 100) {
+      // Update the milestone reached in shipment
+      shipment.milestoneReached = milestoneDistance;
+
+      return {
+        type: "distance_milestone",
+        description: `Your shipment has traveled ${milestoneDistance}km from origin`,
+        location:
+          locationData.address || `${locationData.lat}, ${locationData.lng}`,
+        distanceTraveled: milestoneDistance,
+        timestamp: locationData.timestamp,
+      };
+    }
+  }
+
+  return null; // No milestone reached
+};
+
 // Update shipment location (for logistics companies)
 const updateShipmentLocation = async (req, res) => {
   try {
@@ -1852,6 +1975,66 @@ const updateShipmentLocation = async (req, res) => {
       location: locationData,
       timestamp: new Date(),
     });
+
+    // Send email notification for significant location updates
+    // Only send notifications for significant changes (every 10th update or major milestones)
+    const shouldSendLocationNotification =
+      shipment.locationHistory.length % 10 === 0 || // Every 10th update
+      isSignificantLocationChange(shipment.locationHistory, locationData);
+
+    if (shouldSendLocationNotification) {
+      try {
+        const populatedShipment = await shipment.populate(
+          "user",
+          "name email companyName country"
+        );
+
+        const NotificationService = require("../services/notificationService");
+        await NotificationService.notifyTrackingLocationUpdate(
+          populatedShipment,
+          populatedShipment.user,
+          locationData
+        );
+        console.log(
+          "✅ Location update email notification sent to user:",
+          populatedShipment.user.email
+        );
+      } catch (notificationError) {
+        console.error(
+          "❌ Error sending location update notification:",
+          notificationError
+        );
+        // Don't fail the location update if notification fails
+      }
+    }
+
+    // Check for milestone achievements
+    const milestone = checkForMilestone(shipment, locationData);
+    if (milestone) {
+      try {
+        const populatedShipment = await shipment.populate(
+          "user",
+          "name email companyName country"
+        );
+
+        const NotificationService = require("../services/notificationService");
+        await NotificationService.notifyTrackingMilestoneReached(
+          populatedShipment,
+          populatedShipment.user,
+          milestone
+        );
+        console.log(
+          "✅ Milestone reached email notification sent to user:",
+          populatedShipment.user.email
+        );
+      } catch (notificationError) {
+        console.error(
+          "❌ Error sending milestone notification:",
+          notificationError
+        );
+        // Don't fail the location update if notification fails
+      }
+    }
 
     console.log(`📍 Location updated for shipment ${id}: ${lat}, ${lng}`);
 
@@ -1958,22 +2141,8 @@ const getShipmentTracking = async (req, res) => {
 const startTracking = async (req, res) => {
   try {
     const { id } = req.params;
-    const logisticsCompanyId = req.user._id;
-
-    // Check if this logistics company has an accepted bid for this shipment
-    const acceptedBid = await Bid.findOne({
-      shipment: id,
-      carrier: logisticsCompanyId,
-      status: "accepted",
-    });
-
-    if (!acceptedBid) {
-      return res.status(403).json({
-        success: false,
-        message:
-          "You don't have permission to start tracking for this shipment",
-      });
-    }
+    const userId = req.user._id;
+    const userRole = req.user.role;
 
     // Find the shipment
     const shipment = await Shipment.findById(id);
@@ -1981,6 +2150,28 @@ const startTracking = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Shipment not found",
+      });
+    }
+
+    // Check permissions: shipment owner, logistics company with accepted bid, or admin
+    const isOwner = shipment.user.toString() === userId.toString();
+    const isAdmin = userRole === "admin";
+
+    let isLogisticsHandler = false;
+    if (userRole === "logistics") {
+      const acceptedBid = await Bid.findOne({
+        shipment: id,
+        carrier: userId,
+        status: "accepted",
+      });
+      isLogisticsHandler = !!acceptedBid;
+    }
+
+    if (!isOwner && !isLogisticsHandler && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You don't have permission to start tracking for this shipment",
       });
     }
 
@@ -1996,6 +2187,12 @@ const startTracking = async (req, res) => {
     shipment.trackingStartedAt = new Date();
     await shipment.save();
 
+    // Populate user details for notification
+    const populatedShipment = await shipment.populate(
+      "user",
+      "name email companyName country"
+    );
+
     // Emit tracking started event
     const io = getIO();
     io.to(`shipment:${id}`).emit("trackingStarted", {
@@ -2008,6 +2205,25 @@ const startTracking = async (req, res) => {
       shipmentTitle: shipment.shipmentTitle,
       startedAt: shipment.trackingStartedAt,
     });
+
+    // Send email notification to shipment owner
+    try {
+      const NotificationService = require("../services/notificationService");
+      await NotificationService.notifyTrackingStarted(
+        populatedShipment,
+        populatedShipment.user
+      );
+      console.log(
+        "✅ Tracking started email notification sent to user:",
+        populatedShipment.user.email
+      );
+    } catch (notificationError) {
+      console.error(
+        "❌ Error sending tracking started notification:",
+        notificationError
+      );
+      // Don't fail the tracking start if notification fails
+    }
 
     return res.json({
       success: true,
@@ -2028,21 +2244,8 @@ const startTracking = async (req, res) => {
 const stopTracking = async (req, res) => {
   try {
     const { id } = req.params;
-    const logisticsCompanyId = req.user._id;
-
-    // Check if this logistics company has an accepted bid for this shipment
-    const acceptedBid = await Bid.findOne({
-      shipment: id,
-      carrier: logisticsCompanyId,
-      status: "accepted",
-    });
-
-    if (!acceptedBid) {
-      return res.status(403).json({
-        success: false,
-        message: "You don't have permission to stop tracking for this shipment",
-      });
-    }
+    const userId = req.user._id;
+    const userRole = req.user.role;
 
     // Find the shipment
     const shipment = await Shipment.findById(id);
@@ -2050,6 +2253,27 @@ const stopTracking = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Shipment not found",
+      });
+    }
+
+    // Check permissions: shipment owner, logistics company with accepted bid, or admin
+    const isOwner = shipment.user.toString() === userId.toString();
+    const isAdmin = userRole === "admin";
+
+    let isLogisticsHandler = false;
+    if (userRole === "logistics") {
+      const acceptedBid = await Bid.findOne({
+        shipment: id,
+        carrier: userId,
+        status: "accepted",
+      });
+      isLogisticsHandler = !!acceptedBid;
+    }
+
+    if (!isOwner && !isLogisticsHandler && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to stop tracking for this shipment",
       });
     }
 
@@ -2065,6 +2289,12 @@ const stopTracking = async (req, res) => {
     shipment.trackingEndedAt = new Date();
     await shipment.save();
 
+    // Populate user details for notification
+    const populatedShipment = await shipment.populate(
+      "user",
+      "name email companyName country"
+    );
+
     // Emit tracking stopped event
     const io = getIO();
     io.to(`shipment:${id}`).emit("trackingStopped", {
@@ -2077,6 +2307,25 @@ const stopTracking = async (req, res) => {
       shipmentTitle: shipment.shipmentTitle,
       stoppedAt: shipment.trackingEndedAt,
     });
+
+    // Send email notification to shipment owner
+    try {
+      const NotificationService = require("../services/notificationService");
+      await NotificationService.notifyTrackingStopped(
+        populatedShipment,
+        populatedShipment.user
+      );
+      console.log(
+        "✅ Tracking stopped email notification sent to user:",
+        populatedShipment.user.email
+      );
+    } catch (notificationError) {
+      console.error(
+        "❌ Error sending tracking stopped notification:",
+        notificationError
+      );
+      // Don't fail the tracking stop if notification fails
+    }
 
     return res.json({
       success: true,

@@ -1,20 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+} from "react-leaflet";
 import L from "leaflet";
 import { useParams } from "react-router-dom";
-import { 
-  Navigation, 
-  MapPin, 
-  Clock, 
-  Gauge, 
-  User, 
-  Phone, 
-  Mail, 
-  Building, 
+import {
+  Navigation,
+  MapPin,
+  Clock,
+  Gauge,
+  User,
+  Phone,
+  Mail,
+  Building,
   Globe,
   ArrowLeft,
   Copy,
-  Check
+  Check,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../services/api";
@@ -22,9 +28,12 @@ import api from "../services/api";
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
 const PublicTracking = () => {
@@ -46,7 +55,9 @@ const PublicTracking = () => {
   useEffect(() => {
     const loadTrackingData = async () => {
       try {
-        const response = await api.get(`/shipments/${shipmentId}/public-tracking`);
+        const response = await api.get(
+          `/shipments/${shipmentId}/public-tracking`
+        );
         if (response.data.success) {
           const data = response.data.tracking;
           setTrackingData(data);
@@ -89,7 +100,26 @@ const PublicTracking = () => {
   // Format time
   const formatTime = (timestamp) => {
     if (!timestamp) return "Unknown";
-    return new Date(timestamp).toLocaleTimeString();
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+
+    // If it's today, show time with "ago" format
+    if (diffInMinutes < 1440) {
+      // Less than 24 hours
+      if (diffInMinutes < 1) return "Just now";
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    }
+
+    // If it's older, show date and time
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   // Format date
@@ -188,7 +218,7 @@ const PublicTracking = () => {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                
+
                 {/* Driver marker */}
                 {lastLocation && lastLocation.lat && lastLocation.lng && (
                   <Marker position={[lastLocation.lat, lastLocation.lng]}>
@@ -214,7 +244,7 @@ const PublicTracking = () => {
                 {/* Route polyline */}
                 {locationHistory.length > 1 && (
                   <Polyline
-                    positions={locationHistory.map(loc => [loc.lat, loc.lng])}
+                    positions={locationHistory.map((loc) => [loc.lat, loc.lng])}
                     color="#3B82F6"
                     weight={3}
                     opacity={0.7}
@@ -236,12 +266,18 @@ const PublicTracking = () => {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Name</p>
-                    <p className="text-gray-900">{logisticsCompany.name || "Not provided"}</p>
+                    <p className="text-gray-900">
+                      {logisticsCompany.name || "Not provided"}
+                    </p>
                   </div>
                   {logisticsCompany.companyName && (
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Company</p>
-                      <p className="text-gray-900">{logisticsCompany.companyName}</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        Company
+                      </p>
+                      <p className="text-gray-900">
+                        {logisticsCompany.companyName}
+                      </p>
                     </div>
                   )}
                   {logisticsCompany.phone && (
@@ -270,7 +306,9 @@ const PublicTracking = () => {
                   )}
                   {logisticsCompany.country && (
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Country</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        Country
+                      </p>
                       <p className="text-gray-900 flex items-center gap-1">
                         <Globe size={14} />
                         {logisticsCompany.country}
@@ -290,15 +328,17 @@ const PublicTracking = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Status</span>
-                  <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                    isTrackingActive 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-gray-100 text-gray-800"
-                  }`}>
+                  <span
+                    className={`text-sm font-medium px-2 py-1 rounded-full ${
+                      isTrackingActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
                     {isTrackingActive ? "Tracking Active" : "Not Tracking"}
                   </span>
                 </div>
-                
+
                 {lastLocation && (
                   <>
                     <div className="flex items-center justify-between">
@@ -307,7 +347,7 @@ const PublicTracking = () => {
                         {formatTime(lastLocation.timestamp)}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">ETA</span>
                       <span className="text-sm font-medium">
@@ -327,26 +367,35 @@ const PublicTracking = () => {
               </h3>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {locationHistory.length > 0 ? (
-                  locationHistory.slice(-10).reverse().map((location, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
-                          {location.address || "Unknown location"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatDate(location.timestamp)} at {formatTime(location.timestamp)}
-                        </p>
-                        {location.speed && (
-                          <p className="text-xs text-blue-600">
-                            Speed: {location.speed} km/h
+                  locationHistory
+                    .slice(-10)
+                    .reverse()
+                    .map((location, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">
+                            {location.address || "Unknown location"}
                           </p>
-                        )}
+                          <p className="text-xs text-gray-500">
+                            {formatDate(location.timestamp)} at{" "}
+                            {formatTime(location.timestamp)}
+                          </p>
+                          {location.speed && (
+                            <p className="text-xs text-blue-600">
+                              Speed: {location.speed} km/h
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                 ) : (
-                  <p className="text-gray-500 text-sm">No location history available</p>
+                  <p className="text-gray-500 text-sm">
+                    No location history available
+                  </p>
                 )}
               </div>
             </div>

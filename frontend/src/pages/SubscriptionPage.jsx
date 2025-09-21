@@ -69,10 +69,28 @@ const SubscriptionPage = () => {
 
   useEffect(() => {
     // Additional debugging
+    console.log("🔍 Subscription Debug Info:");
+    console.log("User:", user);
+    console.log("User ID:", user?._id);
+    console.log("Subscriptions:", subscriptions);
+    console.log("Current Subscription:", currentSubscription);
+    console.log("Force Hide Active:", forceHideActive);
+
     if (subscriptions && subscriptions.length > 0) {
-      subscriptions.forEach((sub, index) => {});
+      subscriptions.forEach((sub, index) => {
+        console.log(`Subscription ${index + 1}:`, {
+          id: sub._id,
+          status: sub.status,
+          plan: sub.plan,
+          amount: sub.amount,
+          billingCycle: sub.billingCycle,
+        });
+      });
+
+      const activeSub = subscriptions.find((sub) => sub.status === "active");
+      console.log("Active subscription found:", activeSub);
     }
-  }, [currentSubscription, subscriptions]);
+  }, [currentSubscription, subscriptions, forceHideActive]);
 
   // Fetch subscriptions on component mount and force refresh
   useEffect(() => {
@@ -436,7 +454,6 @@ const SubscriptionPage = () => {
         </div>
       </div>
 
-      {/* Debug Section - Temporary */}
       <div className="py-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg mx-4 mb-4">
         <div className="max-w-7xl mx-auto px-4">
           <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-4">
@@ -496,6 +513,15 @@ const SubscriptionPage = () => {
             </button>
             <button
               onClick={() => {
+                setForceHideActive(false);
+              }}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors flex items-center space-x-2 text-sm"
+            >
+              <Check className="w-4 h-4" />
+              <span>Show Active</span>
+            </button>
+            <button
+              onClick={() => {
                 dispatch({
                   type: "subscription/clearState",
                 });
@@ -506,92 +532,276 @@ const SubscriptionPage = () => {
               <RefreshCw className="w-4 h-4" />
               <span>Force Clear & Reload</span>
             </button>
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(
+                    "http://localhost:5000/api/subscriptions/emergency-cleanup",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem(
+                          "token"
+                        )}`,
+                      },
+                    }
+                  );
+                  const result = await response.json();
+                  if (result.success) {
+                    toast.success(
+                      `Cleaned up ${result.deletedCount} failed subscriptions`
+                    );
+                  } else {
+                    toast.error("Failed to cleanup subscriptions");
+                  }
+                } catch (error) {
+                  toast.error("Error cleaning up subscriptions");
+                }
+              }}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors flex items-center space-x-2 text-sm"
+            >
+              <X className="w-4 h-4" />
+              <span>Emergency Cleanup</span>
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(
+                    "http://localhost:5000/api/subscriptions/clear-cache",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem(
+                          "token"
+                        )}`,
+                      },
+                    }
+                  );
+                  const result = await response.json();
+                  if (result.success) {
+                    toast.success(
+                      `Cleared reference cache (${result.clearedCount} references)`
+                    );
+                  } else {
+                    toast.error("Failed to clear cache");
+                  }
+                } catch (error) {
+                  toast.error("Error clearing cache");
+                }
+              }}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors flex items-center space-x-2 text-sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Clear Cache</span>
+            </button>
+            <button
+              onClick={() => {
+                console.log("🔄 Manually refreshing subscriptions...");
+                dispatch(getUserSubscriptions());
+              }}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors flex items-center space-x-2 text-sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Refresh Subscriptions</span>
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  console.log("🧪 Testing API directly...");
+                  const response = await fetch(
+                    "http://localhost:5000/api/subscriptions/my-subscriptions",
+                    {
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                          "token"
+                        )}`,
+                        "Content-Type": "application/json",
+                      },
+                    }
+                  );
+                  const data = await response.json();
+                  console.log("🧪 Direct API response:", data);
+                  if (data.success) {
+                    console.log(
+                      "🧪 Active subscriptions in response:",
+                      data.data.filter((sub) => sub.status === "active")
+                    );
+                  }
+                } catch (error) {
+                  console.error("🧪 Direct API error:", error);
+                }
+              }}
+              className="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors flex items-center space-x-2 text-sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Test API Direct</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Current Subscription Section */}
-      {!forceHideActive &&
-        (() => {
-          const allSubscriptions = subscriptions || [];
-          const activeSubscription = allSubscriptions.find(
-            (sub) => sub.status === "active"
-          );
-          const cancelledSubscription = allSubscriptions.find(
-            (sub) => sub.status === "cancelled"
-          );
+      {(() => {
+        const allSubscriptions = subscriptions || [];
+        const activeSubscription = allSubscriptions.find(
+          (sub) => sub.status === "active"
+        );
+        const cancelledSubscription = allSubscriptions.find(
+          (sub) => sub.status === "cancelled"
+        );
 
-          // Don't show active section if force hide is true
-          if (forceHideActive) {
-            return null;
-          }
+        console.log("🔍 Display Logic Debug:");
+        console.log("All subscriptions:", allSubscriptions);
+        console.log("Active subscription:", activeSubscription);
+        console.log("Cancelled subscription:", cancelledSubscription);
+        console.log("Force hide active:", forceHideActive);
 
-          // Don't show active section if there's a cancelled subscription or no active subscription
-          if (cancelledSubscription) {
-            return null;
-          }
+        // Additional debugging for display logic
+        console.log("🔍 Display Logic Analysis:");
+        console.log("Total subscriptions found:", allSubscriptions.length);
+        console.log(
+          "Subscriptions with 'active' status:",
+          allSubscriptions.filter((sub) => sub.status === "active").length
+        );
+        console.log(
+          "Subscriptions with 'inactive' status:",
+          allSubscriptions.filter((sub) => sub.status === "inactive").length
+        );
+        console.log(
+          "Subscriptions with 'cancelled' status:",
+          allSubscriptions.filter((sub) => sub.status === "cancelled").length
+        );
 
-          if (!activeSubscription) {
-            return null;
-          }
+        // Check if activeSubscription is truthy
+        console.log("Active subscription is truthy:", !!activeSubscription);
+        console.log("Active subscription type:", typeof activeSubscription);
 
+        // Check the exact condition that determines display
+        const shouldShowActive =
+          !forceHideActive && !cancelledSubscription && activeSubscription;
+        console.log("Should show active subscription:", shouldShowActive);
+
+        // Don't show active section if force hide is true
+        if (forceHideActive) {
           return (
-            <div className="py-12 bg-blue-50 dark:from-green-900/20 dark:to-emerald-900/20">
+            <div className="py-12 bg-gray-50 dark:bg-gray-800/50">
               <div className="max-w-7xl mx-auto px-4">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-green-200 dark:border-green-800 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-green-900 dark:text-green-100 mb-2">
-                          {activeSubscription.plan.charAt(0).toUpperCase() +
-                            activeSubscription.plan.slice(1)}{" "}
-                          Plan Active
-                        </h3>
-                        <p className="text-green-700 dark:text-green-300 mb-1">
-                          Next billing:{" "}
-                          {new Date(
-                            activeSubscription.currentPeriodEnd
-                          ).toLocaleDateString()}
-                        </p>
-                        <p className="text-green-600 dark:text-green-400 text-sm">
-                          {formatCurrency(
-                            activeSubscription.amount,
-                            "NGN",
-                            "NGN"
-                          )}
-                          /{activeSubscription.billingCycle}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-4">
-                        <button
-                          onClick={() => refreshSubscriptions()}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          <span>Refresh</span>
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleCancelSubscription(activeSubscription._id)
-                          }
-                          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-                        >
-                          <X className="w-4 h-4" />
-                          <span>Cancel Subscription</span>
-                        </button>
-                      </div>
-                    </div>
+                <div className="text-center">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-8">
+                    <X className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Subscription Hidden
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                      Your active subscription is currently hidden. Click the
+                      button below to show it again.
+                    </p>
+                    <button
+                      onClick={() => setForceHideActive(false)}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center space-x-2 mx-auto"
+                    >
+                      <Check className="w-5 h-5" />
+                      <span>Show My Subscription</span>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           );
-        })()}
+        }
+
+        // PRIORITY: Show active subscription if it exists, regardless of cancelled subscriptions
+        if (activeSubscription) {
+          console.log(
+            "🔍 SHOWING: Active subscription found - prioritizing over cancelled"
+          );
+          console.log("Active subscription data:", activeSubscription);
+          // Don't return null here - continue to show active subscription
+        } else {
+          console.log("🔍 NOT SHOWING: No active subscription found");
+          console.log("🔍 DEBUG: allSubscriptions:", allSubscriptions);
+          console.log("🔍 DEBUG: Looking for active status...");
+          allSubscriptions.forEach((sub, index) => {
+            console.log(`🔍 DEBUG: Subscription ${index}:`, {
+              id: sub._id,
+              status: sub.status,
+              statusType: typeof sub.status,
+              statusLength: sub.status?.length,
+              isActive: sub.status === "active",
+              strictEqual: sub.status === "active",
+            });
+          });
+          return null;
+        }
+
+        console.log("🔍 SHOWING: Active subscription display");
+
+        return (
+          <div className="py-12 bg-blue-50 dark:from-green-900/20 dark:to-emerald-900/20">
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-green-200 dark:border-green-800 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-green-900 dark:text-green-100 mb-2">
+                        {activeSubscription.plan.charAt(0).toUpperCase() +
+                          activeSubscription.plan.slice(1)}{" "}
+                        Plan Active
+                      </h3>
+                      <p className="text-green-700 dark:text-green-300 mb-1">
+                        Next billing:{" "}
+                        {new Date(
+                          activeSubscription.currentPeriodEnd
+                        ).toLocaleDateString()}
+                      </p>
+                      <p className="text-green-600 dark:text-green-400 text-sm">
+                        {formatCurrency(
+                          activeSubscription.amount,
+                          "NGN",
+                          "NGN"
+                        )}
+                        /{activeSubscription.billingCycle}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={() => refreshSubscriptions()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Refresh</span>
+                      </button>
+                      <button
+                        onClick={() => setForceHideActive(true)}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Hide</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleCancelSubscription(activeSubscription._id)
+                        }
+                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Cancel Subscription</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Cancelled Subscription Section */}
       {(() => {
@@ -599,10 +809,44 @@ const SubscriptionPage = () => {
         const cancelledSubscription = allSubscriptions.find(
           (sub) => sub.status === "cancelled"
         );
+        const activeSubscription = allSubscriptions.find(
+          (sub) => sub.status === "active"
+        );
 
-        if (!cancelledSubscription) {
+        console.log("🔍 CANCELLED SECTION DEBUG:");
+        console.log("All subscriptions:", allSubscriptions.length);
+        console.log("Cancelled subscription:", cancelledSubscription);
+        console.log("Active subscription:", activeSubscription);
+
+        // Don't show cancelled message if there's an active subscription
+        if (activeSubscription) {
+          console.log(
+            "🔍 NOT SHOWING CANCELLED: Active subscription exists, prioritizing active"
+          );
           return null;
         }
+
+        // ADDITIONAL CHECK: Also check if there are any subscriptions with 'active' status
+        const hasActiveStatus = allSubscriptions.some(
+          (sub) => sub.status === "active"
+        );
+        if (hasActiveStatus) {
+          console.log(
+            "🔍 NOT SHOWING CANCELLED: Found subscription with 'active' status"
+          );
+          return null;
+        }
+
+        if (!cancelledSubscription) {
+          console.log(
+            "🔍 NOT SHOWING CANCELLED: No cancelled subscription found"
+          );
+          return null;
+        }
+
+        console.log(
+          "🔍 SHOWING CANCELLED: No active subscription, showing cancelled message"
+        );
 
         return (
           <div className="py-12 bg-blue-50 dark:from-red-900/20 dark:to-orange-900/20">
@@ -1116,6 +1360,14 @@ const PaymentModal = ({ plan, onClose, onPayment, loading }) => {
         import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ||
         "pk_test_56e507241ee90b8b7cb1802d8e27f14035f56e63";
 
+      // Check if Paystack is available first
+      if (typeof window.PaystackPop === "undefined") {
+        console.error("Paystack script not loaded");
+        throw new Error("Paystack script not loaded. Please refresh the page.");
+      }
+
+      console.log("Paystack script loaded successfully");
+
       // Create subscription to get payment data
       const response = await fetch(
         "http://localhost:5000/api/subscriptions/create",
@@ -1133,30 +1385,134 @@ const PaymentModal = ({ plan, onClose, onPayment, loading }) => {
       );
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error Response:", errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API Error Response:", errorData);
+
+        // Handle specific error cases
+        if (
+          response.status === 400 &&
+          errorData.message?.includes("already have an active subscription")
+        ) {
+          throw new Error(
+            "You already have an active subscription. Please cancel it first before creating a new one."
+          );
+        } else if (
+          (response.status === 400 || response.status === 500) &&
+          (errorData.message?.includes("DUPLICATE_REFERENCE") ||
+            errorData.error === "DUPLICATE_REFERENCE_MAX_RETRIES")
+        ) {
+          throw new Error(
+            "Transaction reference conflict. Please wait a moment and try again."
+          );
+        } else {
+          throw new Error(
+            errorData.message ||
+              `HTTP ${response.status}: Failed to create subscription`
+          );
+        }
       }
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && result.data) {
         setPaymentData(result.data);
 
-        // Check if Paystack is available
-        if (typeof window.PaystackPop === "undefined") {
+        // Use the paystackData from backend if available, otherwise fallback to manual setup
+        const paystackData = result.data.paystackData;
+
+        if (paystackData) {
+          console.log("Using backend paystackData:", paystackData);
+
+          // Validate paystackData
+          if (
+            !paystackData.key ||
+            !paystackData.email ||
+            !paystackData.amount ||
+            !paystackData.ref
+          ) {
+            throw new Error("Invalid paystackData received from server");
+          }
+
+          // Use Paystack inline popup with data from backend
+          const handler = window.PaystackPop.setup({
+            key: paystackData.key,
+            email: paystackData.email,
+            amount: paystackData.amount,
+            currency: paystackData.currency || "NGN",
+            ref: paystackData.ref,
+            metadata: paystackData.metadata || {
+              custom_fields: [
+                {
+                  display_name: "Plan",
+                  variable_name: "plan",
+                  value: plan.name,
+                },
+                {
+                  display_name: "Billing Cycle",
+                  variable_name: "billing_cycle",
+                  value: plan.billingCycle,
+                },
+              ],
+              referrer: window.location.href,
+            },
+            callback: function (response) {
+              console.log("Payment successful:", response);
+              handlePaymentSuccess(response.reference);
+            },
+            onClose: function () {
+              console.log("Payment cancelled by user");
+              toast.info("Payment cancelled");
+            },
+          });
+
+          console.log("Opening Paystack payment modal...");
+          handler.openIframe();
+          return; // Exit early if using paystackData
+        }
+
+        // Fallback to manual setup (old method)
+        const rawAmount =
+          result.data.subscription?.amount || result.data.amount || plan.price;
+        const amount = parseFloat(rawAmount);
+        const reference = result.data.reference;
+
+        console.log("Payment data:", result.data);
+        console.log("Raw amount:", rawAmount);
+        console.log("Parsed amount:", amount);
+        console.log("Reference:", reference);
+        console.log("Plan price fallback:", plan.price);
+        console.log("Amount type:", typeof amount);
+
+        if (!amount || isNaN(amount) || amount <= 0) {
+          throw new Error(`Invalid amount received from server: ${rawAmount}`);
+        }
+
+        if (!reference) {
+          throw new Error("Invalid reference received from server");
+        }
+
+        // Convert amount to kobo (multiply by 100)
+        const amountInKobo = Math.round(amount * 100);
+
+        console.log("Final amount in kobo:", amountInKobo);
+        console.log("Final reference:", reference);
+        console.log("User email:", userEmail);
+        console.log("Paystack key:", paystackKey);
+
+        // Validate all required parameters
+        if (!userEmail || !paystackKey || !amountInKobo || !reference) {
           throw new Error(
-            "Paystack script not loaded. Please refresh the page."
+            `Missing required parameters: email=${userEmail}, key=${!!paystackKey}, amount=${amountInKobo}, ref=${reference}`
           );
         }
 
-        // Use Paystack inline popup instead of redirect
+        // Use Paystack inline popup with the reference from backend
         const handler = window.PaystackPop.setup({
           key: paystackKey,
           email: userEmail,
-          amount: plan.price * 100, // Convert to kobo using plan price
+          amount: amountInKobo, // Amount in kobo
           currency: "NGN",
-          ref: result.data.reference,
+          ref: reference, // Use reference from backend
           metadata: {
             custom_fields: [
               {
@@ -1172,25 +1528,20 @@ const PaymentModal = ({ plan, onClose, onPayment, loading }) => {
             ],
           },
           callback: function (response) {
+            console.log("Payment successful:", response);
             handlePaymentSuccess(response.reference);
           },
           onClose: function () {
+            console.log("Payment cancelled by user");
             toast.info("Payment cancelled");
           },
         });
 
+        console.log("Opening Paystack payment modal...");
         handler.openIframe();
       } else {
         console.error("API returned error:", result);
-
-        // Handle duplicate reference error specifically
-        if (result.error === "DUPLICATE_REFERENCE") {
-          toast.error(
-            "Please wait a moment and try again. Transaction reference conflict detected."
-          );
-        } else {
-          toast.error(result.message || "Failed to initialize payment");
-        }
+        throw new Error(result.message || "Failed to initialize payment");
       }
     } catch (error) {
       console.error("Payment initialization error:", error);
