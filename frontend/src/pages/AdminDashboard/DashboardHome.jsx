@@ -23,6 +23,7 @@ import {
   AlertCircle,
   RefreshCw,
   FileText,
+  CreditCard,
 } from "lucide-react";
 import NotificationBell from "../../components/NotificationBell";
 import {
@@ -138,6 +139,14 @@ const AdminDashboardHome = () => {
       icon: <FileText size={24} />,
       color: "from-purple-500 to-pink-600",
       path: "/admin/reports",
+      count: 0,
+    },
+    {
+      name: "Subscription Management",
+      description: "Monitor and manage all user subscriptions and billing.",
+      icon: <CreditCard size={24} />,
+      color: "from-emerald-500 to-teal-600",
+      path: "/admin/subscriptions",
       count: 0,
     },
   ];

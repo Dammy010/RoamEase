@@ -227,6 +227,12 @@ const FloatingDrawer = ({ role }) => {
       description: "Report management",
     },
     {
+      to: "/admin/subscriptions",
+      label: "Subscriptions",
+      icon: CreditCard,
+      description: "Subscription management",
+    },
+    {
       to: "/admin/platform-analytics",
       label: "Analytics",
       icon: BarChart3,

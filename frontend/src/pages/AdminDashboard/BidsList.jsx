@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { fetchAllBids } from "../../redux/slices/adminSlice";
 import {
@@ -49,6 +50,7 @@ import {
 
 const BidsList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
   const { allBids, loading, error } = useSelector((state) => state.admin);
 
@@ -213,6 +215,12 @@ const BidsList = () => {
             <div className="bg-blue-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => navigate("/admin/dashboard")}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
                   <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                     <Wallet className="text-green-600" size={24} />
                   </div>

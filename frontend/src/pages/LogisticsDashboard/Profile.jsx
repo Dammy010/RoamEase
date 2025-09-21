@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { fetchProfile } from "../../redux/slices/authSlice";
 import {
@@ -16,11 +17,13 @@ import {
   Calendar,
   Users,
   FileText,
+  ArrowLeft,
 } from "lucide-react";
 import { getLogisticsDisplayName } from "../../utils/logisticsUtils";
 
 const Profile = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user, loading } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -60,6 +63,12 @@ const Profile = () => {
         {/* Profile Header */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => navigate("/logistics/dashboard")}
+              className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <Truck className="w-8 h-8 text-blue-600" />
             </div>

@@ -105,6 +105,11 @@ const Sidebar = ({ role }) => {
     { to: "/admin/chat", label: "Chat Management", icon: MessageSquare },
     { to: "/admin/reports", label: "Report Management", icon: FileText },
     {
+      to: "/admin/subscriptions",
+      label: "Subscription Management",
+      icon: CreditCard,
+    },
+    {
       to: "/admin/platform-analytics",
       label: "Platform Analytics",
       icon: BarChart3,

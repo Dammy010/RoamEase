@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { markShipmentAsDeliveredByLogistics } from "../../redux/slices/shipmentSlice";
@@ -30,10 +31,12 @@ import {
   MessageSquare,
   Globe,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 
 const ActiveShipments = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isDark } = useTheme();
   const { formatCurrency, currency } = useCurrency();
   const { user } = useSelector((state) => state.auth);
@@ -187,6 +190,12 @@ const ActiveShipments = () => {
           <div className="p-4 sm:p-6 md:p-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 sm:gap-4">
+                <button
+                  onClick={() => navigate("/logistics/dashboard")}
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                >
+                  <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                   <Truck className="text-white sm:w-6 sm:h-6" size={20} />
                 </div>

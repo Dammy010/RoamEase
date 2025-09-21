@@ -40,6 +40,8 @@ import {
   MapPin,
   Award,
   TrendingUp,
+  TrendingDown,
+  RefreshCw,
   BookOpen,
   ExternalLink,
 } from "lucide-react";
@@ -51,7 +53,7 @@ const Subscriptions = () => {
   const { isDark } = useTheme();
   const { formatCurrency } = useCurrency();
   const {
-    subscriptions,
+    subscriptions = [],
     currentSubscription,
     loading,
     error,
@@ -66,6 +68,28 @@ const Subscriptions = () => {
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   const [billingCycle, setBillingCycle] = useState("monthly");
+
+  // Define plan hierarchy for upgrade/downgrade logic
+  const planHierarchy = {
+    basic: 1,
+    premium: 2,
+    enterprise: 3,
+  };
+
+  const getPlanAction = (targetPlan) => {
+    if (!currentSubscription) return "upgrade";
+
+    const currentLevel = planHierarchy[currentSubscription.plan] || 0;
+    const targetLevel = planHierarchy[targetPlan.id] || 0;
+
+    if (targetLevel > currentLevel) {
+      return "upgrade";
+    } else if (targetLevel < currentLevel) {
+      return "downgrade";
+    } else {
+      return "change";
+    }
+  };
 
   // Error handling
   useEffect(() => {
@@ -242,7 +266,10 @@ const Subscriptions = () => {
 
       if (result.success) {
         // Initialize Paystack payment
-        const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+        const paystackKey =
+          result.data.paystackData?.key ||
+          import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ||
+          "pk_test_56e507241ee90b8b7cb1802d8e27f14035f56e63";
         const userEmail = user?.email || "user@example.com";
         const amount = result.data.amount;
         const reference = result.data.reference;
@@ -250,6 +277,11 @@ const Subscriptions = () => {
         // Validate amount and reference
         if (!amount || !reference) {
           throw new Error("Invalid payment data received");
+        }
+
+        // Validate Paystack key
+        if (!paystackKey || paystackKey === "undefined") {
+          throw new Error("Paystack configuration error - missing public key");
         }
 
         const amountInKobo = Math.round(parseFloat(amount) * 100);
@@ -439,7 +471,9 @@ const Subscriptions = () => {
             className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
           >
             {currentSubscription && currentSubscription.status === "active"
-              ? "Upgrade Your Plan"
+              ? currentSubscription.plan === "enterprise"
+                ? "Change Your Plan"
+                : "Upgrade Your Plan"
               : "Choose Your Perfect Plan"}
           </motion.h1>
           <motion.p
@@ -491,10 +525,12 @@ const Subscriptions = () => {
               (() => {
                 // Find the actual active subscription
                 const activeSubscription = subscriptions?.find(
-                  (sub) => sub.status === "active"
+                  (sub) =>
+                    sub && typeof sub === "object" && sub.status === "active"
                 );
                 const cancelledSubscription = subscriptions?.find(
-                  (sub) => sub.status === "cancelled"
+                  (sub) =>
+                    sub && typeof sub === "object" && sub.status === "cancelled"
                 );
 
                 // Don't show if force hidden
@@ -555,15 +591,6 @@ const Subscriptions = () => {
                           <span>Show</span>
                         </button>
                         <button
-                          onClick={() =>
-                            handleUpgradeSubscription(activeSubscription)
-                          }
-                          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                        >
-                          <TrendingUp className="w-4 h-4" />
-                          <span>Upgrade Plan</span>
-                        </button>
-                        <button
                           onClick={() => handleCancel(activeSubscription._id)}
                           className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
                         >
@@ -580,10 +607,12 @@ const Subscriptions = () => {
             {/* Cancelled Subscription Status - Only show if no active subscription */}
             {(() => {
               const hasActiveSubscription = subscriptions.find(
-                (sub) => sub.status === "active"
+                (sub) =>
+                  sub && typeof sub === "object" && sub.status === "active"
               );
               const hasCancelledSubscription = subscriptions.find(
-                (sub) => sub.status === "cancelled"
+                (sub) =>
+                  sub && typeof sub === "object" && sub.status === "cancelled"
               );
 
               // Don't show cancelled message if there's an active subscription
@@ -832,13 +861,23 @@ const Subscriptions = () => {
                             <span>
                               {currentSubscription &&
                               currentSubscription.status === "active"
-                                ? "Upgrade to"
+                                ? getPlanAction(plan) === "upgrade"
+                                  ? "Upgrade to"
+                                  : getPlanAction(plan) === "downgrade"
+                                  ? "Downgrade to"
+                                  : "Change to"
                                 : "Choose"}{" "}
                               {plan.name}
                             </span>
                             {currentSubscription &&
                             currentSubscription.status === "active" ? (
-                              <TrendingUp className="w-5 h-5" />
+                              getPlanAction(plan) === "upgrade" ? (
+                                <TrendingUp className="w-5 h-5" />
+                              ) : getPlanAction(plan) === "downgrade" ? (
+                                <TrendingDown className="w-5 h-5" />
+                              ) : (
+                                <RefreshCw className="w-5 h-5" />
+                              )
                             ) : (
                               <ArrowRight className="w-5 h-5" />
                             )}
@@ -1095,7 +1134,7 @@ const Subscriptions = () => {
         {showUpgradeModal && (
           <UpgradeModal
             currentSubscription={subscriptions?.find(
-              (sub) => sub.status === "active"
+              (sub) => sub && typeof sub === "object" && sub.status === "active"
             )}
             onClose={() => setShowUpgradeModal(false)}
             onUpgrade={handleUpgradePayment}
@@ -1433,7 +1472,9 @@ const UpgradeModal = ({
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Upgrade Your Plan
+            {currentSubscription?.plan === "enterprise"
+              ? "Change Your Plan"
+              : "Upgrade Your Plan"}
           </h2>
           <button
             onClick={onClose}
@@ -1578,8 +1619,21 @@ const UpgradeModal = ({
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <TrendingUp className="w-4 h-4" />
-                      <span>Upgrade to {plan.name}</span>
+                      {getPlanAction(plan) === "upgrade" ? (
+                        <TrendingUp className="w-4 h-4" />
+                      ) : getPlanAction(plan) === "downgrade" ? (
+                        <TrendingDown className="w-4 h-4" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4" />
+                      )}
+                      <span>
+                        {getPlanAction(plan) === "upgrade"
+                          ? "Upgrade to"
+                          : getPlanAction(plan) === "downgrade"
+                          ? "Downgrade to"
+                          : "Change to"}{" "}
+                        {plan.name}
+                      </span>
                     </>
                   )}
                 </button>

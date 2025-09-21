@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { fetchLogisticsHistory } from "../../redux/slices/logisticsSlice";
@@ -27,11 +28,13 @@ import {
   Image,
   X,
   Box,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
 const LogisticsHistory = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isDark } = useTheme();
   const { formatCurrency, getCurrencySymbol, currency } = useCurrency();
   const { history, historyLoading, historyError } = useSelector(
@@ -161,6 +164,12 @@ const LogisticsHistory = () => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="text-white">
                 <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={() => navigate("/logistics/dashboard")}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
                   <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                     <Truck className="text-white" size={24} />
                   </div>

@@ -959,6 +959,259 @@ const sendNotificationEmail = async (email, name, notification) => {
   }
 };
 
+// Send suspension email
+const sendSuspensionEmail = async ({ to, data }) => {
+  try {
+    const transporter = createTransporter();
+    const appName = process.env.APP_NAME || "RoamEase";
+    const currentYear = new Date().getFullYear();
+    const { name, suspensionReason, suspensionDuration, suspensionEndDate } =
+      data;
+
+    const mailOptions = {
+      from: `"${appName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject: `⚠️ Account Suspended - ${appName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Account Suspended</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+            .content { padding: 20px 0; }
+            .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            .info-box { background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+            .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>⚠️ Account Suspended</h1>
+              <p>Your ${appName} account has been temporarily suspended</p>
+            </div>
+            
+            <div class="content">
+              <p>Hello <strong>${name}</strong>,</p>
+              
+              <div class="warning">
+                <h3>⚠️ Important Notice</h3>
+                <p>Your account has been suspended and you will not be able to access the platform until further notice.</p>
+              </div>
+              
+              <div class="info-box">
+                <h4>📋 Suspension Details:</h4>
+                <ul>
+                  <li><strong>Reason:</strong> ${suspensionReason}</li>
+                  <li><strong>Duration:</strong> ${suspensionDuration}</li>
+                  ${
+                    suspensionEndDate !== "Not specified"
+                      ? `<li><strong>End Date:</strong> ${suspensionEndDate}</li>`
+                      : ""
+                  }
+                </ul>
+              </div>
+              
+              <p>If you believe this suspension is in error or if you have any questions, please contact our support team immediately.</p>
+              
+              <p>We appreciate your understanding and cooperation.</p>
+              
+              <p>Best regards,<br>The ${appName} Team</p>
+            </div>
+            
+            <div class="footer">
+              <p>&copy; ${currentYear} ${appName}. All rights reserved.</p>
+              <p>This is an automated message. Please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        Account Suspended - ${appName}
+        
+        Hello ${name},
+        
+        Your account has been suspended and you will not be able to access the platform until further notice.
+        
+        Suspension Details:
+        - Reason: ${suspensionReason}
+        - Duration: ${suspensionDuration}
+        ${
+          suspensionEndDate !== "Not specified"
+            ? `- End Date: ${suspensionEndDate}`
+            : ""
+        }
+        
+        If you believe this suspension is in error or if you have any questions, please contact our support team immediately.
+        
+        We appreciate your understanding and cooperation.
+        
+        Best regards,
+        The ${appName} Team
+        
+        ---
+        © ${currentYear} ${appName}. All rights reserved.
+        This is an automated message. Please do not reply to this email.
+      `,
+    };
+
+    console.log(`📧 Sending suspension email to: ${to}`);
+    console.log(`📧 Mail options:`, {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+    });
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Suspension email sent successfully. Message ID: ${info.messageId}`
+    );
+    logEmailActivity("suspension", to, true);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      message: "Suspension email sent successfully",
+    };
+  } catch (error) {
+    logEmailActivity("suspension", to, false, error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Failed to send suspension email",
+    };
+  }
+};
+
+// Send reactivation email
+const sendReactivationEmail = async ({ to, data }) => {
+  try {
+    const transporter = createTransporter();
+    const appName = process.env.APP_NAME || "RoamEase";
+    const currentYear = new Date().getFullYear();
+    const { name } = data;
+
+    const mailOptions = {
+      from: `"${appName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject: `✅ Account Reactivated - ${appName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Account Reactivated</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; }
+            .content { padding: 20px 0; }
+            .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            .info-box { background: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+            .btn { display: inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Account Reactivated</h1>
+              <p>Your ${appName} account has been restored</p>
+            </div>
+            
+            <div class="content">
+              <p>Hello <strong>${name}</strong>,</p>
+              
+              <div class="success">
+                <h3>🎉 Great News!</h3>
+                <p>Your account has been reactivated and you can now access all platform features again.</p>
+              </div>
+              
+              <div class="info-box">
+                <h4>📋 What's Next:</h4>
+                <ul>
+                  <li>You can now log in to your account normally</li>
+                  <li>All your previous data and settings have been preserved</li>
+                  <li>You can resume using all platform features</li>
+                </ul>
+              </div>
+              
+              <p>We apologize for any inconvenience caused during the suspension period.</p>
+              
+              <p>Welcome back to ${appName}!</p>
+              
+              <p>Best regards,<br>The ${appName} Team</p>
+            </div>
+            
+            <div class="footer">
+              <p>&copy; ${currentYear} ${appName}. All rights reserved.</p>
+              <p>This is an automated message. Please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        Account Reactivated - ${appName}
+        
+        Hello ${name},
+        
+        Great news! Your account has been reactivated and you can now access all platform features again.
+        
+        What's Next:
+        - You can now log in to your account normally
+        - All your previous data and settings have been preserved
+        - You can resume using all platform features
+        
+        We apologize for any inconvenience caused during the suspension period.
+        
+        Welcome back to ${appName}!
+        
+        Best regards,
+        The ${appName} Team
+        
+        ---
+        © ${currentYear} ${appName}. All rights reserved.
+        This is an automated message. Please do not reply to this email.
+      `,
+    };
+
+    console.log(`📧 Sending reactivation email to: ${to}`);
+    console.log(`📧 Mail options:`, {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+    });
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Reactivation email sent successfully. Message ID: ${info.messageId}`
+    );
+    logEmailActivity("reactivation", to, true);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      message: "Reactivation email sent successfully",
+    };
+  } catch (error) {
+    logEmailActivity("reactivation", to, false, error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Failed to send reactivation email",
+    };
+  }
+};
+
 module.exports = {
   generateVerificationToken,
   generateVerificationCode,
@@ -970,5 +1223,7 @@ module.exports = {
   sendLogisticsUserSignupEmail,
   sendLogisticsVerificationEmail,
   sendNotificationEmail,
+  sendSuspensionEmail,
+  sendReactivationEmail,
   getEmailAnalytics,
 };

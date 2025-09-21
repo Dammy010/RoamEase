@@ -5,8 +5,8 @@ const userSchema = new mongoose.Schema(
     // Common Fields
     name: {
       type: String,
-      required: function() {
-        return this.role !== 'logistics';
+      required: function () {
+        return this.role !== "logistics";
       },
       trim: true,
       default: "",
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
     verificationTokenExpires: { type: Date, default: null },
     verificationCode: { type: String, default: "" },
     verificationCodeExpires: { type: Date, default: null },
-    
+
     // Password Reset Fields
     resetPasswordToken: { type: String, default: "" },
     resetPasswordExpires: { type: Date, default: null },
@@ -42,8 +42,8 @@ const userSchema = new mongoose.Schema(
     // User Profile Fields
     phoneNumber: {
       type: String,
-      required: function() {
-        return this.role !== 'logistics';
+      required: function () {
+        return this.role !== "logistics";
       },
       default: "",
     },
@@ -175,7 +175,7 @@ const userSchema = new mongoose.Schema(
       theme: { type: String, default: "light" },
       currency: { type: String, default: "USD" },
       language: { type: String, default: "en" },
-      timezone: { type: String, default: "UTC" }
+      timezone: { type: String, default: "UTC" },
     },
 
     // Notification Preferences
@@ -185,35 +185,42 @@ const userSchema = new mongoose.Schema(
       sms: { type: Boolean, default: false },
       marketing: { type: Boolean, default: false },
       security: { type: Boolean, default: true },
-      updates: { type: Boolean, default: true }
+      updates: { type: Boolean, default: true },
     },
 
     // Push Notification Subscriptions
-    pushSubscriptions: [{
-      endpoint: { type: String, required: true },
-      keys: {
-        p256dh: { type: String, required: true },
-        auth: { type: String, required: true }
+    pushSubscriptions: [
+      {
+        endpoint: { type: String, required: true },
+        keys: {
+          p256dh: { type: String, required: true },
+          auth: { type: String, required: true },
+        },
+        userAgent: { type: String, default: "" },
+        createdAt: { type: Date, default: Date.now },
       },
-      userAgent: { type: String, default: '' },
-      createdAt: { type: Date, default: Date.now }
-    }],
+    ],
 
     // Privacy Settings
     privacySettings: {
       profileVisibility: { type: String, default: "public" },
       showEmail: { type: Boolean, default: true },
       showPhone: { type: Boolean, default: false },
-      showLocation: { type: Boolean, default: true }
-    }
+      showLocation: { type: Boolean, default: true },
+    },
+
+    // Account Status
+    isActive: { type: Boolean, default: true },
+    suspensionEndDate: { type: Date, default: null },
+    suspensionReason: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
 // Pre-save hook to handle empty registration numbers
-userSchema.pre('save', function(next) {
+userSchema.pre("save", function (next) {
   // If registrationNumber is an empty string and user is not logistics, set it to undefined
-  if (this.role !== 'logistics' && this.registrationNumber === '') {
+  if (this.role !== "logistics" && this.registrationNumber === "") {
     this.registrationNumber = undefined;
   }
   next();

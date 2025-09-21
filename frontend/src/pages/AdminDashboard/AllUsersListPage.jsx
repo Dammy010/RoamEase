@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   fetchDashboardData,
   deleteUser,
@@ -38,9 +39,16 @@ import {
 
 const AllUsersListPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { users, loading, error } = useSelector((state) => state.admin);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUserToEdit, setCurrentUserToEdit] = useState(null);
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [currentUserToSuspend, setCurrentUserToSuspend] = useState(null);
+  const [suspensionEndDate, setSuspensionEndDate] = useState("");
+  const [suspensionReason, setSuspensionReason] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -63,10 +71,117 @@ const AllUsersListPage = () => {
     }
   };
 
-  const handleSuspendUser = async (userId, currentStatus) => {
-    const newStatus = currentStatus === "active" ? "suspended" : "active";
-    if (window.confirm(`Are you sure you want to ${newStatus} this user?`)) {
-      await dispatch(suspendUser({ userId, newStatus }));
+  const handleSuspendUser = (user) => {
+    setCurrentUserToSuspend(user);
+    setIsSuspendModalOpen(true);
+  };
+
+  const handleConfirmSuspend = async () => {
+    if (!currentUserToSuspend) return;
+
+    const newStatus = currentUserToSuspend.isActive ? "suspended" : "active";
+    await dispatch(
+      suspendUser({
+        userId: currentUserToSuspend._id,
+        newStatus,
+        suspensionEndDate: newStatus === "suspended" ? suspensionEndDate : null,
+        suspensionReason: newStatus === "suspended" ? suspensionReason : "",
+      })
+    );
+
+    setIsSuspendModalOpen(false);
+    setCurrentUserToSuspend(null);
+    setSuspensionEndDate("");
+    setSuspensionReason("");
+  };
+
+  const handleCloseSuspendModal = () => {
+    setIsSuspendModalOpen(false);
+    setCurrentUserToSuspend(null);
+    setSuspensionEndDate("");
+    setSuspensionReason("");
+  };
+
+  const handleQuickUnsuspend = async (user) => {
+    if (
+      window.confirm(
+        `Are you sure you want to unsuspend ${
+          user.name || user.companyName || user.email
+        }?`
+      )
+    ) {
+      await dispatch(
+        suspendUser({
+          userId: user._id,
+          newStatus: "active",
+          suspensionEndDate: null,
+          suspensionReason: "",
+        })
+      );
+    }
+  };
+
+  const handleQuickSuspend = async (user) => {
+    const reason = prompt(
+      `Enter reason for suspending ${
+        user.name || user.companyName || user.email
+      }:`
+    );
+    if (reason !== null) {
+      await dispatch(
+        suspendUser({
+          userId: user._id,
+          newStatus: "suspended",
+          suspensionEndDate: null,
+          suspensionReason: reason || "Account suspended by administrator",
+        })
+      );
+    }
+  };
+
+  const handleSelectUser = (userId) => {
+    setSelectedUsers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const suspendedUsers = filteredUsers.filter(
+      (user) => user.isActive === false
+    );
+    if (selectedUsers.length === suspendedUsers.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(suspendedUsers.map((user) => user._id));
+    }
+  };
+
+  const handleBulkUnsuspend = async () => {
+    if (selectedUsers.length === 0) return;
+
+    const suspendedUsers = filteredUsers.filter(
+      (user) => selectedUsers.includes(user._id) && user.isActive === false
+    );
+
+    if (
+      window.confirm(
+        `Are you sure you want to unsuspend ${suspendedUsers.length} user(s)?`
+      )
+    ) {
+      for (const user of suspendedUsers) {
+        await dispatch(
+          suspendUser({
+            userId: user._id,
+            newStatus: "active",
+            suspensionEndDate: null,
+            suspensionReason: "",
+          })
+        );
+      }
+      setSelectedUsers([]);
+      setShowBulkActions(false);
     }
   };
 
@@ -211,6 +326,12 @@ const AllUsersListPage = () => {
             <div className="bg-blue-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => navigate("/admin/dashboard")}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
                   <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
                     <Users className="text-blue-600" size={24} />
                   </div>
@@ -228,6 +349,16 @@ const AllUsersListPage = () => {
                     {users.length}
                   </div>
                   <div className="text-indigo-100 text-sm">Total Users</div>
+                  <button
+                    onClick={() => dispatch(fetchDashboardData())}
+                    disabled={loading}
+                    className="mt-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-300 border border-white/20 flex items-center gap-2 text-white"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                    />
+                    <span>Refresh</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -370,6 +501,60 @@ const AllUsersListPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Bulk Actions */}
+          {filteredUsers.some((user) => user.isActive === false) && (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedUsers.length > 0 &&
+                        selectedUsers.length ===
+                          filteredUsers.filter(
+                            (user) => user.isActive === false
+                          ).length
+                      }
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Select All Suspended Users (
+                      {
+                        filteredUsers.filter((user) => user.isActive === false)
+                          .length
+                      }
+                      )
+                    </span>
+                  </div>
+                  {selectedUsers.length > 0 && (
+                    <span className="text-sm text-blue-600 dark:text-blue-400">
+                      {selectedUsers.length} selected
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedUsers.length > 0 && (
+                    <button
+                      onClick={handleBulkUnsuspend}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                      <UserCheck size={16} />
+                      Unsuspend Selected ({selectedUsers.length})
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowBulkActions(!showBulkActions)}
+                    className="px-4 py-2 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {showBulkActions ? "Hide" : "Show"} Bulk Actions
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Users Table */}
@@ -416,6 +601,20 @@ const AllUsersListPage = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200 dark:border-gray-700">
                   <tr>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 w-12">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedUsers.length > 0 &&
+                          selectedUsers.length ===
+                            filteredUsers.filter(
+                              (user) => user.isActive === false
+                            ).length
+                        }
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </th>
                     <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600">
                       User
                     </th>
@@ -442,6 +641,16 @@ const AllUsersListPage = () => {
                       key={user._id}
                       className="hover:bg-gray-50 transition-colors duration-200"
                     >
+                      <td className="py-4 px-6">
+                        {user.isActive === false && (
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.includes(user._id)}
+                            onChange={() => handleSelectUser(user._id)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                        )}
+                      </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white font-semibold">
@@ -524,30 +733,34 @@ const AllUsersListPage = () => {
                               >
                                 <Edit size={16} />
                               </button>
-                              <button
-                                onClick={() =>
-                                  handleSuspendUser(
-                                    user._id,
-                                    user.isActive ? "active" : "suspended"
-                                  )
-                                }
-                                className={`p-2 rounded-lg transition-colors duration-200 ${
-                                  user.isActive === false
-                                    ? "text-green-600 hover:bg-green-100"
-                                    : "text-yellow-600 hover:bg-yellow-100"
-                                }`}
-                                title={
-                                  user.isActive === false
-                                    ? "Activate User"
-                                    : "Suspend User"
-                                }
-                              >
-                                {user.isActive === false ? (
+                              {user.isActive === false ? (
+                                // Quick unsuspend button for suspended users
+                                <button
+                                  onClick={() => handleQuickUnsuspend(user)}
+                                  className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors duration-200"
+                                  title="Quick Unsuspend User"
+                                >
                                   <UserCheck size={16} />
-                                ) : (
-                                  <UserX size={16} />
-                                )}
-                              </button>
+                                </button>
+                              ) : (
+                                // Action buttons for active users
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleQuickSuspend(user)}
+                                    className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors duration-200"
+                                    title="Quick Suspend"
+                                  >
+                                    <UserX size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleSuspendUser(user)}
+                                    className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors duration-200"
+                                    title="Advanced Suspend (with date/reason)"
+                                  >
+                                    <Settings size={16} />
+                                  </button>
+                                </div>
+                              )}
                               <button
                                 onClick={() => handleDeleteUser(user._id)}
                                 className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors duration-200"
@@ -631,6 +844,97 @@ const AllUsersListPage = () => {
             handleCloseEditModal();
           }}
         />
+      )}
+
+      {/* Suspension Modal */}
+      {isSuspendModalOpen && currentUserToSuspend && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    currentUserToSuspend.isActive
+                      ? "bg-yellow-100 text-yellow-600"
+                      : "bg-green-100 text-green-600"
+                  }`}
+                >
+                  {currentUserToSuspend.isActive ? (
+                    <UserX size={24} />
+                  ) : (
+                    <UserCheck size={24} />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {currentUserToSuspend.isActive
+                      ? "Suspend User"
+                      : "Reactivate User"}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {currentUserToSuspend.name ||
+                      currentUserToSuspend.companyName ||
+                      currentUserToSuspend.email}
+                  </p>
+                </div>
+              </div>
+
+              {currentUserToSuspend.isActive && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Suspension End Date (Optional)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={suspensionEndDate}
+                      onChange={(e) => setSuspensionEndDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty for indefinite suspension
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Suspension Reason
+                    </label>
+                    <textarea
+                      value={suspensionReason}
+                      onChange={(e) => setSuspensionReason(e.target.value)}
+                      placeholder="Enter reason for suspension..."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 mt-6">
+                <button
+                  onClick={handleCloseSuspendModal}
+                  className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmSuspend}
+                  className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
+                    currentUserToSuspend.isActive
+                      ? "bg-yellow-600 hover:bg-yellow-700"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
+                >
+                  {currentUserToSuspend.isActive
+                    ? "Suspend User"
+                    : "Reactivate User"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

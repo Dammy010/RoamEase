@@ -285,7 +285,7 @@ const RateShipment = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
         {/* Header */}
         <div className="bg-blue-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
           <div className="p-8">
@@ -322,7 +322,7 @@ const RateShipment = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
-          <div className="p-8">
+          <div className="p-6 sm:p-8 lg:p-10">
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               <div className="text-center p-4 bg-blue-50 rounded-xl">
                 <div className="text-2xl font-bold text-indigo-600 mb-1">
@@ -345,7 +345,7 @@ const RateShipment = () => {
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4 px-2">
               <div className="relative flex-1">
                 <Search
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -377,18 +377,18 @@ const RateShipment = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8 mt-12">
         {/* Left Column - Shipment List */}
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-blue-500 p-6">
+            <div className="bg-blue-500 p-6 px-8">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <Package size={20} />
                 Shipments Ready for Rating
               </h2>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 sm:p-8 lg:p-10">
               {loading ? (
                 <div className="text-center py-16">
                   <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -456,7 +456,7 @@ const RateShipment = () => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 px-2">
                   {filteredAndSortedShipments.map((shipment) => (
                     <div
                       key={shipment._id}
@@ -595,10 +595,10 @@ const RateShipment = () => {
         </div>
 
         {/* Right Column - Rating Form */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 px-2">
           {showRatingForm && selectedShipment ? (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden sticky top-8">
-              <div className="bg-blue-500 p-6">
+              <div className="bg-blue-500 p-6 px-8">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                   <Star size={20} />
                   Rate Shipment
@@ -735,7 +735,7 @@ const RateShipment = () => {
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="text-center py-16">
+              <div className="text-center py-16 px-6 sm:px-8 lg:px-12">
                 <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <MessageSquare className="text-indigo-500 text-4xl" />
                 </div>
@@ -753,15 +753,15 @@ const RateShipment = () => {
       </div>
 
       {/* Rating Guidelines */}
-      <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="bg-blue-500 p-6">
+      <div className="mt-12 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-blue-500 p-6 px-8">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             <Award size={20} />
             Rating Guidelines
           </h3>
         </div>
 
-        <div className="p-8">
+        <div className="p-6 sm:p-8 lg:p-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">

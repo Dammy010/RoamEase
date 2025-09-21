@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FileText,
@@ -19,6 +20,7 @@ import {
   TrendingUp,
   MessageSquare,
   Tag,
+  ArrowLeft,
 } from "lucide-react";
 import {
   getAllReports,
@@ -31,6 +33,7 @@ import ReportDetail from "../../components/reports/ReportDetail";
 
 const ReportManagement = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const {
     allReports,
@@ -271,6 +274,12 @@ const ReportManagement = () => {
             <div className="bg-blue-600 p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => navigate("/admin/dashboard")}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
                   <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
                     <FileText className="w-6 h-6 text-indigo-600" />
                   </div>

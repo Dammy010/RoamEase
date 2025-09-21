@@ -153,13 +153,15 @@ const subscriptionSlice = createSlice({
       })
       .addCase(confirmSubscription.fulfilled, (state, action) => {
         state.paymentLoading = false;
-        state.currentSubscription = action.payload.data;
-        // Update the subscription in the list
-        const index = state.subscriptions.findIndex(
-          (sub) => sub._id === action.payload.data._id
-        );
-        if (index !== -1) {
-          state.subscriptions[index] = action.payload.data;
+        if (action.payload?.data) {
+          state.currentSubscription = action.payload.data;
+          // Update the subscription in the list
+          const index = state.subscriptions.findIndex(
+            (sub) => sub && sub._id === action.payload.data._id
+          );
+          if (index !== -1) {
+            state.subscriptions[index] = action.payload.data;
+          }
         }
       })
       .addCase(confirmSubscription.rejected, (state, action) => {
@@ -200,16 +202,18 @@ const subscriptionSlice = createSlice({
       })
       .addCase(cancelSubscription.fulfilled, (state, action) => {
         state.loading = false;
-        // Update the subscription in the list
-        const index = state.subscriptions.findIndex(
-          (sub) => sub._id === action.payload.data._id
-        );
-        if (index !== -1) {
-          state.subscriptions[index] = action.payload.data;
-        }
-        // Clear current subscription if it was cancelled
-        if (state.currentSubscription?._id === action.payload.data._id) {
-          state.currentSubscription = null;
+        if (action.payload?.data) {
+          // Update the subscription in the list
+          const index = state.subscriptions.findIndex(
+            (sub) => sub && sub._id === action.payload.data._id
+          );
+          if (index !== -1) {
+            state.subscriptions[index] = action.payload.data;
+          }
+          // Clear current subscription if it was cancelled
+          if (state.currentSubscription?._id === action.payload.data._id) {
+            state.currentSubscription = null;
+          }
         }
       })
       .addCase(cancelSubscription.rejected, (state, action) => {
@@ -225,9 +229,11 @@ const subscriptionSlice = createSlice({
       .addCase(upgradeSubscription.fulfilled, (state, action) => {
         state.paymentLoading = false;
         // Add the new upgrade subscription to the list
-        state.subscriptions.unshift(action.payload.data.subscription);
-        // Update current subscription to the new one
-        state.currentSubscription = action.payload.data.subscription;
+        if (action.payload?.data?.subscription) {
+          state.subscriptions.unshift(action.payload.data.subscription);
+          // Update current subscription to the new one
+          state.currentSubscription = action.payload.data.subscription;
+        }
       })
       .addCase(upgradeSubscription.rejected, (state, action) => {
         state.paymentLoading = false;

@@ -670,14 +670,48 @@ const upgradeSubscription = async (req, res) => {
     const currentPricing =
       pricing[currentSubscription.plan][currentSubscription.billingCycle];
 
+    // Validate pricing information exists
+    if (!newPricing || !currentPricing) {
+      console.error("Pricing information not found:", {
+        plan,
+        billingCycle,
+        currentPlan: currentSubscription.plan,
+        currentBillingCycle: currentSubscription.billingCycle,
+        newPricing,
+        currentPricing,
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pricing configuration for the selected plan",
+      });
+    }
+
     // Calculate prorated amount
     const now = new Date();
     const timeRemaining = currentSubscription.currentPeriodEnd - now;
     const totalPeriodTime =
       currentSubscription.currentPeriodEnd -
       currentSubscription.currentPeriodStart;
-    const timeUsed = totalPeriodTime - timeRemaining;
-    const timeUsedPercentage = timeUsed / totalPeriodTime;
+
+    console.log("Time calculations:", {
+      now: now.toISOString(),
+      currentPeriodStart: currentSubscription.currentPeriodStart.toISOString(),
+      currentPeriodEnd: currentSubscription.currentPeriodEnd.toISOString(),
+      timeRemaining: timeRemaining,
+      totalPeriodTime: totalPeriodTime,
+    });
+
+    // Ensure we don't have negative time values
+    const timeUsed = Math.max(0, totalPeriodTime - timeRemaining);
+    const timeUsedPercentage =
+      totalPeriodTime > 0 ? timeUsed / totalPeriodTime : 0;
+
+    console.log("Proration calculations:", {
+      timeUsed,
+      timeUsedPercentage,
+      currentPricing: currentPricing,
+      newPricing: newPricing,
+    });
 
     // Calculate refund for unused time (if downgrading)
     const refundAmount = timeUsedPercentage * currentPricing.price;
@@ -685,6 +719,12 @@ const upgradeSubscription = async (req, res) => {
     // Calculate amount to charge for new plan
     const newAmount = newPricing.price - refundAmount;
     const amountInKobo = Math.max(0, newAmount) * 100; // Ensure non-negative
+
+    console.log("Amount calculations:", {
+      refundAmount,
+      newAmount,
+      amountInKobo,
+    });
 
     if (!process.env.PAYSTACK_SECRET_KEY) {
       return res.status(503).json({
@@ -708,58 +748,61 @@ const upgradeSubscription = async (req, res) => {
     let attempts = 0;
     const maxAttempts = 10;
 
-    while (attempts < maxAttempts) {
-      try {
-        let uuid;
+    try {
+      while (attempts < maxAttempts) {
         try {
-          uuid = crypto.randomUUID();
-        } catch (e) {
-          uuid = uuidv4();
-        }
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 12);
-        const processId = process.pid || Math.floor(Math.random() * 10000);
-        const nanoTime = process.hrtime.bigint().toString();
-        const sessionId = Math.random().toString(36).substring(2, 10);
-        const attemptId = attempts.toString().padStart(2, "0");
-        reference = `upgrade_${timestamp}_${uuid.replace(
-          /-/g,
-          ""
-        )}_${randomSuffix}_${processId}_${nanoTime.substring(
-          nanoTime.length - 8
-        )}_${sessionId}_${attemptId}`;
+          let uuid;
+          try {
+            uuid = crypto.randomUUID();
+          } catch (e) {
+            uuid = uuidv4();
+          }
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 12);
+          const processId = process.pid || Math.floor(Math.random() * 10000);
+          const nanoTime = process.hrtime.bigint().toString();
+          const sessionId = Math.random().toString(36).substring(2, 10);
+          const attemptId = attempts.toString().padStart(2, "0");
+          reference = `upgrade_${timestamp}_${uuid.replace(
+            /-/g,
+            ""
+          )}_${randomSuffix}_${processId}_${nanoTime.substring(
+            nanoTime.length - 8
+          )}_${sessionId}_${attemptId}`;
 
-        if (!usedReferences.has(reference)) {
-          usedReferences.add(reference);
-          break;
+          if (!usedReferences.has(reference)) {
+            usedReferences.add(reference);
+            console.log("Generated unique reference:", reference);
+            break;
+          }
+        } catch (error) {
+          console.error("Error generating reference:", error);
         }
-      } catch (error) {
-        console.error("Error generating reference:", error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
-      attempts++;
-      if (attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
 
-    if (attempts >= maxAttempts) {
+      if (attempts >= maxAttempts) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Failed to generate unique reference after multiple attempts",
+        });
+      }
+    } catch (refError) {
+      console.error("Reference generation error:", refError);
       return res.status(500).json({
         success: false,
-        message: "Failed to generate unique reference after multiple attempts",
+        message: "Error generating payment reference",
+        error: refError.message,
       });
     }
 
     // Create upgrade subscription record
-    const upgradeSubscription = new Subscription({
-      user: userId,
-      plan: plan,
-      billingCycle: billingCycle,
-      amount: newPricing.price,
-      currency: "NGN",
-      paystackReference: reference,
-      status: "pending",
-      currentPeriodStart: now,
-      currentPeriodEnd: new Date(
+    try {
+      const currentPeriodEnd = new Date(
         now.getTime() +
           (billingCycle === "weekly"
             ? 7
@@ -770,16 +813,71 @@ const upgradeSubscription = async (req, res) => {
             60 *
             60 *
             1000
-      ),
-      metadata: {
-        upgradeFrom: currentSubscription.plan,
-        upgradeFromBillingCycle: currentSubscription.billingCycle,
-        refundAmount: refundAmount,
-        originalSubscriptionId: currentSubscription._id,
-      },
-    });
+      );
 
-    await upgradeSubscription.save();
+      console.log("Creating upgrade subscription with data:", {
+        user: userId,
+        plan: plan,
+        billingCycle: billingCycle,
+        amount: newPricing.price,
+        currency: "NGN",
+        paystackReference: reference,
+        status: "pending",
+        currentPeriodStart: now,
+        currentPeriodEnd: currentPeriodEnd,
+        metadata: {
+          upgradeFrom: currentSubscription.plan,
+          upgradeFromBillingCycle: currentSubscription.billingCycle,
+          refundAmount: refundAmount,
+          originalSubscriptionId: currentSubscription._id,
+        },
+      });
+
+      const upgradeSubscription = new Subscription({
+        user: userId,
+        plan: plan,
+        billingCycle: billingCycle,
+        amount: newPricing.price,
+        currency: "NGN",
+        paystackReference: reference,
+        status: "pending",
+        currentPeriodStart: now,
+        currentPeriodEnd: currentPeriodEnd,
+        metadata: {
+          upgradeFrom: currentSubscription.plan,
+          upgradeFromBillingCycle: currentSubscription.billingCycle,
+          refundAmount: refundAmount,
+          originalSubscriptionId: currentSubscription._id,
+        },
+      });
+
+      console.log("Saving upgrade subscription:", upgradeSubscription);
+      await upgradeSubscription.save();
+      console.log("Upgrade subscription saved successfully");
+    } catch (dbError) {
+      console.error("Database error saving upgrade subscription:", dbError);
+      console.error("Validation errors:", dbError.errors);
+      console.error("Error name:", dbError.name);
+      console.error("Error code:", dbError.code);
+
+      // Handle validation errors specifically
+      if (dbError.name === "ValidationError") {
+        const validationErrors = Object.values(dbError.errors).map(
+          (err) => err.message
+        );
+        return res.status(400).json({
+          success: false,
+          message: "Validation error creating upgrade subscription",
+          errors: validationErrors,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Database error creating upgrade subscription",
+        error: dbError.message,
+      });
+    }
 
     // Simulate Paystack response for inline popup
     const paystackResponse = {

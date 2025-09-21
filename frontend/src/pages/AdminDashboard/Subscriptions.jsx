@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
@@ -34,10 +35,13 @@ import {
   BarChart3,
   PieChart,
   Activity,
+  Wallet,
+  ArrowLeft,
 } from "lucide-react";
 
 const AdminSubscriptions = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isDark } = useTheme();
   const { formatCurrency } = useCurrency();
 
@@ -53,6 +57,7 @@ const AdminSubscriptions = () => {
     userType: "logistics",
     status: "all",
     plan: "all",
+    upgradeType: "all", // all, upgraded, new
     page: 1,
     limit: 20,
     sortBy: "createdAt",
@@ -143,59 +148,119 @@ const AdminSubscriptions = () => {
     }
   };
 
-  const filteredSubscriptions = allSubscriptions.filter((subscription) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
+  // Pricing structure matching the backend
+  const getPricingInfo = (plan, billingCycle) => {
+    const pricing = {
+      basic: {
+        weekly: { price: 15600, originalPrice: 20000, discount: 22 },
+        monthly: { price: 45600, originalPrice: 60000, discount: 24 },
+        yearly: { price: 119600, originalPrice: 187200, discount: 36 },
+      },
+      premium: {
+        weekly: { price: 25600, originalPrice: 32000, discount: 20 },
+        monthly: { price: 65600, originalPrice: 82000, discount: 20 },
+        yearly: { price: 319600, originalPrice: 475200, discount: 33 },
+      },
+      enterprise: {
+        weekly: { price: 40600, originalPrice: 50000, discount: 19 },
+        monthly: { price: 150600, originalPrice: 190000, discount: 21 },
+        yearly: { price: 799600, originalPrice: 1195200, discount: 33 },
+      },
+    };
+
     return (
-      subscription.user?.name?.toLowerCase().includes(searchLower) ||
-      subscription.user?.email?.toLowerCase().includes(searchLower) ||
-      subscription.plan.toLowerCase().includes(searchLower) ||
-      subscription.status.toLowerCase().includes(searchLower)
+      pricing[plan]?.[billingCycle] || {
+        price: 0,
+        originalPrice: 0,
+        discount: 0,
+      }
     );
+  };
+
+  const filteredSubscriptions = allSubscriptions.filter((subscription) => {
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch =
+        subscription.user?.name?.toLowerCase().includes(searchLower) ||
+        subscription.user?.email?.toLowerCase().includes(searchLower) ||
+        subscription.plan.toLowerCase().includes(searchLower) ||
+        subscription.status.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+    }
+
+    // Upgrade type filter
+    if (filters.upgradeType === "upgraded") {
+      return subscription.metadata?.upgradeFrom;
+    } else if (filters.upgradeType === "new") {
+      return !subscription.metadata?.upgradeFrom;
+    }
+
+    return true;
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Subscription Management
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage and monitor all user subscriptions
-              </p>
+        <div className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-blue-600 p-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => navigate("/admin/dashboard")}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <CreditCard className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-white">
+                      Subscription Management
+                    </h1>
+                    <p className="text-indigo-100 mt-1">
+                      Monitor and manage all user subscriptions and billing
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-white">
+                    {subscriptionSummary?.totalSubscriptions || 0}
+                  </div>
+                  <div className="text-indigo-100 text-sm">
+                    Total Subscriptions
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={fetchSubscriptions}
-                disabled={adminLoading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${adminLoading ? "animate-spin" : ""}`}
-                />
-                <span>Refresh</span>
-              </button>
+
+            <div className="p-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={fetchSubscriptions}
+                    disabled={adminLoading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${
+                        adminLoading ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Summary Cards */}
         {subscriptionSummary && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
@@ -203,15 +268,37 @@ const AdminSubscriptions = () => {
                     Total Revenue
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(
-                      subscriptionSummary.totalRevenue / 100,
-                      "NGN",
-                      "NGN"
-                    )}
+                    {(() => {
+                      // Calculate total revenue using pricing structure instead of database amounts
+                      const totalPricingRevenue = allSubscriptions.reduce(
+                        (sum, sub) => {
+                          const pricingInfo = getPricingInfo(
+                            sub.plan,
+                            sub.billingCycle
+                          );
+                          return sum + pricingInfo.price;
+                        },
+                        0
+                      );
+
+                      return (
+                        <>
+                          ₦
+                          {totalPricingRevenue.toLocaleString("en-NG", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </>
+                      );
+                    })()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    DB Revenue:{" "}
+                    {subscriptionSummary.totalRevenue.toLocaleString()} kobo
                   </p>
                 </div>
                 <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  <Wallet className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </div>
@@ -255,11 +342,37 @@ const AdminSubscriptions = () => {
                     Average Amount
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(
-                      subscriptionSummary.averageAmount / 100,
-                      "NGN",
-                      "NGN"
-                    )}
+                    {(() => {
+                      // Calculate average using pricing structure instead of database amounts
+                      const totalPricingAmount = allSubscriptions.reduce(
+                        (sum, sub) => {
+                          const pricingInfo = getPricingInfo(
+                            sub.plan,
+                            sub.billingCycle
+                          );
+                          return sum + pricingInfo.price;
+                        },
+                        0
+                      );
+                      const averagePricingAmount =
+                        allSubscriptions.length > 0
+                          ? totalPricingAmount / allSubscriptions.length
+                          : 0;
+
+                      return (
+                        <>
+                          ₦
+                          {averagePricingAmount.toLocaleString("en-NG", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </>
+                      );
+                    })()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    DB Average:{" "}
+                    {subscriptionSummary.averageAmount.toLocaleString()} kobo
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -267,7 +380,40 @@ const AdminSubscriptions = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+
+            {/* Upgrade Statistics */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Upgraded Subscriptions
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {
+                      allSubscriptions.filter(
+                        (sub) => sub.metadata?.upgradeFrom
+                      ).length
+                    }
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    {allSubscriptions.length > 0
+                      ? Math.round(
+                          (allSubscriptions.filter(
+                            (sub) => sub.metadata?.upgradeFrom
+                          ).length /
+                            allSubscriptions.length) *
+                            100
+                        )
+                      : 0}
+                    % of total
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Filters */}
@@ -284,7 +430,7 @@ const AdminSubscriptions = () => {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Search */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -350,6 +496,24 @@ const AdminSubscriptions = () => {
                 <option value="basic">Basic</option>
                 <option value="premium">Premium</option>
                 <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+
+            {/* Upgrade Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Type
+              </label>
+              <select
+                value={filters.upgradeType}
+                onChange={(e) =>
+                  handleFilterChange("upgradeType", e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="all">All Types</option>
+                <option value="new">New Subscriptions</option>
+                <option value="upgraded">Upgraded</option>
               </select>
             </div>
           </div>
@@ -422,6 +586,16 @@ const AdminSubscriptions = () => {
                             {subscription.status.charAt(0).toUpperCase() +
                               subscription.status.slice(1)}
                           </span>
+                          {/* Upgrade Indicator */}
+                          {subscription.metadata?.upgradeFrom && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center space-x-1">
+                              <TrendingUp className="w-3 h-3" />
+                              <span>
+                                Upgraded from{" "}
+                                {subscription.metadata.upgradeFrom}
+                              </span>
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center space-x-1">
@@ -442,20 +616,65 @@ const AdminSubscriptions = () => {
                             <CreditCard className="w-4 h-4" />
                             <span>{subscription.billingCycle}</span>
                           </div>
+                          {/* Upgrade Details */}
+                          {subscription.metadata?.upgradeFrom && (
+                            <div className="flex items-center space-x-1 text-purple-600 dark:text-purple-400">
+                              <TrendingUp className="w-4 h-4" />
+                              <span>
+                                Upgraded from{" "}
+                                {subscription.metadata.upgradeFrom} (
+                                {subscription.metadata.upgradeFromBillingCycle})
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                        {formatCurrency(
-                          subscription.amount / 100,
-                          "NGN",
-                          "NGN"
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {subscription.currency}
-                      </div>
+                      {(() => {
+                        const pricingInfo = getPricingInfo(
+                          subscription.plan,
+                          subscription.billingCycle
+                        );
+                        // Use the pricing info amount instead of database amount
+                        const actualAmount = pricingInfo.price;
+                        const originalAmount = pricingInfo.originalPrice;
+                        const discount = pricingInfo.discount;
+
+                        return (
+                          <>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                              ₦
+                              {actualAmount.toLocaleString("en-NG", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </div>
+                            {originalAmount > 0 && discount > 0 && (
+                              <div className="flex items-center justify-end space-x-2 mb-1">
+                                <span className="text-sm text-gray-500 line-through">
+                                  ₦
+                                  {originalAmount.toLocaleString("en-NG", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </span>
+                                <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded-full text-xs font-semibold">
+                                  {discount}% OFF
+                                </span>
+                              </div>
+                            )}
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              {subscription.currency} •{" "}
+                              {subscription.billingCycle}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-500">
+                              DB amount: {subscription.amount} kobo | Pricing: ₦
+                              {actualAmount} | Original: ₦{originalAmount}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </motion.div>
