@@ -27,7 +27,8 @@ process.env.JWT_REFRESH_SECRET =
   "fallback-refresh-jwt-secret-change-in-production";
 process.env.MONGO_URI =
   process.env.MONGO_URI || "mongodb://localhost:27017/roamease";
-process.env.CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+process.env.CLIENT_URL =
+  process.env.CLIENT_URL || "https://roam-ease.vercel.app";
 
 // 🎨 Beautiful startup banner
 Logger.startupBanner();

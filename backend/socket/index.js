@@ -10,9 +10,10 @@ const initSocket = (server) => {
   io = new Server(server, {
     cors: {
       origin: [
-        process.env.CLIENT_URL || "http://localhost:5173",
+        process.env.CLIENT_URL || "https://roam-ease.vercel.app",
         "http://localhost:3000",
         "http://localhost:5000",
+        "http://localhost:5173",
       ],
       methods: ["GET", "POST"],
       credentials: true,

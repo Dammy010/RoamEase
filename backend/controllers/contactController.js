@@ -1,46 +1,53 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 // Create contact form submission
 const submitContactForm = async (req, res) => {
   try {
-    console.log('Contact form submission received:', req.body);
+    console.log("Contact form submission received:", req.body);
     const { name, email, subject, message } = req.body;
 
     // Validation
     if (!name || !email || !subject || !message) {
-      return res.status(400).json({ 
-        message: 'All fields are required',
+      return res.status(400).json({
+        message: "All fields are required",
         errors: {
-          name: !name ? 'Name is required' : '',
-          email: !email ? 'Email is required' : '',
-          subject: !subject ? 'Subject is required' : '',
-          message: !message ? 'Message is required' : ''
-        }
+          name: !name ? "Name is required" : "",
+          email: !email ? "Email is required" : "",
+          subject: !subject ? "Subject is required" : "",
+          message: !message ? "Message is required" : "",
+        },
       });
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        message: 'Please enter a valid email address',
-        errors: { email: 'Please enter a valid email address' }
+      return res.status(400).json({
+        message: "Please enter a valid email address",
+        errors: { email: "Please enter a valid email address" },
       });
     }
 
     // Check if email configuration is available
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.log('Email configuration not found. Contact form data:', {
-        name, email, subject, message,
+    if (
+      !process.env.SMTP_HOST ||
+      !process.env.SMTP_USER ||
+      !process.env.SMTP_PASS
+    ) {
+      console.log("Email configuration not found. Contact form data:", {
+        name,
+        email,
+        subject,
+        message,
         timestamp: new Date().toISOString(),
-        ip: req.ip || req.connection.remoteAddress
+        ip: req.ip || req.connection.remoteAddress,
       });
-      
+
       // Return success even without email sending for development
       return res.status(200).json({
-        message: 'Contact form submitted successfully (email not configured)',
+        message: "Contact form submitted successfully (email not configured)",
         success: true,
-        note: 'Email configuration not set up. Contact details logged to console.'
+        note: "Email configuration not set up. Contact details logged to console.",
       });
     }
 
@@ -89,7 +96,7 @@ const submitContactForm = async (req, res) => {
               <div style="margin-bottom: 20px;">
                 <strong style="color: #374151;">Message:</strong>
                 <div style="background: #f1f5f9; padding: 15px; border-radius: 6px; margin-top: 8px; color: #475569; line-height: 1.6;">
-                  ${message.replace(/\n/g, '<br>')}
+                  ${message.replace(/\n/g, "<br>")}
                 </div>
               </div>
               
@@ -98,7 +105,9 @@ const submitContactForm = async (req, res) => {
                   <strong>Submitted:</strong> ${new Date().toLocaleString()}
                 </p>
                 <p style="color: #6b7280; font-size: 14px; margin: 5px 0 0 0;">
-                  <strong>IP Address:</strong> ${req.ip || req.connection.remoteAddress}
+                  <strong>IP Address:</strong> ${
+                    req.ip || req.connection.remoteAddress
+                  }
                 </p>
               </div>
             </div>
@@ -118,7 +127,7 @@ const submitContactForm = async (req, res) => {
     const autoReplyOptions = {
       from: process.env.SMTP_USER,
       to: email,
-      subject: 'Thank you for contacting RoamEase',
+      subject: "Thank you for contacting RoamEase",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -148,7 +157,9 @@ const submitContactForm = async (req, res) => {
               </p>
               
               <div style="text-align: center; margin-top: 30px;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}" 
+                <a href="${
+                  process.env.FRONTEND_URL || "https://roam-ease.vercel.app"
+                }" 
                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
                   Visit RoamEase
                 </a>
@@ -168,29 +179,31 @@ const submitContactForm = async (req, res) => {
     await transporter.sendMail(autoReplyOptions);
 
     res.status(200).json({
-      message: 'Contact form submitted successfully',
-      success: true
+      message: "Contact form submitted successfully",
+      success: true,
     });
-
   } catch (error) {
-    console.error('Contact form submission error:', error);
-    
+    console.error("Contact form submission error:", error);
+
     // Log the contact form data for debugging
-    console.log('Contact form data that failed:', {
+    console.log("Contact form data that failed:", {
       name: req.body.name,
       email: req.body.email,
       subject: req.body.subject,
       message: req.body.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     res.status(500).json({
-      message: 'Failed to submit contact form',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message: "Failed to submit contact form",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Internal server error",
     });
   }
 };
 
 module.exports = {
-  submitContactForm
+  submitContactForm,
 };

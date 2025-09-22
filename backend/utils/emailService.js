@@ -495,7 +495,8 @@ const sendNormalUserSignupEmail = async (email, name) => {
     const transporter = createTransporter();
     const appName = "RoamEase";
     const currentYear = new Date().getFullYear();
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl =
+      process.env.FRONTEND_URL || "https://roam-ease.vercel.app";
 
     const info = await transporter.sendMail({
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -586,7 +587,8 @@ const sendLogisticsUserSignupEmail = async (email, companyName) => {
     const transporter = createTransporter();
     const appName = "RoamEase";
     const currentYear = new Date().getFullYear();
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl =
+      process.env.FRONTEND_URL || "https://roam-ease.vercel.app";
 
     const info = await transporter.sendMail({
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -679,7 +681,8 @@ const sendLogisticsVerificationEmail = async (email, companyName) => {
     const transporter = createTransporter();
     const appName = "RoamEase";
     const currentYear = new Date().getFullYear();
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl =
+      process.env.FRONTEND_URL || "https://roam-ease.vercel.app";
 
     const info = await transporter.sendMail({
       from: `"${appName}" <${process.env.SMTP_USER}>`,
@@ -879,7 +882,8 @@ const sendNotificationEmail = async (email, name, notification) => {
                       .map(
                         (action) =>
                           `<a href="${
-                            process.env.FRONTEND_URL || "http://localhost:3000"
+                            process.env.FRONTEND_URL ||
+                            "https://roam-ease.vercel.app"
                           }${action.url}" class="btn">${action.label}</a>`
                       )
                       .join("")}
