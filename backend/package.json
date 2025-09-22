@@ -32,12 +32,6 @@
     "npm": ">=8.0.0"
   },
   "type": "commonjs",
-  "overrides": {
-    "debug": "4.3.4"
-  },
-  "resolutions": {
-    "debug": "4.3.4"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
