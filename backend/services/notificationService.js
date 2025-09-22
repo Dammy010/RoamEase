@@ -1,8 +1,6 @@
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const emailService = require("../utils/emailService");
-const smsService = require("./smsService");
-const pushService = require("./pushService");
 
 class NotificationService {
   /**
@@ -89,23 +87,6 @@ class NotificationService {
       if (shouldSendEmail) {
         await this.sendEmailNotification(notification, user);
       }
-
-      // Send SMS notification if enabled
-      if (
-        preferences.sms &&
-        user.phoneNumber &&
-        this.shouldSendSMSNotification(notification.type)
-      ) {
-        await this.sendSMSNotification(notification, user);
-      }
-
-      // Send push notification if enabled
-      if (
-        preferences.push &&
-        this.shouldSendPushNotification(notification.type)
-      ) {
-        await this.sendPushNotification(notification, user);
-      }
     } catch (error) {
       console.error("❌ Error sending notification through channels:", error);
       // Don't fail the notification creation if channel sending fails
@@ -144,32 +125,6 @@ class NotificationService {
     ];
 
     return importantTypes.includes(type) || true; // Default to true for now
-  }
-
-  /**
-   * Check if SMS notification should be sent for this type
-   */
-  static shouldSendSMSNotification(type) {
-    // Only send urgent notifications via SMS
-    const urgentTypes = [
-      "verification_approved",
-      "bid_accepted",
-      "shipment_delivered",
-      "payment_failed",
-      "dispute_created",
-    ];
-
-    return urgentTypes.includes(type);
-  }
-
-  /**
-   * Check if push notification should be sent for this type
-   */
-  static shouldSendPushNotification(type) {
-    // Send most notifications via push
-    const excludedTypes = ["marketing", "updates"];
-
-    return !excludedTypes.includes(type);
   }
 
   /**
@@ -237,108 +192,6 @@ class NotificationService {
       }
     } catch (error) {
       console.error("❌ Error sending email notification:", error);
-    }
-  }
-
-  /**
-   * Send SMS notification
-   */
-  static async sendSMSNotification(notification, user) {
-    try {
-      if (!user.phoneNumber) {
-        console.log("⚠️ No phone number available for SMS notification");
-        return;
-      }
-
-      const smsResult = await smsService.sendNotificationSMS(
-        user.phoneNumber,
-        notification
-      );
-
-      if (smsResult.success) {
-        console.log(
-          "✅ SMS notification sent successfully to:",
-          user.phoneNumber
-        );
-      } else {
-        console.error("❌ Failed to send SMS notification:", smsResult.error);
-      }
-    } catch (error) {
-      console.error("❌ Error sending SMS notification:", error);
-    }
-  }
-
-  /**
-   * Send push notification
-   */
-  static async sendPushNotification(notification, user) {
-    try {
-      const pushSubscriptions = user.pushSubscriptions || [];
-
-      if (pushSubscriptions.length === 0) {
-        console.log("⚠️ No push subscriptions available for push notification");
-        return;
-      }
-
-      const results = await pushService.sendBulkPushNotifications(
-        pushSubscriptions,
-        notification
-      );
-
-      const successCount = results.filter((r) => r.success).length;
-      const failureCount = results.filter((r) => !r.success).length;
-
-      console.log(
-        `✅ Push notifications sent: ${successCount} successful, ${failureCount} failed`
-      );
-
-      // Remove expired subscriptions
-      const expiredSubscriptions = results
-        .filter((r) => !r.success && r.error === "Subscription expired")
-        .map((r) => r.subscription);
-
-      if (expiredSubscriptions.length > 0) {
-        await this.removeExpiredPushSubscriptions(
-          notification.recipient,
-          expiredSubscriptions
-        );
-      }
-    } catch (error) {
-      console.error("❌ Error sending push notification:", error);
-    }
-  }
-
-  /**
-   * Remove expired push subscriptions
-   */
-  static async removeExpiredPushSubscriptions(userId, expiredSubscriptionIds) {
-    try {
-      await User.findByIdAndUpdate(userId, {
-        $pull: { pushSubscriptions: { _id: { $in: expiredSubscriptionIds } } },
-      });
-      console.log(
-        `✅ Removed ${expiredSubscriptionIds.length} expired push subscriptions`
-      );
-    } catch (error) {
-      console.error("❌ Error removing expired push subscriptions:", error);
-    }
-  }
-
-  /**
-   * Remove expired push notification tokens
-   */
-  static async removeExpiredPushTokens(userId, expiredTokens) {
-    try {
-      const preferences = await NotificationPreferences.getUserPreferences(
-        userId
-      );
-      preferences.push.deviceTokens = preferences.push.deviceTokens.filter(
-        (token) => !expiredTokens.includes(token.token)
-      );
-      await preferences.save();
-      console.log("✅ Removed expired push tokens for user:", userId);
-    } catch (error) {
-      console.error("❌ Error removing expired push tokens:", error);
     }
   }
 

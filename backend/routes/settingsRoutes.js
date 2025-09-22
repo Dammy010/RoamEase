@@ -1,44 +1,36 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   getUserSettings,
   updateNotificationPreferences,
   updatePrivacySettings,
   updateGeneralPreferences,
-  subscribeToPush,
-  unsubscribeFromPush,
-  getPushPublicKey,
-  testNotificationPreferences
-} = require('../controllers/settingsController');
-const { protect } = require('../middlewares/authMiddleware');
+  testNotificationPreferences,
+} = require("../controllers/settingsController");
+const { protect } = require("../middlewares/authMiddleware");
 
 // Apply authentication middleware to all routes
 router.use(protect);
 
 // Get user settings
-router.get('/', getUserSettings);
+router.get("/", getUserSettings);
 
 // Update general settings (catch-all for general settings updates)
-router.put('/settings', updateGeneralPreferences);
+router.put("/settings", updateGeneralPreferences);
 
 // Update profile settings
-router.put('/profile', updateGeneralPreferences);
+router.put("/profile", updateGeneralPreferences);
 
 // Update notification preferences
-router.put('/notifications', updateNotificationPreferences);
+router.put("/notifications", updateNotificationPreferences);
 
 // Update privacy settings
-router.put('/privacy', updatePrivacySettings);
+router.put("/privacy", updatePrivacySettings);
 
 // Update general preferences
-router.put('/preferences', updateGeneralPreferences);
-
-// Push notification management
-router.post('/push/subscribe', subscribeToPush);
-router.post('/push/unsubscribe', unsubscribeFromPush);
-router.get('/push/public-key', getPushPublicKey);
+router.put("/preferences", updateGeneralPreferences);
 
 // Test notification preferences
-router.post('/test-notification', testNotificationPreferences);
+router.post("/test-notification", testNotificationPreferences);
 
 module.exports = router;
