@@ -4,7 +4,6 @@
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "debug": "^4.3.4",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
@@ -28,11 +27,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=18.0.0 <24.0.0",
     "npm": ">=8.0.0"
   },
   "type": "commonjs",
   "overrides": {
+    "debug": "^4.3.4"
+  },
+  "resolutions": {
     "debug": "^4.3.4"
   },
   "scripts": {
