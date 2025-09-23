@@ -29,24 +29,24 @@ router.get("/token-check", (req, res) => {
 });
 
 // Debug route to check database connectivity
-router.get("/db-status", (req, res) => {
-  const mongoose = require('mongoose');
-  const connectionState = mongoose.connection.readyState;
-  const stateNames = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting'
-  };
+// router.get("/db-status", (req, res) => {
+//   const mongoose = require('mongoose');
+//   const connectionState = mongoose.connection.readyState;
+//   const stateNames = {
+//     0: 'disconnected',
+//     1: 'connected',
+//     2: 'connecting',
+//     3: 'disconnecting'
+//   };
   
-  res.json({
-    databaseStatus: stateNames[connectionState] || 'unknown',
-    connectionState: connectionState,
-    isConnected: connectionState === 1,
-    mongoUri: process.env.MONGODB_URI ? 'configured' : 'not configured',
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
+//   res.json({
+//     databaseStatus: stateNames[connectionState] || 'unknown',
+//     connectionState: connectionState,
+//     isConnected: connectionState === 1,
+//     mongoUri: process.env.MONGODB_URI ? 'configured' : 'not configured',
+//     environment: process.env.NODE_ENV || 'development'
+//   });
+// });
 
 // Debug route to check shipments in database
 router.get("/shipments-count", async (req, res) => {
