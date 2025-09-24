@@ -25,11 +25,16 @@ const createShipment = async (req, res) => {
       user: req.user._id,
     });
 
-    // Handle file uploads
+    // Handle file uploads from Cloudinary
     if (req.files) {
-      if (req.files.photos) data.photos = req.files.photos.map((f) => f.path);
-      if (req.files.documents)
-        data.documents = req.files.documents.map((f) => f.path);
+      if (req.files.photos) {
+        data.photos = req.files.photos.map((f) => f.path); // Cloudinary URL
+        console.log("📸 Photos uploaded to Cloudinary:", data.photos);
+      }
+      if (req.files.documents) {
+        data.documents = req.files.documents.map((f) => f.path); // Cloudinary URL
+        console.log("📄 Documents uploaded to Cloudinary:", data.documents);
+      }
     }
 
     // Convert numeric fields

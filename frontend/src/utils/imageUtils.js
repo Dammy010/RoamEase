@@ -51,8 +51,11 @@ export const getProfilePictureUrl = (profilePicture) => {
 export const getStaticAssetUrl = (assetPath) => {
   if (!assetPath) return null;
 
-  // If it's already a full URL, return as is
-  if (assetPath.startsWith("http")) return assetPath;
+  // If it's already a full URL (Cloudinary or other), return as is
+  if (assetPath.startsWith("http")) {
+    console.log("🔍 getStaticAssetUrl - Already full URL:", assetPath);
+    return assetPath;
+  }
 
   // Get the backend base URL
   const backendBaseUrl =
