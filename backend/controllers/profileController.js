@@ -84,11 +84,20 @@ const updateProfile = async (req, res) => {
 // Change password
 const changePassword = async (req, res) => {
   try {
+    console.log("🔐 Password change request received:", {
+      userId: req.user?._id,
+      hasCurrentPassword: !!req.body.currentPassword,
+      hasNewPassword: !!req.body.newPassword,
+      currentPasswordLength: req.body.currentPassword?.length,
+      newPasswordLength: req.body.newPassword?.length
+    });
+
     const userId = req.user._id;
     const { currentPassword, newPassword } = req.body;
 
     // Validate required fields
     if (!currentPassword || !newPassword) {
+      console.log("❌ Missing required fields:", { currentPassword: !!currentPassword, newPassword: !!newPassword });
       return res.status(400).json({
         success: false,
         message: "Current password and new password are required",
@@ -97,6 +106,7 @@ const changePassword = async (req, res) => {
 
     // Validate new password length
     if (newPassword.length < 6) {
+      console.log("❌ Password too short:", { length: newPassword.length });
       return res.status(400).json({
         success: false,
         message: "New password must be at least 6 characters long",
@@ -104,20 +114,28 @@ const changePassword = async (req, res) => {
     }
 
     // Get user with password
+    console.log("🔍 Looking up user:", userId);
     const user = await User.findById(userId);
     if (!user) {
+      console.log("❌ User not found:", userId);
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
+    console.log("✅ User found:", { id: user._id, email: user.email, hasPassword: !!user.password });
+
     // Verify current password
+    console.log("🔍 Verifying current password...");
     const isCurrentPasswordValid = await bcrypt.compare(
       currentPassword,
       user.password
     );
+    console.log("🔍 Password verification result:", isCurrentPasswordValid);
+    
     if (!isCurrentPasswordValid) {
+      console.log("❌ Current password is incorrect");
       return res.status(400).json({
         success: false,
         message: "Current password is incorrect",
@@ -125,11 +143,15 @@ const changePassword = async (req, res) => {
     }
 
     // Hash new password
+    console.log("🔐 Hashing new password...");
     const saltRounds = 12;
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+    console.log("✅ New password hashed successfully");
 
     // Update password
+    console.log("💾 Updating user password...");
     await User.findByIdAndUpdate(userId, { password: hashedNewPassword });
+    console.log("✅ Password updated successfully");
 
     res.json({
       success: true,

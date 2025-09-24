@@ -59,8 +59,6 @@ export const uploadProfilePicture = createAsyncThunk(
     try {
       const formData = new FormData();
       formData.append("profilePicture", file);
-      for (let [key, value] of formData.entries()) {
-      }
       const response = await api.post(
         "/profile/upload-profile-picture",
         formData,
@@ -97,9 +95,21 @@ export const changePassword = createAsyncThunk(
   "settings/changePassword",
   async (passwordData, { rejectWithValue }) => {
     try {
+      console.log("🔐 Redux: Sending password change request:", {
+        hasCurrentPassword: !!passwordData.currentPassword,
+        hasNewPassword: !!passwordData.newPassword,
+        currentPasswordLength: passwordData.currentPassword?.length,
+        newPasswordLength: passwordData.newPassword?.length
+      });
+      
       const response = await api.put("/profile/change-password", passwordData);
+      console.log("✅ Redux: Password change successful:", response.data);
       return response.data;
     } catch (error) {
+      console.error("❌ Redux: Password change error:", error);
+      console.error("❌ Redux: Error response:", error.response?.data);
+      console.error("❌ Redux: Error status:", error.response?.status);
+      console.error("❌ Redux: Error headers:", error.response?.headers);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -117,46 +127,7 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
-// Push notification management
-export const subscribeToPush = createAsyncThunk(
-  "settings/subscribeToPush",
-  async (subscription, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/settings/push/subscribe", {
-        subscription,
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-export const unsubscribeFromPush = createAsyncThunk(
-  "settings/unsubscribeFromPush",
-  async (endpoint, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/settings/push/unsubscribe", {
-        endpoint,
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-export const getPushPublicKey = createAsyncThunk(
-  "settings/getPushPublicKey",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.get("/settings/push/public-key");
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
+// Push notification functions removed - service no longer available
 
 export const testNotificationPreferences = createAsyncThunk(
   "settings/testNotificationPreferences",
@@ -183,8 +154,6 @@ const settingsSlice = createSlice({
     },
     notifications: {
       email: true,
-      push: true,
-      sms: false,
       marketing: false,
       security: true,
       updates: true,
