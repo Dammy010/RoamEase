@@ -252,7 +252,8 @@ const SettingsPage = () => {
     }
 
     try {
-      const result = await dispatch(changePassword(passwordData));
+      const { currentPassword, newPassword } = passwordData;
+      const result = await dispatch(changePassword({ currentPassword, newPassword }));
       if (changePassword.fulfilled.match(result)) {
         toast.success("Password changed successfully");
         setShowPasswordForm(false);

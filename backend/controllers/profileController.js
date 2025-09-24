@@ -87,6 +87,22 @@ const changePassword = async (req, res) => {
     const userId = req.user._id;
     const { currentPassword, newPassword } = req.body;
 
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
+
+    // Validate new password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long",
+      });
+    }
+
     // Get user with password
     const user = await User.findById(userId);
     if (!user) {
@@ -121,6 +137,13 @@ const changePassword = async (req, res) => {
     });
   } catch (error) {
     console.error("Password change error:", error);
+    console.error("Error details:", {
+      userId: req.user?._id,
+      hasCurrentPassword: !!req.body.currentPassword,
+      hasNewPassword: !!req.body.newPassword,
+      errorMessage: error.message,
+      errorStack: error.stack
+    });
     res.status(500).json({
       success: false,
       message: "Error changing password",
