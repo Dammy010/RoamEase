@@ -141,6 +141,11 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
       <ScrollToTop />
       <div className="min-h-screen">
+        <Routes>
+          {/* Public Tracking Route - Accessible to Everyone */}
+          <Route path="/track/:shipmentId" element={<PublicTracking />} />
+        </Routes>
+        
         {user ? (
           <>
             <FloatingDrawer role={user.role} />
@@ -343,8 +348,7 @@ function App() {
                   element={<ForgotPasswordPage />}
                 />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/track/:shipmentId" element={<PublicTracking />} />
-
+                
                 {/* Catch-all for public users */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
