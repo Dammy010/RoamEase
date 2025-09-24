@@ -590,6 +590,7 @@ const ShipmentDetail = () => {
             </div>
 
             {/* Photos Section */}
+            {console.log("🔍 Photos data:", currentShipment.photos)}
             {currentShipment.photos && currentShipment.photos.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="bg-blue-500 p-6">
@@ -607,6 +608,13 @@ const ShipmentDetail = () => {
                           <img
                             src={`https://roamease-3wg1.onrender.com/${photo}`}
                             alt={`Shipment photo ${index + 1}`}
+                            onError={(e) => {
+                              console.error("❌ Image failed to load:", `https://roamease-3wg1.onrender.com/${photo}`);
+                              console.error("❌ Original photo path:", photo);
+                            }}
+                            onLoad={() => {
+                              console.log("✅ Image loaded successfully:", `https://roamease-3wg1.onrender.com/${photo}`);
+                            }}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onClick={() =>
                               window.open(
