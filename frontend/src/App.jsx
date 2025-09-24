@@ -40,7 +40,6 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
-import PublicTracking from "./pages/PublicTracking";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 
 // User Dashboard Pages
@@ -141,11 +140,6 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
       <ScrollToTop />
       <div className="min-h-screen">
-        <Routes>
-          {/* Public Tracking Route - Accessible to Everyone */}
-          <Route path="/track/:shipmentId" element={<PublicTracking />} />
-        </Routes>
-        
         {user ? (
           <>
             <FloatingDrawer role={user.role} />

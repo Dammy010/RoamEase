@@ -21,7 +21,6 @@ const {
   getShipmentTracking,
   startTracking,
   stopTracking,
-  getPublicShipmentTracking, // New: Import public tracking function
 } = require("../controllers/shipmentController");
 
 const { protect, allowRoles } = require("../middlewares/authMiddleware"); // Destructure both protect and allowRoles
@@ -125,7 +124,5 @@ router.post(
   stopTracking
 ); // Stop tracking
 
-// Public tracking route (no authentication required)
-router.get("/:id/public-tracking", getPublicShipmentTracking); // Public tracking data
 
 module.exports = router;

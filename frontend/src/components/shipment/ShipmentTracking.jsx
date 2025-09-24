@@ -24,8 +24,6 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
-  Copy,
-  Check,
 } from "lucide-react";
 
 // Fix for default markers in react-leaflet
@@ -79,7 +77,6 @@ const ShipmentTracking = ({ shipmentId, onClose }) => {
   const [followDriver, setFollowDriver] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   const socket = useRef(null);
   const mapRef = useRef(null);
@@ -208,19 +205,6 @@ const ShipmentTracking = ({ shipmentId, onClose }) => {
     });
   };
 
-  // Copy tracking link
-  const copyTrackingLink = async () => {
-    try {
-      const trackingUrl = `${window.location.origin}/track/${shipmentId}`;
-      await navigator.clipboard.writeText(trackingUrl);
-      setCopied(true);
-      toast.success("Tracking link copied to clipboard!");
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Error copying link:", error);
-      toast.error("Failed to copy link");
-    }
-  };
 
   // Format speed
   const formatSpeed = (speed) => {
@@ -291,20 +275,6 @@ const ShipmentTracking = ({ shipmentId, onClose }) => {
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2 w-full sm:w-auto">
-            <button
-              onClick={copyTrackingLink}
-              className="flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs sm:text-sm"
-            >
-              {copied ? (
-                <Check size={14} className="sm:w-4 sm:h-4" />
-              ) : (
-                <Copy size={14} className="sm:w-4 sm:h-4" />
-              )}
-              <span className="hidden sm:inline">
-                {copied ? "Copied!" : "Copy Link"}
-              </span>
-              <span className="sm:hidden">{copied ? "✓" : "📋"}</span>
-            </button>
             <button
               onClick={() => setFollowDriver(!followDriver)}
               className={`p-1.5 sm:p-2 rounded-lg ${

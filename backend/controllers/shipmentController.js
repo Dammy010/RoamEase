@@ -2342,63 +2342,6 @@ const stopTracking = async (req, res) => {
   }
 };
 
-// Get public tracking data (no authentication required)
-const getPublicShipmentTracking = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const shipment = await Shipment.findById(id);
-    if (!shipment) {
-      return res.status(404).json({
-        success: false,
-        message: "Shipment not found",
-      });
-    }
-
-    // Check if shipment has an accepted bid
-    const acceptedBid = await Bid.findOne({
-      shipment: id,
-      status: "accepted",
-    });
-
-    if (!acceptedBid) {
-      return res.status(404).json({
-        success: false,
-        message: "No tracking available for this shipment",
-      });
-    }
-
-    // Get the logistics company handling this shipment
-    let logisticsCompany = null;
-    if (acceptedBid) {
-      logisticsCompany = await User.findById(acceptedBid.carrier).select(
-        "name companyName phone email address bio country profilePicture isOnline lastSeen"
-      );
-    }
-
-    const responseData = {
-      success: true,
-      tracking: {
-        isTrackingActive: shipment.isTrackingActive,
-        lastLocation: shipment.lastLocation,
-        locationHistory: shipment.locationHistory,
-        trackingStartedAt: shipment.trackingStartedAt,
-        trackingEndedAt: shipment.trackingEndedAt,
-        logisticsCompany,
-        eta: acceptedBid ? acceptedBid.eta : null,
-      },
-    };
-
-    return res.json(responseData);
-  } catch (error) {
-    console.error("Error getting public shipment tracking:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error getting tracking data",
-      error: error.message,
-    });
-  }
-};
 
 module.exports = {
   createShipment,
@@ -2420,5 +2363,4 @@ module.exports = {
   getShipmentTracking,
   startTracking,
   stopTracking,
-  getPublicShipmentTracking, // New: Export public tracking function
 };
