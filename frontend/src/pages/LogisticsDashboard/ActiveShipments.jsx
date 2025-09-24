@@ -759,12 +759,12 @@ const ActiveShipments = () => {
                             {shipment.photos.map((photo, index) => (
                               <div key={index} className="relative group">
                                 <img
-                                  src={`http://localhost:5000/${photo}`}
+                                  src={`https://roamease-3wg1.onrender.com/${photo}`}
                                   alt={`Shipment photo ${index + 1}`}
                                   className="w-full h-24 object-cover rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group-hover:scale-105"
                                   onClick={() =>
                                     window.open(
-                                      `http://localhost:5000/${photo}`,
+                                      `https://roamease-3wg1.onrender.com/${photo}`,
                                       "_blank"
                                     )
                                   }
@@ -811,7 +811,7 @@ const ActiveShipments = () => {
                                   <button
                                     onClick={() =>
                                       window.open(
-                                        `http://localhost:5000/${document}`,
+                                        `https://roamease-3wg1.onrender.com/${document}`,
                                         "_blank"
                                       )
                                     }

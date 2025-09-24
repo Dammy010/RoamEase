@@ -69,7 +69,7 @@ const NewMessageInput = ({ conversationId }) => {
           throw new Error('No authentication token found');
         }
         // Upload file to backend
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/chat/upload`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "https://roamease-3wg1.onrender.com"}/api/chat/upload`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

@@ -6,34 +6,38 @@
  * @returns {string|null} - The full URL or null if no picture
  */
 export const getProfilePictureUrl = (profilePicture) => {
-  if (!profilePicture || typeof profilePicture !== 'string') {
+  if (!profilePicture || typeof profilePicture !== "string") {
     return null;
   }
-  
+
   // If it's already a full URL, return as is
-  if (profilePicture.startsWith('http')) {
+  if (profilePicture.startsWith("http")) {
     return profilePicture;
   }
-  
+
   // Get the backend base URL
-  const backendBaseUrl = process.env.NODE_ENV === 'production' 
-    ? window.location.origin 
-    : 'http://localhost:5000';
-  
+  const backendBaseUrl =
+    process.env.NODE_ENV === "production"
+      ? "https://roamease-3wg1.onrender.com"
+      : "http://localhost:5000";
+
   // Normalize the path - remove any leading slashes and normalize separators
-  let cleanPath = profilePicture.replace(/\\/g, '/').replace(/^\/+/, '');
+  let cleanPath = profilePicture.replace(/\\/g, "/").replace(/^\/+/, "");
   // If the path already includes 'uploads/profiles/', use it directly
-  if (cleanPath.startsWith('uploads/profiles/')) {
+  if (cleanPath.startsWith("uploads/profiles/")) {
     const finalUrl = `${backendBaseUrl}/${cleanPath}`;
     return finalUrl;
   }
-  
+
   // If the path starts with 'uploads/' but not 'uploads/profiles/', assume it's in profiles
-  if (cleanPath.startsWith('uploads/')) {
-    const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath.replace('uploads/', '')}`;
+  if (cleanPath.startsWith("uploads/")) {
+    const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath.replace(
+      "uploads/",
+      ""
+    )}`;
     return finalUrl;
   }
-  
+
   // If it's just a filename, assume it's in the profiles directory
   const finalUrl = `${backendBaseUrl}/uploads/profiles/${cleanPath}`;
   return finalUrl;
@@ -46,15 +50,16 @@ export const getProfilePictureUrl = (profilePicture) => {
  */
 export const getStaticAssetUrl = (assetPath) => {
   if (!assetPath) return null;
-  
+
   // If it's already a full URL, return as is
-  if (assetPath.startsWith('http')) return assetPath;
-  
+  if (assetPath.startsWith("http")) return assetPath;
+
   // Get the backend base URL
-  const backendBaseUrl = process.env.NODE_ENV === 'production' 
-    ? window.location.origin 
-    : 'http://localhost:5000';
-  
+  const backendBaseUrl =
+    process.env.NODE_ENV === "production"
+      ? "https://roamease-3wg1.onrender.com"
+      : "http://localhost:5000";
+
   // Normalize path separators and construct full URL
-  return `${backendBaseUrl}/${assetPath.replace(/\\/g, '/')}`;
+  return `${backendBaseUrl}/${assetPath.replace(/\\/g, "/")}`;
 };

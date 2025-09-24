@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api", // change to your backend URL
+  baseURL: "https://roamease-3wg1.onrender.com/api", // Render deployment URL
   withCredentials: true, // only if cookies are used
 });
 
@@ -60,18 +60,23 @@ api.interceptors.response.use(
           throw new Error("No refresh token found");
         }
         // Call refresh endpoint
-        const res = await axios.post("http://localhost:5000/api/auth/refresh", {
-          token: refreshToken, // matches backend contract
-        });
+        const res = await axios.post(
+          "https://roamease-3wg1.onrender.com/api/auth/refresh",
+          {
+            token: refreshToken, // matches backend contract
+          }
+        );
         const newAccessToken = res.data.accessToken;
 
         // Save new access token
         localStorage.setItem("token", newAccessToken);
-        api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+        api.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${newAccessToken}`;
 
         // Reconnect socket with new token
         try {
-          const { reconnectSocket } = await import('./socket');
+          const { reconnectSocket } = await import("./socket");
           const newSocket = reconnectSocket();
           if (newSocket) {
           }
@@ -85,26 +90,35 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (err) {
-        console.error("DEBUG: API Interceptor - Token refresh failed:", err.message);
-        console.error("DEBUG: API Interceptor - Error details:", err.response?.data);
+        console.error(
+          "DEBUG: API Interceptor - Token refresh failed:",
+          err.message
+        );
+        console.error(
+          "DEBUG: API Interceptor - Error details:",
+          err.response?.data
+        );
         processQueue(err, null);
-        
+
         // Clear all auth data
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        
+
         // Dispatch logout action instead of direct redirect
         try {
           if (window.store && window.store.dispatch) {
-            const { logout } = await import('../redux/slices/authSlice');
+            const { logout } = await import("../redux/slices/authSlice");
             window.store.dispatch(logout());
           } else {
             // Fallback to direct redirect if store is not available
             window.location.href = "/login";
           }
         } catch (dispatchError) {
-          console.error("DEBUG: API Interceptor - Failed to dispatch logout:", dispatchError.message);
+          console.error(
+            "DEBUG: API Interceptor - Failed to dispatch logout:",
+            dispatchError.message
+          );
           window.location.href = "/login";
         }
         return Promise.reject(err);

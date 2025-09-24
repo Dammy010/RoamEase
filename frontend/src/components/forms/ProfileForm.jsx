@@ -178,7 +178,7 @@ const ProfileForm = ({ user }) => {
 
   const getStaticAssetUrl = useCallback((relativePath) => {
     if (!relativePath) return null;
-    const backendStaticBaseUrl = 'http://localhost:5000';
+    const backendStaticBaseUrl = 'https://roamease-3wg1.onrender.com';
     let fullUrl = `${backendStaticBaseUrl}/${relativePath.replace(/\\/g, '/')}`;
     if (relativePath.startsWith('/') && backendStaticBaseUrl.endsWith('/')) {
         fullUrl = `${backendStaticBaseUrl}${relativePath.substring(1)}`;

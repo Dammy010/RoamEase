@@ -6,59 +6,58 @@ export const initSocket = () => {
   if (socket) {
     return socket;
   }
-  
+
   const token = localStorage.getItem("token");
-  
+
   // Only initialize socket if we have a valid token
   if (!token) {
     return null;
   }
-  
-  socket = io("http://localhost:5000", {
-    transports: ['websocket', 'polling'],
+
+  socket = io("https://roamease-3wg1.onrender.com", {
+    transports: ["websocket", "polling"],
     autoConnect: true,
     withCredentials: true,
     timeout: 20000,
     forceNew: true,
     auth: {
-      token: token
-    }
+      token: token,
+    },
   });
 
-  socket.on('connect', () => {
+  socket.on("connect", () => {
     // Send user-online event to join the user to their specific room
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
         const userId = user._id;
         if (userId) {
-          socket.emit('user-online', userId);
+          socket.emit("user-online", userId);
         } else {
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     } else {
     }
   });
 
-  socket.on('connect_error', (error) => {
-    console.error('❌ Socket.io connection error:', error);
-    console.error('🔍 Error details:', {
+  socket.on("connect_error", (error) => {
+    console.error("❌ Socket.io connection error:", error);
+    console.error("🔍 Error details:", {
       message: error.message,
       description: error.description,
       context: error.context,
-      type: error.type
+      type: error.type,
     });
-    
-    if (error.message.includes('Authentication error')) {
+
+    if (error.message.includes("Authentication error")) {
       // Don't automatically logout on socket auth errors
       // Let the API interceptor handle authentication failures
     }
   });
 
-  socket.on('disconnect', (reason) => {
-    if (reason === 'io server disconnect') {
+  socket.on("disconnect", (reason) => {
+    if (reason === "io server disconnect") {
       // Server disconnected the client, reconnect manually
       setTimeout(() => {
         socket.connect();
@@ -67,18 +66,16 @@ export const initSocket = () => {
   });
 
   // Handle reconnection events
-  socket.on('reconnect', (attemptNumber) => {
+  socket.on("reconnect", (attemptNumber) => {});
+
+  socket.on("reconnect_attempt", (attemptNumber) => {});
+
+  socket.on("reconnect_error", (error) => {
+    console.error("❌ Socket.io reconnection error:", error);
   });
 
-  socket.on('reconnect_attempt', (attemptNumber) => {
-  });
-
-  socket.on('reconnect_error', (error) => {
-    console.error('❌ Socket.io reconnection error:', error);
-  });
-
-  socket.on('reconnect_failed', () => {
-    console.error('❌ Socket.io reconnection failed');
+  socket.on("reconnect_failed", () => {
+    console.error("❌ Socket.io reconnection failed");
   });
 
   return socket;

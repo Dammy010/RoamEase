@@ -605,12 +605,12 @@ const ShipmentDetail = () => {
                       <div key={index} className="group relative">
                         <div className="aspect-square rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                           <img
-                            src={`http://localhost:5000/${photo}`}
+                            src={`https://roamease-3wg1.onrender.com/${photo}`}
                             alt={`Shipment photo ${index + 1}`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onClick={() =>
                               window.open(
-                                `http://localhost:5000/${photo}`,
+                                `https://roamease-3wg1.onrender.com/${photo}`,
                                 "_blank"
                               )
                             }
@@ -661,7 +661,7 @@ const ShipmentDetail = () => {
                             <button
                               onClick={() =>
                                 window.open(
-                                  `http://localhost:5000/${document}`,
+                                  `https://roamease-3wg1.onrender.com/${document}`,
                                   "_blank"
                                 )
                               }

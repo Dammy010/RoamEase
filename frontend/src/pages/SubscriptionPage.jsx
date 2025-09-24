@@ -107,7 +107,7 @@ const SubscriptionPage = () => {
     if (user) {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/subscriptions/my-subscriptions",
+          "https://roamease-3wg1.onrender.com/api/subscriptions/my-subscriptions",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -140,7 +140,7 @@ const SubscriptionPage = () => {
     if (user) {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/subscriptions/my-subscriptions",
+          "https://roamease-3wg1.onrender.com/api/subscriptions/my-subscriptions",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -536,7 +536,7 @@ const SubscriptionPage = () => {
               onClick={async () => {
                 try {
                   const response = await fetch(
-                    "http://localhost:5000/api/subscriptions/emergency-cleanup",
+                    "https://roamease-3wg1.onrender.com/api/subscriptions/emergency-cleanup",
                     {
                       method: "POST",
                       headers: {
@@ -568,7 +568,7 @@ const SubscriptionPage = () => {
               onClick={async () => {
                 try {
                   const response = await fetch(
-                    "http://localhost:5000/api/subscriptions/clear-cache",
+                    "https://roamease-3wg1.onrender.com/api/subscriptions/clear-cache",
                     {
                       method: "POST",
                       headers: {
@@ -611,7 +611,7 @@ const SubscriptionPage = () => {
                 try {
                   console.log("🧪 Testing API directly...");
                   const response = await fetch(
-                    "http://localhost:5000/api/subscriptions/my-subscriptions",
+                    "https://roamease-3wg1.onrender.com/api/subscriptions/my-subscriptions",
                     {
                       headers: {
                         Authorization: `Bearer ${localStorage.getItem(
@@ -1370,7 +1370,7 @@ const PaymentModal = ({ plan, onClose, onPayment, loading }) => {
 
       // Create subscription to get payment data
       const response = await fetch(
-        "http://localhost:5000/api/subscriptions/create",
+        "https://roamease-3wg1.onrender.com/api/subscriptions/create",
         {
           method: "POST",
           headers: {
