@@ -63,5 +63,8 @@ export const getStaticAssetUrl = (assetPath) => {
   // Normalize path separators and construct full URL
   // Remove any leading slashes and normalize separators
   let cleanPath = assetPath.replace(/\\/g, "/").replace(/^\/+/, "");
+  console.log("🔍 getStaticAssetUrl - Original path:", assetPath);
+  console.log("🔍 getStaticAssetUrl - Cleaned path:", cleanPath);
+  console.log("🔍 getStaticAssetUrl - Final URL:", `${backendBaseUrl}/${cleanPath}`);
   return `${backendBaseUrl}/${cleanPath}`;
 };
