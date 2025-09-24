@@ -65,7 +65,8 @@ app.use(
         "connect-src": [
           "'self'",
           process.env.CLIENT_URL,
-          "ws://localhost:5000",
+          "https://roamease-3wg1.onrender.com",
+          "wss://roamease-3wg1.onrender.com",
         ],
       },
     },
@@ -79,8 +80,8 @@ app.use(
   cors({
     origin: [
       process.env.CLIENT_URL,
-      "http://localhost:5173"
-      
+      "https://roam-ease.vercel.app",
+      "http://localhost:5173",
     ],
     credentials: true,
   })

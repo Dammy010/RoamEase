@@ -1407,12 +1407,12 @@ const AvailableShipments = () => {
                             {shipment.photos.slice(0, 4).map((photo, index) => (
                               <div key={index} className="relative group">
                                 <img
-                                  src={`http://localhost:5000/${photo}`}
+                                  src={`https://roamease-3wg1.onrender.com/${photo}`}
                                   alt={`Shipment photo ${index + 1}`}
                                   className="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300"
                                   onClick={() =>
                                     window.open(
-                                      `http://localhost:5000/${photo}`,
+                                      `https://roamease-3wg1.onrender.com/${photo}`,
                                       "_blank"
                                     )
                                   }
@@ -1447,7 +1447,7 @@ const AvailableShipments = () => {
                                 key={index}
                                 onClick={() =>
                                   window.open(
-                                    `http://localhost:5000/${document}`,
+                                    `https://roamease-3wg1.onrender.com/${document}`,
                                     "_blank"
                                   )
                                 }
