@@ -8,6 +8,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 import {
   Navigation,
   MapPin,
@@ -55,8 +56,9 @@ const PublicTracking = () => {
   useEffect(() => {
     const loadTrackingData = async () => {
       try {
-        const response = await api.get(
-          `/shipments/${shipmentId}/public-tracking`
+        // Use direct axios call without authentication for public tracking
+        const response = await axios.get(
+          `https://roamease-3wg1.onrender.com/api/shipments/${shipmentId}/public-tracking`
         );
         if (response.data.success) {
           const data = response.data.tracking;
