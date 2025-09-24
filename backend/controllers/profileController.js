@@ -113,9 +113,9 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Get user with password
+    // Get user with password (explicitly select password field)
     console.log("🔍 Looking up user:", userId);
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select('+password');
     if (!user) {
       console.log("❌ User not found:", userId);
       return res.status(404).json({
@@ -124,7 +124,22 @@ const changePassword = async (req, res) => {
       });
     }
 
-    console.log("✅ User found:", { id: user._id, email: user.email, hasPassword: !!user.password });
+    console.log("✅ User found:", { 
+      id: user._id, 
+      email: user.email, 
+      hasPassword: !!user.password,
+      passwordType: typeof user.password,
+      passwordLength: user.password?.length
+    });
+
+    // Check if user has a password
+    if (!user.password) {
+      console.log("❌ User has no password set");
+      return res.status(400).json({
+        success: false,
+        message: "No password set for this account. Please contact support.",
+      });
+    }
 
     // Verify current password
     console.log("🔍 Verifying current password...");

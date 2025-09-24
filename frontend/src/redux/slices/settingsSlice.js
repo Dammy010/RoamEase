@@ -99,9 +99,9 @@ export const changePassword = createAsyncThunk(
         hasCurrentPassword: !!passwordData.currentPassword,
         hasNewPassword: !!passwordData.newPassword,
         currentPasswordLength: passwordData.currentPassword?.length,
-        newPasswordLength: passwordData.newPassword?.length
+        newPasswordLength: passwordData.newPassword?.length,
       });
-      
+
       const response = await api.put("/profile/change-password", passwordData);
       console.log("✅ Redux: Password change successful:", response.data);
       return response.data;
