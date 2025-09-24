@@ -610,18 +610,21 @@ const ShipmentDetail = () => {
                             src={getStaticAssetUrl(photo)}
                             alt={`Shipment photo ${index + 1}`}
                             onError={(e) => {
-                              console.error("❌ Image failed to load:", getStaticAssetUrl(photo));
+                              console.error(
+                                "❌ Image failed to load:",
+                                getStaticAssetUrl(photo)
+                              );
                               console.error("❌ Original photo path:", photo);
                             }}
                             onLoad={() => {
-                              console.log("✅ Image loaded successfully:", getStaticAssetUrl(photo));
+                              console.log(
+                                "✅ Image loaded successfully:",
+                                getStaticAssetUrl(photo)
+                              );
                             }}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onClick={() =>
-                              window.open(
-                                getStaticAssetUrl(photo),
-                                "_blank"
-                              )
+                              window.open(getStaticAssetUrl(photo), "_blank")
                             }
                           />
                         </div>

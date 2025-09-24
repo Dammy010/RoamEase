@@ -61,5 +61,7 @@ export const getStaticAssetUrl = (assetPath) => {
       : "http://localhost:5000";
 
   // Normalize path separators and construct full URL
-  return `${backendBaseUrl}/${assetPath.replace(/\\/g, "/")}`;
+  // Remove any leading slashes and normalize separators
+  let cleanPath = assetPath.replace(/\\/g, "/").replace(/^\/+/, "");
+  return `${backendBaseUrl}/${cleanPath}`;
 };

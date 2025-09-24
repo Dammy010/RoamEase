@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import { getStaticAssetUrl } from "../../utils/imageUtils";
 import { markShipmentAsDeliveredByLogistics } from "../../redux/slices/shipmentSlice";
 import { toast } from "react-toastify";
 import api from "../../services/api";
@@ -759,7 +760,7 @@ const ActiveShipments = () => {
                             {shipment.photos.map((photo, index) => (
                               <div key={index} className="relative group">
                                 <img
-                                  src={`https://roamease-3wg1.onrender.com/${photo}`}
+                                  src={getStaticAssetUrl(photo)}
                                   alt={`Shipment photo ${index + 1}`}
                                   className="w-full h-24 object-cover rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group-hover:scale-105"
                                   onClick={() =>
