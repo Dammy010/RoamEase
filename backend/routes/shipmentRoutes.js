@@ -60,11 +60,11 @@ router.get(
   getLogisticsHistory
 );
 
-// New: Route for users and logistics to get delivered shipments awaiting confirmation
+// New: Route for users, logistics, and admins to get delivered shipments awaiting confirmation
 router.get(
   "/delivered",
   protect,
-  allowRoles("user", "logistics"),
+  allowRoles("user", "logistics", "admin"),
   getDeliveredShipments
 );
 
