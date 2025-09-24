@@ -10,6 +10,7 @@ import {
 } from "../../redux/slices/shipmentSlice";
 import { toast } from "react-toastify";
 import ShipmentTracking from "../../components/shipment/ShipmentTracking";
+import { getStaticAssetUrl } from "../../utils/imageUtils";
 import {
   ArrowRight,
   Package,
@@ -606,19 +607,19 @@ const ShipmentDetail = () => {
                       <div key={index} className="group relative">
                         <div className="aspect-square rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                           <img
-                            src={`https://roamease-3wg1.onrender.com/${photo}`}
+                            src={getStaticAssetUrl(photo)}
                             alt={`Shipment photo ${index + 1}`}
                             onError={(e) => {
-                              console.error("❌ Image failed to load:", `https://roamease-3wg1.onrender.com/${photo}`);
+                              console.error("❌ Image failed to load:", getStaticAssetUrl(photo));
                               console.error("❌ Original photo path:", photo);
                             }}
                             onLoad={() => {
-                              console.log("✅ Image loaded successfully:", `https://roamease-3wg1.onrender.com/${photo}`);
+                              console.log("✅ Image loaded successfully:", getStaticAssetUrl(photo));
                             }}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onClick={() =>
                               window.open(
-                                `https://roamease-3wg1.onrender.com/${photo}`,
+                                getStaticAssetUrl(photo),
                                 "_blank"
                               )
                             }
