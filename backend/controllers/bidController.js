@@ -11,11 +11,6 @@ const createBid = async (req, res) => {
   try {
     const { shipmentId, price, currency, eta, message } = req.body;
 
-    // --- DEBUGGING LOGS ---
-    console.log("DEBUG: createBid - req.body:", req.body);
-    console.log("DEBUG: createBid - req.user:", req.user);
-    // --- END DEBUGGING LOGS ---
-
     // Validation
     if (!shipmentId || !price || !eta) {
       return res.status(400).json({ message: 'Missing required fields: shipmentId, price, and eta are required' });
@@ -74,96 +69,87 @@ const createBid = async (req, res) => {
       .populate('carrier', 'name email companyName country')
       .populate('shipment');
 
-    // Create notification for the shipment owner about the new bid
-    try {
-      console.log('📦 Creating notification for new bid:', bid._id);
-      
-      const notificationData = {
-        recipient: shipment.user,
-        type: 'bid_received',
-        title: 'New Bid Received',
-        message: `You received a new bid of ${populatedBid.carrier.companyName || populatedBid.carrier.name} for your shipment "${shipment.shipmentTitle}".`,
-        priority: 'high',
-        relatedEntity: {
-          type: 'bid',
-          id: bid._id
-        },
-        metadata: {
-          bidId: bid._id,
-          shipmentId: shipment._id,
-          shipmentTitle: shipment.shipmentTitle,
-          bidderId: req.user._id,
-          bidderName: populatedBid.carrier.companyName || populatedBid.carrier.name,
-          bidPrice: price,
-          bidCurrency: currency || 'USD',
-          bidEta: eta,
-          bidMessage: message
-        },
-        actions: [
-          {
-            label: 'View Bid',
-            action: 'view',
-            url: `/shipments/${shipment._id}`,
-            method: 'GET'
-          }
-        ]
-      };
+    // Send response immediately
+    res.status(201).json(populatedBid.toObject());
 
-      await NotificationService.createNotification(notificationData);
-      console.log('✅ Notification created for new bid');
-    } catch (notificationError) {
-      console.error('❌ Error creating bid notification:', notificationError);
-      // Don't fail the bid creation if notification creation fails
-    }
+    // Handle async operations after response
+    setImmediate(async () => {
+      try {
+        // Create notification for the shipment owner about the new bid
+        const notificationData = {
+          recipient: shipment.user,
+          type: 'bid_received',
+          title: 'New Bid Received',
+          message: `You received a new bid of ${populatedBid.carrier.companyName || populatedBid.carrier.name} for your shipment "${shipment.shipmentTitle}".`,
+          priority: 'high',
+          relatedEntity: {
+            type: 'bid',
+            id: bid._id
+          },
+          metadata: {
+            bidId: bid._id,
+            shipmentId: shipment._id,
+            shipmentTitle: shipment.shipmentTitle,
+            bidderId: req.user._id,
+            bidderName: populatedBid.carrier.companyName || populatedBid.carrier.name,
+            bidPrice: price,
+            bidCurrency: currency || 'USD',
+            bidEta: eta,
+            bidMessage: message
+          },
+          actions: [
+            {
+              label: 'View Bid',
+              action: 'view',
+              url: `/shipments/${shipment._id}`,
+              method: 'GET'
+            }
+          ]
+        };
 
-    // New: Create or get conversation after bid is placed
-    const conversationData = {
-      body: { recipientId: shipment.user, shipmentId: shipmentId }, // Shipper is the recipient
-      user: req.user // Carrier is the sender
-    };
-    
-    // Simulate req and res for chatCreateConversation
-    let conversationRes = {};
-    const mockChatRes = {
-        status: (code) => {
+        await NotificationService.createNotification(notificationData);
+
+        // Create or get conversation after bid is placed
+        const conversationData = {
+          body: { recipientId: shipment.user, shipmentId: shipmentId },
+          user: req.user
+        };
+        
+        let conversationRes = {};
+        const mockChatRes = {
+          status: (code) => {
             conversationRes.statusCode = code;
             return mockChatRes;
-        },
-        json: (data) => {
+          },
+          json: (data) => {
             conversationRes.data = data;
-        }
-    };
-    await chatCreateConversation(conversationData, mockChatRes); // Pass mock req and res
+          }
+        };
+        await chatCreateConversation(conversationData, mockChatRes);
 
-    let conversation = null;
-    if (conversationRes.statusCode === 201 || conversationRes.statusCode === 200) {
-        conversation = conversationRes.data; // Get the created or existing conversation
+        let conversation = null;
+        if (conversationRes.statusCode === 201 || conversationRes.statusCode === 200) {
+          conversation = conversationRes.data;
 
-        // Log the conversation ID for debugging
-        console.log("DEBUG: createBid - Created/Retrieved Conversation ID:", conversation._id);
-
-        // New: Emit a socket event to the shipper to notify them of a new bid and conversation
-        const io = getIO();
-        io.to(shipment.user.toString()).emit('new-bid-for-shipper', {
+          // Emit socket events
+          const io = getIO();
+          io.to(shipment.user.toString()).emit('new-bid-for-shipper', {
             shipmentId: shipmentId,
             conversationId: conversation._id,
-            bid: populatedBid.toObject() // Include bid details for the notification
-        });
-        
-        // Emit notification refresh event to the user
-        io.to(shipment.user.toString()).emit('notification-refresh', {
+            bid: populatedBid.toObject()
+          });
+          
+          io.to(shipment.user.toString()).emit('notification-refresh', {
             type: 'bid_received',
             message: 'You have a new bid notification'
-        });
+          });
 
-    } else {
-        console.error("Failed to create/get conversation:", conversationRes.data);
-    }
-
-    const io = getIO();
-    io.emit('new-bid', populatedBid); // Emit new bid event
-
-    res.status(201).json({ ...populatedBid.toObject(), conversationId: conversation ? conversation._id : null }); // Return conversationId
+          io.emit('new-bid', populatedBid);
+        }
+      } catch (notificationError) {
+        console.error('❌ Error creating bid notification:', notificationError);
+      }
+    });
   } catch (err) {
     console.error('Create bid error:', err);
     res.status(500).json({ message: 'Error creating bid', error: err.message });

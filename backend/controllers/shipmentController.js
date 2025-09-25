@@ -13,22 +13,7 @@ const parseDate = (val) => (val ? new Date(val) : undefined);
 // Create a new shipment
 const createShipment = async (req, res) => {
   try {
-    console.log("🔍 createShipment - Request received");
-    console.log("🔍 createShipment - Headers:", req.headers);
-    console.log("🔍 createShipment - Files:", req.files);
-    console.log("🔍 createShipment - Body:", req.body);
-    
     const data = req.body;
-
-    // Debug: Log the incoming data to see what's being received
-    console.log("📦 Creating shipment with data:", {
-      shipmentTitle: data.shipmentTitle,
-      pickupCity: data.pickupCity,
-      pickupCountry: data.pickupCountry,
-      deliveryCity: data.deliveryCity,
-      deliveryCountry: data.deliveryCountry,
-      user: req.user._id,
-    });
 
     // Handle file uploads
     if (req.files) {
@@ -51,68 +36,59 @@ const createShipment = async (req, res) => {
     const populatedShipment = await shipment.populate(
       "user",
       "name email companyName country"
-    ); // Populate for emitting
+    );
 
-    // Debug: Log the created shipment to see what was saved
-    console.log("📦 Created shipment:", {
-      _id: shipment._id,
-      shipmentTitle: shipment.shipmentTitle,
-      pickupCity: shipment.pickupCity,
-      pickupCountry: shipment.pickupCountry,
-      deliveryCity: shipment.deliveryCity,
-      deliveryCountry: shipment.deliveryCountry,
+    // Send response immediately
+    res.status(201).json({
+      success: true,
+      shipment: populatedShipment,
     });
 
-    const io = getIO();
-    io.emit("new-shipment", populatedShipment); // Emit new shipment event to all connected clients
+    // Handle async operations after response
+    setImmediate(async () => {
+      try {
+        const io = getIO();
+        io.emit("new-shipment", populatedShipment);
 
-    // Create notifications for shipment creation
-    try {
-      console.log("📦 Creating notifications for new shipment:", shipment._id);
-
-      // 1. Notification for the user who created the shipment
-      const userNotificationData = {
-        recipient: req.user._id,
-        type: "shipment_created",
-        title: "Shipment Created Successfully",
-        message: `Your shipment "${shipment.shipmentTitle}" has been created and is now available for logistics providers to bid on.`,
-        priority: "medium",
-        relatedEntity: {
-          type: "shipment",
-          id: shipment._id,
-        },
-        metadata: {
-          shipmentId: shipment._id,
-          shipmentTitle: shipment.shipmentTitle,
-          pickupCity: shipment.pickupCity,
-          pickupCountry: shipment.pickupCountry,
-          deliveryCity: shipment.deliveryCity,
-          deliveryCountry: shipment.deliveryCountry,
-          estimatedValue: shipment.estimatedValue,
-        },
-        actions: [
-          {
-            label: "View Shipment",
-            action: "view",
-            url: `/shipments/${shipment._id}`,
-            method: "GET",
+        // Create notifications asynchronously
+        const userNotificationData = {
+          recipient: req.user._id,
+          type: "shipment_created",
+          title: "Shipment Created Successfully",
+          message: `Your shipment "${shipment.shipmentTitle}" has been created and is now available for logistics providers to bid on.`,
+          priority: "medium",
+          relatedEntity: {
+            type: "shipment",
+            id: shipment._id,
           },
-        ],
-      };
+          metadata: {
+            shipmentId: shipment._id,
+            shipmentTitle: shipment.shipmentTitle,
+            pickupCity: shipment.pickupCity,
+            pickupCountry: shipment.pickupCountry,
+            deliveryCity: shipment.deliveryCity,
+            deliveryCountry: shipment.deliveryCountry,
+            estimatedValue: shipment.estimatedValue,
+          },
+          actions: [
+            {
+              label: "View Shipment",
+              action: "view",
+              url: `/shipments/${shipment._id}`,
+              method: "GET",
+            },
+          ],
+        };
 
-      await NotificationService.createNotification(userNotificationData);
-      console.log("✅ User notification created for shipment creation");
+        await NotificationService.createNotification(userNotificationData);
 
-      // 2. Notifications for all logistics providers
-      const logisticsUsers = await User.find({
-        role: "logistics",
-        isVerified: true,
-      }).select("_id name companyName");
-      console.log(
-        `📋 Found ${logisticsUsers.length} verified logistics providers`
-      );
+        // 2. Notifications for all logistics providers
+        const logisticsUsers = await User.find({
+          role: "logistics",
+          isVerified: true,
+        }).select("_id name companyName");
 
-      if (logisticsUsers.length > 0) {
+        if (logisticsUsers.length > 0) {
         // Debug: Log shipment data to see what's available
         console.log("🔍 Shipment data for notification:", {
           shipmentTitle: shipment.shipmentTitle,
@@ -223,21 +199,14 @@ const createShipment = async (req, res) => {
         }));
 
         await NotificationService.createBulkNotifications(adminNotifications);
-        console.log(
-          `✅ Created ${adminNotifications.length} notifications for admin users`
-        );
       }
-    } catch (notificationError) {
-      console.error(
-        "❌ Error creating shipment notifications:",
-        notificationError
-      );
-      // Don't fail the shipment creation if notification creation fails
-    }
-
-    return res.status(201).json({
-      success: true,
-      shipment: populatedShipment,
+      } catch (notificationError) {
+        console.error(
+          "❌ Error creating shipment notifications:",
+          notificationError
+        );
+        // Don't fail the shipment creation if notification creation fails
+      }
     });
   } catch (err) {
     console.error("❌ ERROR: createShipment - Error creating shipment:", err);
@@ -257,42 +226,40 @@ const createShipment = async (req, res) => {
 // Fetch all shipments for logged-in user
 const getShipments = async (req, res) => {
   try {
-    console.log("DEBUG: getShipments - User ID:", req.user._id); // Log the user ID
     const query = {
       user: req.user._id,
-      status: { $in: ["open", "accepted", "delivered"] }, // Fetch 'open', 'accepted', and 'delivered' shipments
+      status: { $in: ["open", "accepted", "delivered"] },
     };
-    console.log("DEBUG: getShipments - Query:", query); // Log the query
 
     const shipments = await Shipment.find(query).sort({
       createdAt: -1,
     });
-    console.log("DEBUG: getShipments - Shipments found:", shipments.length); // Log number of shipments
 
-    // Get accepted bid information for each shipment
+    // Get accepted bid information for each shipment using aggregation
     const Bid = require("../models/Bid");
-    const shipmentsWithBids = await Promise.all(
-      shipments.map(async (shipment) => {
-        const acceptedBid = await Bid.findOne({
-          shipment: shipment._id,
-          status: "accepted",
-        });
-
-        return {
-          ...shipment.toObject(),
-          acceptedBid: acceptedBid
-            ? {
-                _id: acceptedBid._id,
-                price: acceptedBid.price,
-                currency: acceptedBid.currency,
-                eta: acceptedBid.eta,
-                message: acceptedBid.message,
-                createdAt: acceptedBid.createdAt,
-              }
-            : null,
-        };
-      })
-    );
+    const shipmentIds = shipments.map(s => s._id);
+    
+    const acceptedBids = await Bid.find({
+      shipment: { $in: shipmentIds },
+      status: "accepted",
+    }).select("shipment price currency eta message createdAt");
+    
+    const bidMap = {};
+    acceptedBids.forEach(bid => {
+      bidMap[bid.shipment.toString()] = {
+        _id: bid._id,
+        price: bid.price,
+        currency: bid.currency,
+        eta: bid.eta,
+        message: bid.message,
+        createdAt: bid.createdAt,
+      };
+    });
+    
+    const shipmentsWithBids = shipments.map(shipment => ({
+      ...shipment.toObject(),
+      acceptedBid: bidMap[shipment._id.toString()] || null,
+    }));
 
     return res.json({
       success: true,
