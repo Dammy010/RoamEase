@@ -768,26 +768,52 @@ const ShipmentForm = () => {
         return;
       }
 
-      const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (
-          ["photos", "documents", "confirmDetails", "agreeToPolicy"].includes(
-            key
+      // Check if there are any files to upload
+      const hasFiles = (formData.photos && formData.photos.length > 0) || 
+                      (formData.documents && formData.documents.length > 0);
+
+      let data;
+      let contentType;
+
+      if (hasFiles) {
+        // Use FormData for file uploads
+        data = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          if (
+            ["photos", "documents", "confirmDetails", "agreeToPolicy"].includes(
+              key
+            )
           )
-        )
-          return;
-        if (value !== undefined && value !== null) data.append(key, value);
-      });
-      // Only append files if they exist
-      if (formData.photos && formData.photos.length > 0) {
-        formData.photos.forEach((file) => data.append("photos", file));
-      }
-      if (formData.documents && formData.documents.length > 0) {
-        formData.documents.forEach((file) => data.append("documents", file));
+            return;
+          if (value !== undefined && value !== null) data.append(key, value);
+        });
+        // Only append files if they exist
+        if (formData.photos && formData.photos.length > 0) {
+          formData.photos.forEach((file) => data.append("photos", file));
+        }
+        if (formData.documents && formData.documents.length > 0) {
+          formData.documents.forEach((file) => data.append("documents", file));
+        }
+        contentType = 'multipart/form-data';
+      } else {
+        // Use regular JSON for no files
+        data = {};
+        Object.entries(formData).forEach(([key, value]) => {
+          if (
+            ["photos", "documents", "confirmDetails", "agreeToPolicy"].includes(
+              key
+            )
+          )
+            return;
+          if (value !== undefined && value !== null) data[key] = value;
+        });
+        contentType = 'application/json';
       }
 
+      console.log("🔍 Form submission:", { hasFiles, contentType, data });
+
       setLoading(true);
-      dispatch(postShipment(data)).finally(() => setLoading(false));
+      dispatch(postShipment({ data, contentType })).finally(() => setLoading(false));
     },
     [dispatch, formData]
   );

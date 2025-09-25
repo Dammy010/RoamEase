@@ -6,14 +6,23 @@ import { toast } from 'react-toastify';
 // Post shipment
 export const postShipment = createAsyncThunk(
   'shipment/post',
-  async (data, thunkAPI) => {
+  async ({ data, contentType }, thunkAPI) => {
     try {
-      const res = await api.post('/shipments', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      console.log("🔍 postShipment - Sending data:", { contentType, data });
+      
+      const headers = {};
+      if (contentType === 'multipart/form-data') {
+        // Don't set Content-Type for FormData, let browser set it with boundary
+        // The browser will automatically set: multipart/form-data; boundary=----WebKitFormBoundary...
+      } else {
+        headers['Content-Type'] = 'application/json';
+      }
+      
+      const res = await api.post('/shipments', data, { headers });
       toast.success('Shipment posted successfully');
       return res.data; // { success, shipment }
     } catch (err) {
+      console.error("❌ postShipment error:", err);
       const message = err.response?.data?.message || 'Failed to post shipment';
       toast.error(message);
       return thunkAPI.rejectWithValue(message);

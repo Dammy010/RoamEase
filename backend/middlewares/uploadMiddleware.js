@@ -102,6 +102,26 @@ const upload = multer({
   preservePath: true // Preserve the full path of uploaded files
 });
 
+// Create a middleware that handles both file uploads and no files
+const flexibleUpload = (req, res, next) => {
+  console.log("🔍 flexibleUpload - Content-Type:", req.headers['content-type']);
+  console.log("🔍 flexibleUpload - Request body keys:", Object.keys(req.body || {}));
+  
+  // If no files are being uploaded, skip multer entirely
+  if (!req.headers['content-type'] || !req.headers['content-type'].includes('multipart/form-data')) {
+    console.log("🔍 flexibleUpload - No multipart data, skipping multer");
+    // Set empty files object for consistency
+    req.files = {};
+    return next();
+  }
+  
+  // Use multer for file uploads
+  upload.fields([
+    { name: "photos", maxCount: 10 },
+    { name: "documents", maxCount: 10 },
+  ])(req, res, next);
+};
+
 // Add error handling middleware
 const handleUploadError = (error, req, res, next) => {
   console.error("❌ Upload middleware error:", error);
@@ -134,5 +154,6 @@ const handleUploadError = (error, req, res, next) => {
 
 module.exports = {
   upload,
+  flexibleUpload,
   handleUploadError
 };

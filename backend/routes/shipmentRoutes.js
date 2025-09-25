@@ -24,16 +24,11 @@ const {
 } = require("../controllers/shipmentController");
 
 const { protect, allowRoles } = require("../middlewares/authMiddleware"); // Destructure both protect and allowRoles
-const { upload, handleUploadError } = require("../middlewares/uploadMiddleware");
+const { flexibleUpload, handleUploadError } = require("../middlewares/uploadMiddleware");
 const { locationUpdateRateLimit } = require("../middlewares/locationRateLimit");
 
-const shipmentUpload = upload.fields([
-  { name: "photos", maxCount: 10 },
-  { name: "documents", maxCount: 10 },
-]);
-
 // Routes
-router.post("/", protect, shipmentUpload, handleUploadError, createShipment);
+router.post("/", protect, flexibleUpload, handleUploadError, createShipment);
 router.get("/", protect, getShipments);
 router.get("/history", protect, getShipmentHistory); // 👈 new
 
