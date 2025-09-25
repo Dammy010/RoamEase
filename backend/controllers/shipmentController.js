@@ -383,18 +383,16 @@ const updateShipmentStatus = async (req, res) => {
     const populatedShipment = await shipment.populate(
       "user",
       "name email companyName country"
-    ); // Populate for emitting
-    const io = getIO();
-    io.emit("shipment-updated", populatedShipment); // Emit shipment updated event
+    );
 
-    // Create notifications for shipment status update
-    try {
-      console.log(
-        "📦 Creating notifications for shipment status update:",
-        shipment._id,
-        "to",
-        status
-      );
+    // Send response immediately
+    res.json({ success: true, shipment: populatedShipment });
+
+    // Handle async operations after response
+    setImmediate(async () => {
+      try {
+        const io = getIO();
+        io.emit("shipment-updated", populatedShipment);
 
       // 1. Notification for the shipment owner
       const userNotificationData = {
@@ -515,15 +513,13 @@ const updateShipmentStatus = async (req, res) => {
           );
         }
       }
-    } catch (notificationError) {
-      console.error(
-        "❌ Error creating status update notifications:",
-        notificationError
-      );
-      // Don't fail the status update if notification creation fails
-    }
-
-    return res.json({ success: true, shipment: populatedShipment });
+      } catch (notificationError) {
+        console.error(
+          "❌ Error creating status update notifications:",
+          notificationError
+        );
+      }
+    });
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -895,27 +891,26 @@ const markAsDeliveredByLogistics = async (req, res) => {
       "name email companyName country"
     );
 
-    // Emit socket event for real-time updates
-    const io = getIO();
-    io.emit("shipment-delivered-by-logistics", populatedShipment);
+    // Send response immediately
+    res.json({ success: true, shipment: populatedShipment });
 
-    // Emit specific event to the user
-    io.emit(`user-${shipment.user._id}`, {
-      type: "shipment-delivered",
-      message: `Your shipment "${
-        shipment.shipmentTitle
-      }" has been delivered by ${
-        req.user.companyName || req.user.name
-      }. Please confirm receipt.`,
-      shipment: populatedShipment,
-    });
+    // Handle async operations after response
+    setImmediate(async () => {
+      try {
+        // Emit socket event for real-time updates
+        const io = getIO();
+        io.emit("shipment-delivered-by-logistics", populatedShipment);
 
-    // Create notifications for shipment delivery
-    try {
-      console.log(
-        "📦 Creating notifications for shipment delivery:",
-        shipment._id
-      );
+        // Emit specific event to the user
+        io.emit(`user-${shipment.user._id}`, {
+          type: "shipment-delivered",
+          message: `Your shipment "${
+            shipment.shipmentTitle
+          }" has been delivered by ${
+            req.user.companyName || req.user.name
+          }. Please confirm receipt.`,
+          shipment: populatedShipment,
+        });
 
       // 1. Notification for the user (shipment owner)
       const userNotificationData = {
@@ -996,18 +991,12 @@ const markAsDeliveredByLogistics = async (req, res) => {
           `✅ Created ${adminNotifications.length} notifications for admin users`
         );
       }
-    } catch (notificationError) {
-      console.error(
-        "❌ Error creating delivery notifications:",
-        notificationError
-      );
-    }
-
-    return res.json({
-      success: true,
-      message:
-        "Shipment marked as delivered by logistics company. User has been notified to confirm receipt.",
-      shipment: populatedShipment,
+      } catch (notificationError) {
+        console.error(
+          "❌ Error creating delivery notifications:",
+          notificationError
+        );
+      }
     });
   } catch (err) {
     console.error(
@@ -1157,24 +1146,27 @@ const markAsDeliveredByUser = async (req, res) => {
     );
 
     // Emit socket event for real-time updates
-    const io = getIO();
-    io.emit("shipment-delivered-by-user", populatedShipment);
+    // Send response immediately
+    res.json({
+      success: true,
+      message: "Shipment delivery confirmed successfully.",
+      shipment: populatedShipment,
+    });
 
-    // Emit specific event to the logistics company
-    if (shipment.deliveredByLogistics) {
-      io.emit(`user-${shipment.deliveredByLogistics._id}`, {
-        type: "shipment-delivered",
-        message: `Your delivery of "${shipment.shipmentTitle}" has been confirmed by the user.`,
-        shipment: populatedShipment,
-      });
-    }
+    // Handle async operations after response
+    setImmediate(async () => {
+      try {
+        const io = getIO();
+        io.emit("shipment-delivered-by-user", populatedShipment);
 
-    // Create notifications for shipment receipt confirmation
-    try {
-      console.log(
-        "📦 Creating notifications for shipment receipt confirmation:",
-        shipment._id
-      );
+        // Emit specific event to the logistics company
+        if (shipment.deliveredByLogistics) {
+          io.emit(`user-${shipment.deliveredByLogistics._id}`, {
+            type: "shipment-delivered",
+            message: `Your delivery of "${shipment.shipmentTitle}" has been confirmed by the user.`,
+            shipment: populatedShipment,
+          });
+        }
 
       // 1. Notification for the logistics company
       if (shipment.deliveredByLogistics) {
@@ -1252,13 +1244,7 @@ const markAsDeliveredByUser = async (req, res) => {
         "❌ Error creating receipt confirmation notifications:",
         notificationError
       );
-    }
-
-    return res.json({
-      success: true,
-      message:
-        "Delivery confirmed successfully! You can now rate the delivery service.",
-      shipment: populatedShipment,
+      }
     });
   } catch (err) {
     console.error(

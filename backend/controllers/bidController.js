@@ -219,6 +219,7 @@ const acceptBid = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to accept this bid' });
     }
 
+    // Update bid and shipment status
     bid.status = 'accepted';
     await bid.save();
 
@@ -235,24 +236,25 @@ const acceptBid = async (req, res) => {
       .populate('carrier', 'name email companyName country')
       .populate('shipment');
 
-    const io = getIO();
-    io.emit('bid-updated', populatedBid); // Emit bid updated event
-
-    // Also emit a shipment-updated event because the shipment status has changed
-    const populatedShipment = await shipment.populate('user', 'name email companyName country');
-    io.emit('shipment-updated', populatedShipment);
-
-    // Create notification for the logistics company whose bid was accepted
-    try {
-      const NotificationService = require('../services/notificationService');
-      await NotificationService.notifyBidAccepted(populatedBid, populatedBid.carrier);
-      console.log('✅ Bid acceptance notification sent to logistics company:', populatedBid.carrier._id);
-    } catch (notificationError) {
-      console.error('❌ Error sending bid acceptance notification:', notificationError);
-      // Don't fail the bid acceptance if notification fails
-    }
-
+    // Send response immediately
     res.json(populatedBid);
+
+    // Handle async operations after response
+    setImmediate(async () => {
+      try {
+        const io = getIO();
+        io.emit('bid-updated', populatedBid);
+
+        const populatedShipment = await shipment.populate('user', 'name email companyName country');
+        io.emit('shipment-updated', populatedShipment);
+
+        // Create notification for the logistics company whose bid was accepted
+        const NotificationService = require('../services/notificationService');
+        await NotificationService.notifyBidAccepted(populatedBid, populatedBid.carrier);
+      } catch (notificationError) {
+        console.error('❌ Error sending bid acceptance notification:', notificationError);
+      }
+    });
   } catch (err) {
     console.error('Accept bid error:', err);
     res.status(500).json({ message: 'Error accepting bid', error: err.message });
