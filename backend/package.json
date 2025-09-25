@@ -42,7 +42,7 @@
     "build": "npm ci --force",
     "check-suspensions": "node scripts/checkSuspensions.js",
     "migrate-photos": "node scripts/migratePhotosToCloudinary.js",
-    "test-email": "node scripts/testEmail.js"
+    "test-email": "node scripts/testEmailNotifications.js"
   },
   "keywords": [],
   "author": "",
