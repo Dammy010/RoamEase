@@ -33,29 +33,39 @@ const ensureDir = (dir) => {
 // Create storage configurations for different file types
 const createStorage = (folder) => {
   if (isCloudinaryConfigured()) {
-    return new CloudinaryStorage({
-      cloudinary: cloudinary,
-      params: {
-        folder: folder,
-        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'],
-        transformation: [{ width: 1000, height: 1000, crop: 'limit' }], // Resize images
-      },
-    });
+    try {
+      return new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+          folder: folder,
+          allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'],
+          transformation: [{ width: 1000, height: 1000, crop: 'limit' }], // Resize images
+        },
+      });
+    } catch (error) {
+      console.error('❌ CloudinaryStorage error:', error.message);
+      // Fallback to local storage if Cloudinary fails
+      return createLocalStorage(folder);
+    }
   } else {
-    // Fallback to local storage
-    const localDir = `uploads/${folder.split('/').pop()}`;
-    ensureDir(localDir);
-    
-    return multer.diskStorage({
-      destination: (req, file, cb) => {
-        cb(null, localDir);
-      },
-      filename: (req, file, cb) => {
-        const filename = `${Date.now()}-${file.originalname}`;
-        cb(null, filename);
-      },
-    });
+    return createLocalStorage(folder);
   }
+};
+
+// Create local storage configuration
+const createLocalStorage = (folder) => {
+  const localDir = `uploads/${folder.split('/').pop()}`;
+  ensureDir(localDir);
+  
+  return multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, localDir);
+    },
+    filename: (req, file, cb) => {
+      const filename = `${Date.now()}-${file.originalname}`;
+      cb(null, filename);
+    },
+  });
 };
 
 // Storage configurations

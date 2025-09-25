@@ -25,16 +25,11 @@ const createShipment = async (req, res) => {
       user: req.user._id,
     });
 
-    // Handle file uploads (Cloudinary or local)
+    // Handle file uploads
     if (req.files) {
-      if (req.files.photos) {
-        data.photos = req.files.photos.map((f) => f.path);
-        console.log("📸 Photos uploaded:", data.photos);
-      }
-      if (req.files.documents) {
+      if (req.files.photos) data.photos = req.files.photos.map((f) => f.path);
+      if (req.files.documents)
         data.documents = req.files.documents.map((f) => f.path);
-        console.log("📄 Documents uploaded:", data.documents);
-      }
     }
 
     // Convert numeric fields
