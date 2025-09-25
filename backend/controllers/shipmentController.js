@@ -13,6 +13,11 @@ const parseDate = (val) => (val ? new Date(val) : undefined);
 // Create a new shipment
 const createShipment = async (req, res) => {
   try {
+    console.log("🔍 createShipment - Request received");
+    console.log("🔍 createShipment - Headers:", req.headers);
+    console.log("🔍 createShipment - Files:", req.files);
+    console.log("🔍 createShipment - Body:", req.body);
+    
     const data = req.body;
 
     // Debug: Log the incoming data to see what's being received
@@ -235,11 +240,16 @@ const createShipment = async (req, res) => {
       shipment: populatedShipment,
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ ERROR: createShipment - Error creating shipment:", err);
+    console.error("❌ ERROR: createShipment - Error stack:", err.stack);
+    console.error("❌ ERROR: createShipment - Error name:", err.name);
+    console.error("❌ ERROR: createShipment - Error message:", err.message);
+    
     return res.status(500).json({
       success: false,
       message: "Error creating shipment",
       error: err.message,
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
 };

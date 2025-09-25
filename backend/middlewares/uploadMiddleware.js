@@ -102,4 +102,37 @@ const upload = multer({
   preservePath: true // Preserve the full path of uploaded files
 });
 
-module.exports = upload;
+// Add error handling middleware
+const handleUploadError = (error, req, res, next) => {
+  console.error("❌ Upload middleware error:", error);
+  console.error("❌ Upload error details:", {
+    message: error.message,
+    code: error.code,
+    field: error.field,
+    name: error.name
+  });
+  
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 50MB.',
+        error: error.message
+      });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        message: 'Too many files. Maximum is 10 files per field.',
+        error: error.message
+      });
+    }
+  }
+  
+  next(error);
+};
+
+module.exports = {
+  upload,
+  handleUploadError
+};
