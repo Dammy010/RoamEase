@@ -778,8 +778,13 @@ const ShipmentForm = () => {
           return;
         if (value !== undefined && value !== null) data.append(key, value);
       });
-      formData.photos.forEach((file) => data.append("photos", file));
-      formData.documents.forEach((file) => data.append("documents", file));
+      // Only append files if they exist
+      if (formData.photos && formData.photos.length > 0) {
+        formData.photos.forEach((file) => data.append("photos", file));
+      }
+      if (formData.documents && formData.documents.length > 0) {
+        formData.documents.forEach((file) => data.append("documents", file));
+      }
 
       setLoading(true);
       dispatch(postShipment(data)).finally(() => setLoading(false));
