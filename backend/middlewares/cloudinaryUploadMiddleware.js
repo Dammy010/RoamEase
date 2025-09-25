@@ -1,24 +1,61 @@
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Check if Cloudinary is configured
+const isCloudinaryConfigured = () => {
+  return process.env.CLOUDINARY_CLOUD_NAME && 
+         process.env.CLOUDINARY_API_KEY && 
+         process.env.CLOUDINARY_API_SECRET;
+};
+
+// Configure Cloudinary only if credentials are available
+if (isCloudinaryConfigured()) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  console.log('✅ Cloudinary configured successfully');
+} else {
+  console.log('⚠️ Cloudinary not configured, using local storage fallback');
+}
+
+// Ensure upload directories exist for local storage
+const ensureDir = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
 
 // Create storage configurations for different file types
 const createStorage = (folder) => {
-  return new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: folder,
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'],
-      transformation: [{ width: 1000, height: 1000, crop: 'limit' }], // Resize images
-    },
-  });
+  if (isCloudinaryConfigured()) {
+    return new CloudinaryStorage({
+      cloudinary: cloudinary,
+      params: {
+        folder: folder,
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'],
+        transformation: [{ width: 1000, height: 1000, crop: 'limit' }], // Resize images
+      },
+    });
+  } else {
+    // Fallback to local storage
+    const localDir = `uploads/${folder.split('/').pop()}`;
+    ensureDir(localDir);
+    
+    return multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, localDir);
+      },
+      filename: (req, file, cb) => {
+        const filename = `${Date.now()}-${file.originalname}`;
+        cb(null, filename);
+      },
+    });
+  }
 };
 
 // Storage configurations
