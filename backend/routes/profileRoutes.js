@@ -8,7 +8,7 @@ const {
   getProfileStats
 } = require('../controllers/profileController');
 const { protect } = require('../middlewares/authMiddleware');
-const uploadMiddleware = require('../middlewares/uploadMiddleware');
+const { upload: uploadMiddleware } = require('../middlewares/uploadMiddleware');
 
 // All routes require authentication
 router.use(protect);

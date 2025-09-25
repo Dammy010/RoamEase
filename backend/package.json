@@ -41,8 +41,7 @@
     "dev": "nodemon index.js",
     "build": "npm ci --force",
     "check-suspensions": "node scripts/checkSuspensions.js",
-    "migrate-photos": "node scripts/migratePhotosToCloudinary.js",
-    "test-email": "node scripts/testEmailNotifications.js"
+    "migrate-photos": "node scripts/migratePhotosToCloudinary.js"
   },
   "keywords": [],
   "author": "",

@@ -10,7 +10,7 @@ const {
   markConversationAsRead,
   deleteMessage
 } = require('../controllers/chatController');
-const upload = require('../middlewares/uploadMiddleware');
+const { upload } = require('../middlewares/uploadMiddleware');
 
 // Chat routes
 router.post('/conversations', protect, createConversation);
