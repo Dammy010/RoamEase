@@ -1,8 +1,21 @@
 // src/services/api.js
 import axios from "axios";
 
+// Auto-detect environment and use appropriate API URL
+const getApiBaseURL = () => {
+  // Check if we're in development (localhost) or production
+  if (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  ) {
+    return "http://localhost:5000/api"; // Local development
+  } else {
+    return "https://roamease-3wg1.onrender.com/api"; // Production
+  }
+};
+
 const api = axios.create({
-  baseURL: "https://roamease-3wg1.onrender.com/api", // Render deployment URL
+  baseURL: getApiBaseURL(),
   withCredentials: true, // only if cookies are used
 });
 
@@ -60,12 +73,9 @@ api.interceptors.response.use(
           throw new Error("No refresh token found");
         }
         // Call refresh endpoint
-        const res = await axios.post(
-          "https://roamease-3wg1.onrender.com/api/auth/refresh",
-          {
-            token: refreshToken, // matches backend contract
-          }
-        );
+        const res = await axios.post(`${getApiBaseURL()}/auth/refresh`, {
+          token: refreshToken, // matches backend contract
+        });
         const newAccessToken = res.data.accessToken;
 
         // Save new access token

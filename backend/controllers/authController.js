@@ -1211,68 +1211,47 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// Upload profile picture
-const uploadProfilePicture = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No profile picture file provided",
-      });
-    }
-
-    // Update user with new profile picture
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { profilePicture: req.file.filename },
-      { new: true }
-    ).select(
-      "-password -verificationToken -resetPasswordToken -resetPasswordExpires"
-    );
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Profile picture uploaded successfully",
-      profilePicture: user.profilePicture,
-    });
-  } catch (error) {
-    console.error("Upload profile picture error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error during profile picture upload",
-    });
-  }
-};
+// Upload profile picture function removed - now handled by profileController.js
 
 // Delete profile picture
 const deleteProfilePicture = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Update user to remove profile picture
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $unset: { profilePicture: 1 } },
-      { new: true }
-    ).select(
-      "-password -verificationToken -resetPasswordToken -resetPasswordExpires"
-    );
-
+    // Get user first to check if they have a profile picture
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+
+    // Delete the actual file from disk if it exists
+    if (user.profilePicture) {
+      const fs = require("fs");
+      const path = require("path");
+      const imagePath = path.join(
+        __dirname,
+        "..",
+        "uploads",
+        "profiles",
+        user.profilePicture
+      );
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log(`✅ Deleted profile picture file: ${imagePath}`);
+      }
+    }
+
+    // Update user to remove profile picture from database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $unset: { profilePicture: 1 } },
+      { new: true }
+    ).select(
+      "-password -verificationToken -resetPasswordToken -resetPasswordExpires"
+    );
 
     res.json({
       success: true,
@@ -1300,6 +1279,5 @@ module.exports = {
   forgotPassword,
   validateResetCode,
   resetPassword,
-  uploadProfilePicture,
   deleteProfilePicture,
 };

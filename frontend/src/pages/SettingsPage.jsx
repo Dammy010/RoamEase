@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getProfilePictureUrl } from "../utils/imageUtils";
+// Removed getProfilePictureUrl import - now using profilePictureUrl directly
 import ProfilePictureModal from "../components/shared/ProfilePictureModal";
 import ThemeToggle from "../components/shared/ThemeToggle";
 import { useTheme } from "../contexts/ThemeContext";
@@ -69,7 +69,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {}, [user?.profilePicture]);
+  useEffect(() => {}, [user?.profilePictureUrl]);
   const { theme, toggleTheme, isDark } = useTheme();
   const {
     currency,
@@ -253,7 +253,9 @@ const SettingsPage = () => {
 
     try {
       const { currentPassword, newPassword } = passwordData;
-      const result = await dispatch(changePassword({ currentPassword, newPassword }));
+      const result = await dispatch(
+        changePassword({ currentPassword, newPassword })
+      );
       if (changePassword.fulfilled.match(result)) {
         toast.success("Password changed successfully");
         setShowPasswordForm(false);
@@ -347,12 +349,43 @@ const SettingsPage = () => {
         return;
       }
       const result = await dispatch(uploadProfilePicture(file));
+      console.log("🔍 Upload result:", result);
       if (uploadProfilePicture.fulfilled.match(result)) {
-        // Update user data in Redux instead of reloading
-        dispatch({
-          type: "auth/updateProfilePicture",
-          payload: result.payload.profilePicture,
-        });
+        console.log("✅ Upload successful, payload:", result.payload);
+
+        // Handle both old and new response formats
+        const profilePictureUrl = result.payload.profilePictureUrl || null;
+        const profilePictureId = result.payload.profilePictureId || null;
+        const oldProfilePicture = result.payload.profilePicture || null;
+
+        console.log("🔍 Profile Picture URL from backend:", profilePictureUrl);
+        console.log("🔍 Profile Picture ID from backend:", profilePictureId);
+        console.log("🔍 Old Profile Picture from backend:", oldProfilePicture);
+
+        // Update user data in Redux with new format
+        if (profilePictureUrl && profilePictureId) {
+          // New format with Cloudinary URLs
+          dispatch({
+            type: "auth/updateProfilePicture",
+            payload: {
+              profilePictureUrl: profilePictureUrl,
+              profilePictureId: profilePictureId,
+            },
+          });
+        } else if (oldProfilePicture) {
+          // Temporary: Handle old format until backend is fixed
+          console.warn(
+            "⚠️ Backend still returning old format, this should be fixed"
+          );
+          dispatch({
+            type: "auth/updateProfilePicture",
+            payload: {
+              profilePictureUrl: null, // Will use fallback
+              profilePictureId: null,
+              profilePicture: oldProfilePicture, // Keep for backward compatibility
+            },
+          });
+        }
 
         toast.success("Profile picture updated successfully");
         setShowProfilePictureModal(false);
@@ -446,184 +479,178 @@ const SettingsPage = () => {
 
   const [activeSection, setActiveSection] = useState("profile");
 
-  const renderProfileSection = () => (
-    <div className="space-y-6">
-      {/* Profile Picture */}
-      <div className="flex items-center space-x-6">
-        <div className="relative">
-          <img
-            src={getProfilePictureUrl(user?.profilePicture)}
-            alt="Profile"
-            className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
-            onError={(e) => {
-              console.error("❌ Image load error:", e);
-              console.error("❌ Image src:", e.target.src);
-              console.error("❌ User profile picture:", user?.profilePicture);
-            }}
-            onLoad={() => {
-              console.log(
-                "✅ Image loaded successfully:",
-                getProfilePictureUrl(user?.profilePicture)
-              );
-            }}
-          />
-          <button
-            onClick={() => setShowProfilePictureModal(true)}
-            className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-800 hover:bg-blue-700 transition-colors"
-          >
-            <Camera className="w-4 h-4 text-white" />
-          </button>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {user?.role === "logistics" ? user?.companyName : user?.name}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
-          <button
-            onClick={() => setShowProfilePictureModal(true)}
-            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            Change Photo
-          </button>
-        </div>
-      </div>
-
-      {/* Profile Form */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {user?.role === "logistics" ? "Company Name" : "Full Name"}
-          </label>
-          <input
-            type="text"
-            value={profileData.name}
-            onChange={(e) =>
-              setProfileData({ ...profileData, name: e.target.value })
-            }
-            disabled={!isEditingProfile}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
-              profileErrors.name
-                ? "border-red-500"
-                : "border-gray-300 dark:border-gray-600"
-            }`}
-          />
-          {profileErrors.name && (
-            <p className="mt-1 text-sm text-red-600">{profileErrors.name}</p>
-          )}
+  const renderProfileSection = () => {
+    return (
+      <div className="space-y-6">
+        {/* Profile Picture */}
+        <div className="flex items-center space-x-6">
+          <div className="relative">
+            <img
+              src={user?.profilePictureUrl || "/default-avatar.svg"}
+              alt="Profile"
+              onError={(e) => (e.currentTarget.src = "/default-avatar.svg")}
+              className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
+            />
+            <button
+              onClick={() => setShowProfilePictureModal(true)}
+              className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-800 hover:bg-blue-700 transition-colors"
+            >
+              <Camera className="w-4 h-4 text-white" />
+            </button>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {user?.role === "logistics" ? user?.companyName : user?.name}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
+            <button
+              onClick={() => setShowProfilePictureModal(true)}
+              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Change Photo
+            </button>
+          </div>
         </div>
 
-        {privacySettings?.showEmail !== false && (
+        {/* Profile Form */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email Address
+              {user?.role === "logistics" ? "Company Name" : "Full Name"}
             </label>
             <input
-              type="email"
-              value={profileData.email}
+              type="text"
+              value={profileData.name}
               onChange={(e) =>
-                setProfileData({ ...profileData, email: e.target.value })
+                setProfileData({ ...profileData, name: e.target.value })
               }
               disabled={!isEditingProfile}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
-                profileErrors.email
+                profileErrors.name
                   ? "border-red-500"
                   : "border-gray-300 dark:border-gray-600"
               }`}
             />
-            {profileErrors.email && (
-              <p className="mt-1 text-sm text-red-600">{profileErrors.email}</p>
+            {profileErrors.name && (
+              <p className="mt-1 text-sm text-red-600">{profileErrors.name}</p>
             )}
           </div>
-        )}
 
-        {privacySettings?.showPhone !== false && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              value={profileData.phone}
-              onChange={(e) =>
-                setProfileData({ ...profileData, phone: e.target.value })
-              }
-              disabled={!isEditingProfile}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-            />
-          </div>
-        )}
-
-        {privacySettings?.showLocation !== false && (
-          <>
+          {privacySettings?.showEmail !== false && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Country
+                Email Address
               </label>
               <input
-                type="text"
-                value={profileData.country}
+                type="email"
+                value={profileData.email}
                 onChange={(e) =>
-                  setProfileData({ ...profileData, country: e.target.value })
+                  setProfileData({ ...profileData, email: e.target.value })
+                }
+                disabled={!isEditingProfile}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
+                  profileErrors.email
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+              />
+              {profileErrors.email && (
+                <p className="mt-1 text-sm text-red-600">
+                  {profileErrors.email}
+                </p>
+              )}
+            </div>
+          )}
+
+          {privacySettings?.showPhone !== false && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                value={profileData.phone}
+                onChange={(e) =>
+                  setProfileData({ ...profileData, phone: e.target.value })
                 }
                 disabled={!isEditingProfile}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               />
             </div>
-          </>
-        )}
-      </div>
+          )}
 
-      {/* Profile Actions */}
-      <div className="flex justify-end space-x-4">
-        {isEditingProfile ? (
-          <>
+          {privacySettings?.showLocation !== false && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  value={profileData.country}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, country: e.target.value })
+                  }
+                  disabled={!isEditingProfile}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Profile Actions */}
+        <div className="flex justify-end space-x-4">
+          {isEditingProfile ? (
+            <>
+              <button
+                onClick={() => {
+                  setIsEditingProfile(false);
+                  setProfileData({
+                    name:
+                      user?.role === "logistics"
+                        ? user?.companyName || ""
+                        : user?.name || "",
+                    email: user?.email || "",
+                    phone:
+                      user?.role === "logistics"
+                        ? user?.contactPhone || ""
+                        : user?.phoneNumber || "",
+                    companyName: user?.companyName || "",
+                    country: user?.country || "",
+                  });
+                  setProfileErrors({});
+                }}
+                className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleProfileSave}
+                disabled={updateLoading}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                {updateLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>Save Changes</span>
+              </button>
+            </>
+          ) : (
             <button
-              onClick={() => {
-                setIsEditingProfile(false);
-                setProfileData({
-                  name:
-                    user?.role === "logistics"
-                      ? user?.companyName || ""
-                      : user?.name || "",
-                  email: user?.email || "",
-                  phone:
-                    user?.role === "logistics"
-                      ? user?.contactPhone || ""
-                      : user?.phoneNumber || "",
-                  companyName: user?.companyName || "",
-                  country: user?.country || "",
-                });
-                setProfileErrors({});
-              }}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => setIsEditingProfile(true)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
             >
-              Cancel
+              <Edit3 className="w-4 h-4" />
+              <span>Edit Profile</span>
             </button>
-            <button
-              onClick={handleProfileSave}
-              disabled={updateLoading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-            >
-              {updateLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              <span>Save Changes</span>
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setIsEditingProfile(true)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <Edit3 className="w-4 h-4" />
-            <span>Edit Profile</span>
-          </button>
-        )}
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderNotificationsSection = () => (
     <div className="space-y-6">
@@ -1437,7 +1464,7 @@ const SettingsPage = () => {
           onClose={() => setShowProfilePictureModal(false)}
           onUpload={handleProfilePictureUpload}
           onRemove={handleProfilePictureRemove}
-          profilePicture={getProfilePictureUrl(user?.profilePicture)}
+          profilePicture={user?.profilePictureUrl || "/default-avatar.svg"}
           uploadLoading={updateLoading}
         />
       )}

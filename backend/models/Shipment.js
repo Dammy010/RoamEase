@@ -42,9 +42,13 @@ const shipmentSchema = new mongoose.Schema(
     insuranceRequired: { type: String, enum: ["Yes", "No"], default: "No" },
     handlingInstructions: String,
 
-    // Attachments
-    photos: [{ type: String }],
-    documents: [{ type: String }],
+    // Attachments - Cloudinary URLs
+    photos: [{ type: String }], // Cloudinary secure URLs
+    documents: [{ type: String }], // Cloudinary secure URLs
+
+    // Cloudinary public IDs for cleanup
+    photoIds: [{ type: String }], // Cloudinary public IDs for photos
+    documentIds: [{ type: String }], // Cloudinary public IDs for documents
 
     // Confirmation Flags
     confirmDetails: { type: Boolean, default: false },

@@ -1,82 +1,79 @@
-const mongoose = require("mongoose");
-const {
-  sendSuspensionEmail,
-  sendReactivationEmail,
-} = require("../utils/emailService");
+const emailService = require("../utils/emailService");
 
-// Connect to MongoDB
-const connectDB = async () => {
-  try {
-    await mongoose.connect(
-      process.env.MONGODB_URI || "mongodb://localhost:27017/roamease"
+async function testEmailConfiguration() {
+  console.log("🧪 Testing Email Configuration...");
+
+  // Check environment variables
+  console.log("📋 Environment Variables:");
+  console.log("SMTP_HOST:", process.env.SMTP_HOST ? "✅ Set" : "❌ Missing");
+  console.log("SMTP_PORT:", process.env.SMTP_PORT || "587 (default)");
+  console.log("SMTP_USER:", process.env.SMTP_USER ? "✅ Set" : "❌ Missing");
+  console.log("SMTP_PASS:", process.env.SMTP_PASS ? "✅ Set" : "❌ Missing");
+  console.log("CLIENT_URL:", process.env.CLIENT_URL || "❌ Missing");
+  console.log("APP_NAME:", process.env.APP_NAME || "RoamEase (default)");
+
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
+    console.log(
+      "❌ Email configuration incomplete. Please set SMTP variables."
     );
-    console.log("MongoDB connected for email test");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
+    return;
   }
-};
 
-// Test suspension email
-const testSuspensionEmail = async () => {
+  // Test verification email
+  console.log("\n📧 Testing verification email...");
+  const testEmail = "test@example.com"; // Replace with your test email
+  const testCode = "123456";
+  const testName = "Test User";
+
   try {
-    console.log("🧪 Testing suspension email...");
-
-    const result = await sendSuspensionEmail({
-      to: "test@example.com", // Replace with a real email for testing
-      data: {
-        name: "Test User",
-        suspensionReason: "Testing email functionality",
-        suspensionDuration: "7 days",
-        suspensionEndDate: "January 20, 2025",
-      },
-    });
-
-    console.log("✅ Suspension email test result:", result);
+    const result = await emailService.sendVerificationEmail(
+      testEmail,
+      testCode,
+      testName
+    );
+    if (result.success) {
+      console.log("✅ Verification email test successful!");
+      console.log("Message ID:", result.messageId);
+    } else {
+      console.log("❌ Verification email test failed:", result.error);
+    }
   } catch (error) {
-    console.error("❌ Suspension email test failed:", error);
+    console.log("❌ Verification email test error:", error.message);
   }
-};
 
-// Test reactivation email
-const testReactivationEmail = async () => {
+  // Test notification email
+  console.log("\n🔔 Testing notification email...");
+  const testNotification = {
+    title: "Test Notification",
+    message: "This is a test notification to verify email functionality.",
+    type: "test",
+    priority: "medium",
+  };
+
   try {
-    console.log("🧪 Testing reactivation email...");
-
-    const result = await sendReactivationEmail({
-      to: "test@example.com", // Replace with a real email for testing
-      data: {
-        name: "Test User",
-      },
-    });
-
-    console.log("✅ Reactivation email test result:", result);
+    const result = await emailService.sendNotificationEmail(
+      testEmail,
+      testName,
+      testNotification
+    );
+    if (result.success) {
+      console.log("✅ Notification email test successful!");
+      console.log("Message ID:", result.messageId);
+    } else {
+      console.log("❌ Notification email test failed:", result.error);
+    }
   } catch (error) {
-    console.error("❌ Reactivation email test failed:", error);
+    console.log("❌ Notification email test error:", error.message);
   }
-};
 
-// Run the tests
-const runEmailTests = async () => {
-  await connectDB();
-
-  console.log("📧 Starting email functionality tests...");
-  console.log("⚠️  Make sure to set up your SMTP credentials in .env file");
-  console.log(
-    "⚠️  Replace test@example.com with a real email address for testing"
-  );
-
-  await testSuspensionEmail();
-  await testReactivationEmail();
-
-  await mongoose.connection.close();
-  console.log("Database connection closed");
-  process.exit(0);
-};
-
-// Run if called directly
-if (require.main === module) {
-  runEmailTests();
+  console.log("\n📊 Email Analytics:");
+  const analytics = emailService.getEmailAnalytics();
+  console.log(analytics);
 }
 
-module.exports = { testSuspensionEmail, testReactivationEmail };
+// Run the test
+testEmailConfiguration().catch(console.error);

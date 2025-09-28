@@ -14,7 +14,19 @@ export const initSocket = () => {
     return null;
   }
 
-  socket = io("https://roamease-3wg1.onrender.com", {
+  // Auto-detect environment and use appropriate socket URL
+  const getSocketURL = () => {
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      return "http://localhost:5000"; // Local development
+    } else {
+      return "https://roamease-3wg1.onrender.com"; // Production
+    }
+  };
+
+  socket = io(getSocketURL(), {
     transports: ["websocket", "polling"],
     autoConnect: true,
     withCredentials: true,

@@ -765,7 +765,7 @@ const ActiveShipments = () => {
                                   className="w-full h-24 object-cover rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group-hover:scale-105"
                                   onClick={() =>
                                     window.open(
-                                      `https://roamease-3wg1.onrender.com/${photo}`,
+                                      getStaticAssetUrl(photo),
                                       "_blank"
                                     )
                                   }

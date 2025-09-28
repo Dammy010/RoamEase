@@ -299,7 +299,17 @@ const authSlice = createSlice({
     },
     updateProfilePicture: (state, action) => {
       if (state.user) {
-        state.user.profilePicture = action.payload;
+        // Handle both old format (string) and new format (object with profilePictureUrl and profilePictureId)
+        if (typeof action.payload === "string") {
+          // Old format - just the URL
+          state.user.profilePicture = action.payload;
+        } else if (action.payload && action.payload.profilePictureUrl) {
+          // New format - object with profilePictureUrl and profilePictureId
+          state.user.profilePictureUrl = action.payload.profilePictureUrl;
+          state.user.profilePictureId = action.payload.profilePictureId;
+          // Keep old field for backward compatibility
+          state.user.profilePicture = action.payload.profilePictureUrl;
+        }
         // Update localStorage as well
         localStorage.setItem("user", JSON.stringify(state.user));
       }

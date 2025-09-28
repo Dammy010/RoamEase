@@ -57,6 +57,14 @@ export const uploadProfilePicture = createAsyncThunk(
   "settings/uploadProfilePicture",
   async (file, { rejectWithValue }) => {
     try {
+      // Client-side file size validation (10MB limit)
+      const maxFileSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxFileSize) {
+        return rejectWithValue(
+          "Your file is too large. Please upload an image under 10MB."
+        );
+      }
+
       const formData = new FormData();
       formData.append("profilePicture", file);
       const response = await api.post(
@@ -74,6 +82,15 @@ export const uploadProfilePicture = createAsyncThunk(
       console.error("❌ Redux: Error response:", error.response?.data);
       console.error("❌ Redux: Error status:", error.response?.status);
       console.error("❌ Redux: Error headers:", error.response?.headers);
+
+      // Handle specific error cases
+      if (error.response?.status === 413) {
+        return rejectWithValue(
+          "Your file is too large. Please upload an image under 10MB."
+        );
+      }
+
+      // Return the server's error message or a fallback
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }

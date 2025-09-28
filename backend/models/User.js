@@ -48,6 +48,8 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
     profilePicture: { type: String, default: "" },
+    profilePictureUrl: { type: String, default: "" },
+    profilePictureId: { type: String, default: "" },
 
     // Logistics Provider Fields
     verificationStatus: {

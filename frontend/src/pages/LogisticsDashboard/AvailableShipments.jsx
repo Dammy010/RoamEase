@@ -58,6 +58,7 @@ const AvailableShipments = () => {
   const [isRefreshingProfile, setIsRefreshingProfile] = useState(false);
 
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
+  const [selectedShipment, setSelectedShipment] = useState(null);
   const [bidPrice, setBidPrice] = useState("");
   const [bidEta, setBidEta] = useState("");
   const [bidMessage, setBidMessage] = useState("");
@@ -174,18 +175,22 @@ const AvailableShipments = () => {
   };
 
   const handlePlaceBidClick = (shipmentId) => {
+    const shipment = availableShipments.find((s) => s._id === shipmentId);
     setSelectedShipmentId(shipmentId);
+    setSelectedShipment(shipment);
     setShowBidModal(true);
   };
 
   const handleEditBidClick = (shipmentId) => {
     const existingBid = getBidForShipment(shipmentId);
     if (existingBid) {
+      const shipment = availableShipments.find((s) => s._id === shipmentId);
       setEditingBid(existingBid);
       setBidPrice(existingBid.price.toString());
       setBidEta(existingBid.eta);
       setBidMessage(existingBid.message || "");
       setSelectedShipmentId(shipmentId);
+      setSelectedShipment(shipment);
       setShowEditBidModal(true);
     }
   };
@@ -208,6 +213,8 @@ const AvailableShipments = () => {
     const result = await dispatch(createBid(bidData));
     if (createBid.fulfilled.match(result)) {
       setShowBidModal(false);
+      setSelectedShipmentId(null);
+      setSelectedShipment(null);
       setBidPrice("");
       setBidEta("");
       setBidMessage("");
@@ -253,6 +260,8 @@ const AvailableShipments = () => {
     if (updateBid.fulfilled.match(result)) {
       setShowEditBidModal(false);
       setEditingBid(null);
+      setSelectedShipmentId(null);
+      setSelectedShipment(null);
       setBidPrice("");
       setBidEta("");
       setBidMessage("");
@@ -1408,12 +1417,12 @@ const AvailableShipments = () => {
                             {shipment.photos.slice(0, 4).map((photo, index) => (
                               <div key={index} className="relative group">
                                 <img
-                                  src={`https://roamease-3wg1.onrender.com/${photo}`}
+                                  src={getStaticAssetUrl(photo)}
                                   alt={`Shipment photo ${index + 1}`}
                                   className="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300"
                                   onClick={() =>
                                     window.open(
-                                      `https://roamease-3wg1.onrender.com/${photo}`,
+                                      getStaticAssetUrl(photo),
                                       "_blank"
                                     )
                                   }
@@ -1448,7 +1457,7 @@ const AvailableShipments = () => {
                                 key={index}
                                 onClick={() =>
                                   window.open(
-                                    `https://roamease-3wg1.onrender.com/${document}`,
+                                    getStaticAssetUrl(document),
                                     "_blank"
                                   )
                                 }
@@ -1659,7 +1668,12 @@ const AvailableShipments = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => setShowEditBidModal(false)}
+                    onClick={() => {
+                      setShowEditBidModal(false);
+                      setSelectedShipmentId(null);
+                      setSelectedShipment(null);
+                      setEditingBid(null);
+                    }}
                     className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
                   >
                     <span className="text-white text-xl font-bold">×</span>
@@ -1766,7 +1780,12 @@ const AvailableShipments = () => {
                   <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <button
                       type="button"
-                      onClick={() => setShowEditBidModal(false)}
+                      onClick={() => {
+                        setShowEditBidModal(false);
+                        setSelectedShipmentId(null);
+                        setSelectedShipment(null);
+                        setEditingBid(null);
+                      }}
                       className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 font-semibold"
                     >
                       Cancel

@@ -348,11 +348,21 @@ const ProfilePage = () => {
                       onClick={() => setShowFullScreenImage(true)}
                       onError={(e) => {
                         console.error(
-                          "Profile picture failed to load:",
+                          "❌ Profile picture failed to load:",
                           e.target.src
+                        );
+                        console.error(
+                          "❌ User profile picture:",
+                          user.profilePicture
                         );
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
+                      }}
+                      onLoad={() => {
+                        console.log(
+                          "✅ Profile picture loaded successfully:",
+                          getProfilePictureUrl(user.profilePicture)
+                        );
                       }}
                     />
                   ) : null}
@@ -417,7 +427,7 @@ const ProfilePage = () => {
                         <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-8 rounded"></div>
                       ) : (
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {stats.rating}
+                          {stats.rating > 0 ? stats.rating : "No ratings yet"}
                         </span>
                       )}
                     </div>
@@ -724,7 +734,7 @@ const ProfilePage = () => {
                           <div className="flex items-center justify-center gap-1 mb-2">
                             <Star className="w-5 h-5 text-yellow-500 fill-current" />
                             <span className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                              {stats.rating || 0}
+                              {stats.rating > 0 ? stats.rating : "N/A"}
                             </span>
                           </div>
                         )}

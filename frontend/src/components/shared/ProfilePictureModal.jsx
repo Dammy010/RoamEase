@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { X, Camera, Trash2, Upload } from "lucide-react";
-import { getProfilePictureUrl } from "../../utils/imageUtils";
 
 const ProfilePictureModal = ({
   isOpen,
@@ -63,9 +62,12 @@ const ProfilePictureModal = ({
             <div className="relative inline-block">
               {profilePicture ? (
                 <img
-                  src={getProfilePictureUrl(profilePicture)}
+                  src={profilePicture}
                   alt="Profile"
                   className="w-32 h-32 rounded-full object-cover shadow-lg mx-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = "/default-avatar.svg";
+                  }}
                 />
               ) : (
                 <div className="w-32 h-32 bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg mx-auto">
