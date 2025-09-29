@@ -349,18 +349,11 @@ const SettingsPage = () => {
         return;
       }
       const result = await dispatch(uploadProfilePicture(file));
-      console.log("🔍 Upload result:", result);
       if (uploadProfilePicture.fulfilled.match(result)) {
-        console.log("✅ Upload successful, payload:", result.payload);
-
         // Handle both old and new response formats
         const profilePictureUrl = result.payload.profilePictureUrl || null;
         const profilePictureId = result.payload.profilePictureId || null;
         const oldProfilePicture = result.payload.profilePicture || null;
-
-        console.log("🔍 Profile Picture URL from backend:", profilePictureUrl);
-        console.log("🔍 Profile Picture ID from backend:", profilePictureId);
-        console.log("🔍 Old Profile Picture from backend:", oldProfilePicture);
 
         // Update user data in Redux with new format
         if (profilePictureUrl && profilePictureId) {
@@ -373,10 +366,7 @@ const SettingsPage = () => {
             },
           });
         } else if (oldProfilePicture) {
-          // Temporary: Handle old format until backend is fixed
-          console.warn(
-            "⚠️ Backend still returning old format, this should be fixed"
-          );
+          // Handle old format for backward compatibility
           dispatch({
             type: "auth/updateProfilePicture",
             payload: {

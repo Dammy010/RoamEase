@@ -103,7 +103,8 @@ const AdminDashboardHome = () => {
   const adminProfile = {
     name: user?.name || "Admin",
     role: user?.role || "Administrator",
-    avatar: getProfilePictureUrl(user?.profilePicture), // Modified: Use the constructed URL
+    avatar:
+      user?.profilePictureUrl || getProfilePictureUrl(user?.profilePicture), // Modified: Use the constructed URL
   };
 
   const modules = [

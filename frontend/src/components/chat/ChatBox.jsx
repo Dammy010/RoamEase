@@ -105,10 +105,14 @@ const ChatBox = () => {
           <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
             {(() => {
               // Check for profile picture
-              const avatarUrl = otherParticipant?.profilePicture;
+              const avatarUrl =
+                otherParticipant?.profilePictureUrl ||
+                otherParticipant?.profilePicture;
 
               if (avatarUrl) {
-                const fullAvatarUrl = getProfilePictureUrl(avatarUrl);
+                const fullAvatarUrl =
+                  otherParticipant?.profilePictureUrl ||
+                  getProfilePictureUrl(otherParticipant?.profilePicture);
                 return (
                   <>
                     <img

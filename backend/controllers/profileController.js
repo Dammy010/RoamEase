@@ -490,7 +490,7 @@ const getProfileStats = async (req, res) => {
 
       // Convert userId to ObjectId if it's a string
       const mongoose = require("mongoose");
-      const logisticsUserId = mongoose.Types.ObjectId.isValid(userId)
+      const logisticsUserId = mongoose.isValidObjectId(userId)
         ? new mongoose.Types.ObjectId(userId)
         : userId;
 
@@ -650,6 +650,93 @@ const getProfileStats = async (req, res) => {
             if (responseTimeHours >= 0 && responseTimeHours <= 168) {
               // Valid range: 0-168 hours
               responseTimes.push(responseTimeHours);
+            }
+          }
+        }
+
+        if (responseTimes.length > 0) {
+          const avgResponseTimeHours =
+            responseTimes.reduce((sum, time) => sum + time, 0) /
+            responseTimes.length;
+          if (avgResponseTimeHours < 1) {
+            stats.responseTime = `${Math.round(
+              avgResponseTimeHours * 60
+            )} minutes`;
+          } else if (avgResponseTimeHours < 24) {
+            stats.responseTime = `${
+              Math.round(avgResponseTimeHours * 10) / 10
+            } hours`;
+          } else {
+            stats.responseTime = `${
+              Math.round((avgResponseTimeHours / 24) * 10) / 10
+            } days`;
+          }
+        } else {
+          stats.responseTime = "1 hour"; // Default fallback
+        }
+      } else {
+        stats.responseTime = "1 hour"; // Default fallback
+      }
+    } else if (userRole === "user") {
+      // For regular users, get their shipment statistics
+      const Shipment = require("../models/Shipment");
+      const Bid = require("../models/Bid");
+
+      // Get total shipments they've posted
+      const totalShipments = await Shipment.countDocuments({ user: userId });
+      stats.totalShipments = totalShipments;
+
+      // Get completed/delivered shipments
+      const completedShipments = await Shipment.countDocuments({
+        user: userId,
+        status: "delivered",
+      });
+      stats.completedShipments = completedShipments;
+
+      // Calculate completion rate
+      if (totalShipments > 0) {
+        stats.successRate = Math.round(
+          (completedShipments / totalShipments) * 100
+        );
+      }
+
+      // Get average rating they've given to logistics providers
+      const ratedShipments = await Shipment.find({
+        user: userId,
+        rating: { $exists: true, $ne: null },
+      });
+
+      if (ratedShipments.length > 0) {
+        const totalRating = ratedShipments.reduce(
+          (sum, shipment) => sum + shipment.rating,
+          0
+        );
+        stats.rating =
+          Math.round((totalRating / ratedShipments.length) * 10) / 10;
+      } else {
+        stats.rating = 0;
+      }
+
+      // Calculate average response time from bids received
+      const shipmentsWithBids = await Shipment.find({
+        user: userId,
+        $expr: { $gt: [{ $size: "$bids" }, 0] },
+      }).populate("bids");
+
+      if (shipmentsWithBids.length > 0) {
+        const responseTimes = [];
+        for (const shipment of shipmentsWithBids) {
+          if (shipment.bids && shipment.bids.length > 0) {
+            // Get the first bid (earliest response)
+            const firstBid = shipment.bids.sort(
+              (a, b) => a.createdAt - b.createdAt
+            )[0];
+            if (firstBid.createdAt && shipment.createdAt) {
+              const responseTimeMs = firstBid.createdAt - shipment.createdAt;
+              const responseTimeHours = responseTimeMs / (1000 * 60 * 60);
+              if (responseTimeHours >= 0 && responseTimeHours <= 168) {
+                responseTimes.push(responseTimeHours);
+              }
             }
           }
         }

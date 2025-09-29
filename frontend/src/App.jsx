@@ -342,7 +342,7 @@ function App() {
                   element={<ForgotPasswordPage />}
                 />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-                
+
                 {/* Catch-all for public users */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

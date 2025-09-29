@@ -105,7 +105,8 @@ const UserDashboardHome = () => {
     email: user?.email || "N/A",
     phoneNumber: user?.phoneNumber || "N/A",
     role: user?.role || "user",
-    avatar: getProfilePictureUrl(user?.profilePicture),
+    avatar:
+      user?.profilePictureUrl || getProfilePictureUrl(user?.profilePicture),
   };
 
   const modules = [

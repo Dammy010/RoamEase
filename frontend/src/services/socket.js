@@ -27,7 +27,7 @@ export const initSocket = () => {
   };
 
   socket = io(getSocketURL(), {
-    transports: ["websocket", "polling"],
+    transports: ["polling", "websocket"],
     autoConnect: true,
     withCredentials: true,
     timeout: 20000,
@@ -38,6 +38,9 @@ export const initSocket = () => {
   });
 
   socket.on("connect", () => {
+    console.log("✅ Socket.io connected successfully:", socket.id);
+    console.log("🔍 Socket transport:", socket.io.engine.transport.name);
+
     // Send user-online event to join the user to their specific room
     const userStr = localStorage.getItem("user");
     if (userStr) {
@@ -46,10 +49,15 @@ export const initSocket = () => {
         const userId = user._id;
         if (userId) {
           socket.emit("user-online", userId);
+          console.log("👤 User-online event sent for user:", userId);
         } else {
+          console.warn("⚠️ No user ID found in localStorage");
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("❌ Error parsing user from localStorage:", error);
+      }
     } else {
+      console.warn("⚠️ No user data found in localStorage");
     }
   });
 
@@ -61,8 +69,11 @@ export const initSocket = () => {
       context: error.context,
       type: error.type,
     });
+    console.error("🔍 Socket URL:", getSocketURL());
+    console.error("🔍 Token present:", !!localStorage.getItem("token"));
 
     if (error.message.includes("Authentication error")) {
+      console.error("🔐 Authentication error - token might be invalid");
       // Don't automatically logout on socket auth errors
       // Let the API interceptor handle authentication failures
     }

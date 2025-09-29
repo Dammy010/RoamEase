@@ -482,6 +482,8 @@ const loginUser = async (req, res) => {
       role: user.role,
       phoneNumber: user.phoneNumber,
       profilePicture: normalizePath(user.profilePicture),
+      profilePictureUrl: user.profilePictureUrl || "",
+      profilePictureId: user.profilePictureId || "",
       accessToken: generateAccessToken(user._id),
       refreshToken: generateRefreshToken(user._id),
     };
@@ -560,7 +562,11 @@ const getProfile = async (req, res) => {
 
     res.json({
       success: true,
-      user: user,
+      user: {
+        ...user.toObject(),
+        profilePictureUrl: user.profilePictureUrl || "",
+        profilePictureId: user.profilePictureId || "",
+      },
     });
   } catch (error) {
     console.error("Get profile error:", error);
@@ -674,6 +680,8 @@ const updateProfile = async (req, res) => {
         address: userToReturn.address,
         bio: userToReturn.bio,
         profilePicture: userToReturn.profilePicture,
+        profilePictureUrl: userToReturn.profilePictureUrl || "",
+        profilePictureId: userToReturn.profilePictureId || "",
         companyName: userToReturn.companyName,
         country: userToReturn.country,
         yearsInOperation: userToReturn.yearsInOperation,

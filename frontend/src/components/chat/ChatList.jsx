@@ -112,10 +112,14 @@ const ChatList = () => {
                             : null;
 
                         // Check for profile picture
-                        const avatarUrl = participant?.profilePicture;
+                        const avatarUrl =
+                          participant?.profilePictureUrl ||
+                          participant?.profilePicture;
 
                         if (avatarUrl) {
-                          const fullAvatarUrl = getProfilePictureUrl(avatarUrl);
+                          const fullAvatarUrl =
+                            participant?.profilePictureUrl ||
+                            getProfilePictureUrl(participant?.profilePicture);
                           return (
                             <img
                               src={fullAvatarUrl}
@@ -142,7 +146,8 @@ const ChatList = () => {
                             otherParticipants.length > 0
                               ? otherParticipants[0]
                               : null;
-                          return participant?.profilePicture
+                          return participant?.profilePictureUrl ||
+                            participant?.profilePicture
                             ? "hidden"
                             : "flex";
                         })()}`}

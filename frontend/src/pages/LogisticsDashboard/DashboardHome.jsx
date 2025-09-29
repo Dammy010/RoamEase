@@ -98,7 +98,8 @@ const LogisticsDashboardHome = () => {
   const logisticsUser = {
     name: getLogisticsDisplayName(user) || "Logistics Partner",
     role: getVerificationStatusText(user) || "Partner",
-    avatar: getProfilePictureUrl(user?.profilePicture),
+    avatar:
+      user?.profilePictureUrl || getProfilePictureUrl(user?.profilePicture),
   };
 
   const modules = [

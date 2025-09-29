@@ -10,6 +10,14 @@ try {
   const storedUser = localStorage.getItem("user");
   if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
     user = JSON.parse(storedUser);
+
+    // Ensure profile picture fields are present for all users
+    user = {
+      ...user,
+      profilePictureUrl: user.profilePictureUrl || "",
+      profilePictureId: user.profilePictureId || "",
+    };
+
     // Ensure all required fields are present for logistics users
     if (user && user.role === "logistics") {
       user = {
@@ -57,6 +65,8 @@ export const loginUser = createAsyncThunk(
         role,
         phoneNumber,
         profilePicture,
+        profilePictureUrl,
+        profilePictureId,
         ...restUser
       } = res.data; // Capture other user fields
 
@@ -68,6 +78,8 @@ export const loginUser = createAsyncThunk(
         role,
         phoneNumber,
         profilePicture,
+        profilePictureUrl: profilePictureUrl || "",
+        profilePictureId: profilePictureId || "",
         ...restUser,
       };
 
@@ -132,6 +144,8 @@ export const signupUser = createAsyncThunk(
         role,
         phoneNumber,
         profilePicture,
+        profilePictureUrl,
+        profilePictureId,
         ...restUser
       } = res.data; // Capture other user fields
       const userData = {
@@ -141,6 +155,8 @@ export const signupUser = createAsyncThunk(
         role,
         phoneNumber,
         profilePicture,
+        profilePictureUrl: profilePictureUrl || "",
+        profilePictureId: profilePictureId || "",
         ...restUser,
       };
 
@@ -370,8 +386,10 @@ const authSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.user = payload;
-        state.role = payload.role;
+        state.user = payload.user || payload;
+        state.role = (payload.user || payload).role;
+        // Update localStorage with fresh profile data
+        localStorage.setItem("user", JSON.stringify(payload.user || payload));
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;

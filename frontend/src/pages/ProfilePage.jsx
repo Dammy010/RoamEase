@@ -80,9 +80,9 @@ const ProfilePage = () => {
     confirm: false,
   });
 
-  // Load profile stats on mount
+  // Load profile stats on mount - only for logistics users
   useEffect(() => {
-    if (user) {
+    if (user && user.role === "logistics") {
       dispatch(getProfileStats());
     }
   }, [user, dispatch]);
@@ -340,29 +340,25 @@ const ProfilePage = () => {
               {/* Profile Picture */}
               <div className="text-center mb-6">
                 <div className="relative inline-block group">
-                  {user?.profilePicture ? (
+                  {(() => {
+                    const hasProfilePicture =
+                      user?.profilePictureUrl || user?.profilePicture;
+                    return hasProfilePicture;
+                  })() ? (
                     <img
-                      src={getProfilePictureUrl(user.profilePicture)}
+                      src={
+                        user?.profilePictureUrl ||
+                        getProfilePictureUrl(user.profilePicture)
+                      }
                       alt="Profile"
                       className="w-28 h-28 rounded-full object-cover shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700"
                       onClick={() => setShowFullScreenImage(true)}
                       onError={(e) => {
-                        console.error(
-                          "❌ Profile picture failed to load:",
-                          e.target.src
-                        );
-                        console.error(
-                          "❌ User profile picture:",
-                          user.profilePicture
-                        );
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
                       }}
                       onLoad={() => {
-                        console.log(
-                          "✅ Profile picture loaded successfully:",
-                          getProfilePictureUrl(user.profilePicture)
-                        );
+                        // Image loaded successfully
                       }}
                     />
                   ) : null}
@@ -370,7 +366,9 @@ const ProfilePage = () => {
                     className={`w-28 h-28 ${getRoleColor(
                       user?.role
                     )} rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg cursor-pointer hover:opacity-80 transition-opacity border-4 border-white dark:border-gray-700 ${
-                      user?.profilePicture ? "hidden" : ""
+                      user?.profilePictureUrl || user?.profilePicture
+                        ? "hidden"
+                        : ""
                     }`}
                     onClick={() => setShowFullScreenImage(true)}
                   >
@@ -636,130 +634,119 @@ const ProfilePage = () => {
               </div>
             )}
 
-            {/* Statistics */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                    <Award className="w-6 h-6 text-white" />
+            {/* Statistics - Only for logistics users */}
+            {user?.role === "logistics" && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                      <Award className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        Statistics
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Your performance metrics and achievements
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      Statistics
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Your performance metrics and achievements
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => dispatch(getProfileStats())}
-                  disabled={statsLoading}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
-                  title="Refresh statistics"
-                >
-                  <RefreshCw
-                    className={`w-5 h-5 ${statsLoading ? "animate-spin" : ""}`}
-                  />
-                </button>
-              </div>
-
-              {error ? (
-                <div className="text-center py-8">
-                  <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Failed to load statistics
-                  </p>
                   <button
                     onClick={() => dispatch(getProfileStats())}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    disabled={statsLoading}
+                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                    title="Refresh statistics"
                   >
-                    Retry
+                    <RefreshCw
+                      className={`w-5 h-5 ${
+                        statsLoading ? "animate-spin" : ""
+                      }`}
+                    />
                   </button>
                 </div>
-              ) : statsLoading &&
-                !stats.totalShipments &&
-                !stats.completedShipments ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Loading statistics...
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className={`grid gap-6 ${
-                    user?.role === "logistics"
-                      ? "grid-cols-2 md:grid-cols-4"
-                      : "grid-cols-2"
-                  }`}
-                >
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                    {statsLoading ? (
-                      <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
-                    ) : (
-                      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
-                        {stats.totalShipments || 0}
+
+                {error ? (
+                  <div className="text-center py-8">
+                    <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Failed to load statistics
+                    </p>
+                    <button
+                      onClick={() => dispatch(getProfileStats())}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : statsLoading &&
+                  !stats.totalShipments &&
+                  !stats.completedShipments ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Loading statistics...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 grid-cols-2 md:grid-cols-4">
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      {statsLoading ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                      ) : (
+                        <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
+                          {stats.totalShipments || 0}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        Total Bids
                       </div>
-                    )}
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      {user?.role === "logistics"
-                        ? "Total Bids"
-                        : "Total Shipments"}
+                    </div>
+
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      {statsLoading ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                      ) : (
+                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                          {stats.completedShipments || 0}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        Accepted Bids
+                      </div>
+                    </div>
+
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      {statsLoading ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1 mb-2">
+                          <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                          <span className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                            {stats.rating > 0 ? stats.rating : "N/A"}
+                          </span>
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        Rating
+                      </div>
+                    </div>
+
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      {statsLoading ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
+                      ) : (
+                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                          {stats.successRate || 0}%
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        Success Rate
+                      </div>
                     </div>
                   </div>
-
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                    {statsLoading ? (
-                      <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
-                    ) : (
-                      <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                        {stats.completedShipments || 0}
-                      </div>
-                    )}
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      {user?.role === "logistics"
-                        ? "Accepted Bids"
-                        : "Completed"}
-                    </div>
-                  </div>
-
-                  {/* Only show Rating and Success Rate for logistics users */}
-                  {user?.role === "logistics" && (
-                    <>
-                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                        {statsLoading ? (
-                          <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
-                        ) : (
-                          <div className="flex items-center justify-center gap-1 mb-2">
-                            <Star className="w-5 h-5 text-yellow-500 fill-current" />
-                            <span className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                              {stats.rating > 0 ? stats.rating : "N/A"}
-                            </span>
-                          </div>
-                        )}
-                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                          Rating
-                        </div>
-                      </div>
-
-                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                        {statsLoading ? (
-                          <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-12 rounded mx-auto mb-2"></div>
-                        ) : (
-                          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                            {stats.successRate || 0}%
-                          </div>
-                        )}
-                        <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                          Success Rate
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Password Change Form */}
             {showPasswordForm && (
@@ -943,7 +930,10 @@ const ProfilePage = () => {
       {/* Profile Picture Modal */}
       {showProfilePictureModal && (
         <ProfilePictureModal
-          imageUrl={getProfilePictureUrl(user?.profilePicture)}
+          imageUrl={
+            user?.profilePictureUrl ||
+            getProfilePictureUrl(user?.profilePicture)
+          }
           onClose={() => setShowProfilePictureModal(false)}
           onUpload={handleProfilePictureUpload}
           uploadLoading={uploadLoading}
@@ -955,7 +945,10 @@ const ProfilePage = () => {
         <FullScreenImageViewer
           isOpen={showFullScreenImage}
           onClose={() => setShowFullScreenImage(false)}
-          imageUrl={getProfilePictureUrl(user?.profilePicture)}
+          imageUrl={
+            user?.profilePictureUrl ||
+            getProfilePictureUrl(user?.profilePicture)
+          }
           alt="Profile Picture"
         />
       )}

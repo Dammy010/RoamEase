@@ -11,6 +11,7 @@ const initSocket = (server) => {
     cors: {
       origin: [
         process.env.CLIENT_URL || "https://roam-ease.vercel.app",
+        "https://roam-ease.vercel.app",
         "http://localhost:3000",
         "http://localhost:5000",
         "http://localhost:5173",
@@ -31,6 +32,13 @@ const initSocket = (server) => {
         socket.handshake.auth.token ||
         socket.handshake.headers.authorization?.split(" ")[1];
 
+      console.log("🔍 Socket connection attempt:", {
+        hasAuthToken: !!socket.handshake.auth.token,
+        hasHeaderToken: !!socket.handshake.headers.authorization,
+        socketId: socket.id,
+        origin: socket.handshake.headers.origin,
+      });
+
       if (!token) {
         console.log("Socket connection rejected: No token provided");
         return next(new Error("Authentication error: No token provided"));
@@ -47,6 +55,7 @@ const initSocket = (server) => {
       socket.userId = user._id.toString();
       socket.user = user;
       socket.userRole = user.role;
+      console.log("✅ Socket authentication successful for user:", user.email);
       next();
     } catch (error) {
       console.log("Socket connection rejected:", error.message);
