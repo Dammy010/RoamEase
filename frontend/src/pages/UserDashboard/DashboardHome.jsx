@@ -106,7 +106,9 @@ const UserDashboardHome = () => {
     phoneNumber: user?.phoneNumber || "N/A",
     role: user?.role || "user",
     avatar:
-      user?.profilePictureUrl || getProfilePictureUrl(user?.profilePicture),
+      user?.profilePictureUrl ||
+      getProfilePictureUrl(user?.profilePicture) ||
+      "/default-avatar.svg",
   };
 
   const modules = [

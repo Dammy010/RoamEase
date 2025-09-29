@@ -62,6 +62,7 @@ import {
   logout,
   updateProfilePicture,
   updateProfile,
+  fetchProfile,
 } from "../redux/slices/authSlice";
 
 const SettingsPage = () => {
@@ -69,7 +70,15 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {}, [user?.profilePictureUrl]);
+  useEffect(() => {
+    console.log("🔍 SettingsPage Debug - User data:", {
+      profilePictureUrl: user?.profilePictureUrl,
+      profilePictureId: user?.profilePictureId,
+      profilePicture: user?.profilePicture,
+      hasProfilePictureUrl: !!user?.profilePictureUrl,
+      hasProfilePicture: !!user?.profilePicture,
+    });
+  }, [user?.profilePictureUrl, user?.profilePicture]);
   const { theme, toggleTheme, isDark } = useTheme();
   const {
     currency,
@@ -125,6 +134,9 @@ const SettingsPage = () => {
     dispatch(initializeSettings());
     // Load settings in background without blocking UI
     dispatch(getSettings());
+
+    // Fetch fresh profile data to ensure we have the latest profile picture
+    dispatch(fetchProfile());
 
     // Initialize currency from user settings
     if (user?.preferences?.currency) {
@@ -394,8 +406,20 @@ const SettingsPage = () => {
     try {
       const result = await dispatch(removeProfilePicture());
       if (removeProfilePicture.fulfilled.match(result)) {
-        // Update user data in Redux instead of reloading
-        dispatch(updateProfilePicture(null));
+        // Update user data in Redux with the updated user object from backend
+        if (result.payload.user) {
+          dispatch({
+            type: "auth/updateProfilePicture",
+            payload: {
+              profilePictureUrl: "",
+              profilePictureId: "",
+              profilePicture: "",
+            },
+          });
+        } else {
+          // Fallback: clear profile picture fields
+          dispatch(updateProfilePicture(null));
+        }
         toast.success("Profile picture removed successfully");
         setShowProfilePictureModal(false);
       } else {
@@ -478,7 +502,27 @@ const SettingsPage = () => {
             <img
               src={user?.profilePictureUrl || "/default-avatar.svg"}
               alt="Profile"
-              onError={(e) => (e.currentTarget.src = "/default-avatar.svg")}
+              onError={(e) => {
+                console.error(
+                  "❌ SettingsPage - Image failed to load:",
+                  e.target.src
+                );
+                console.error(
+                  "❌ SettingsPage - User profilePictureUrl:",
+                  user?.profilePictureUrl
+                );
+                console.error(
+                  "❌ SettingsPage - User profilePicture:",
+                  user?.profilePicture
+                );
+                e.currentTarget.src = "/default-avatar.svg";
+              }}
+              onLoad={() => {
+                console.log(
+                  "✅ SettingsPage - Image loaded successfully:",
+                  user?.profilePictureUrl || "/default-avatar.svg"
+                );
+              }}
               className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
             />
             <button

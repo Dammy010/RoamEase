@@ -1224,7 +1224,7 @@ const resetPassword = async (req, res) => {
 // Delete profile picture
 const deleteProfilePicture = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     // Get user first to check if they have a profile picture
     const user = await User.findById(userId);
@@ -1235,8 +1235,33 @@ const deleteProfilePicture = async (req, res) => {
       });
     }
 
-    // Delete the actual file from disk if it exists
-    if (user.profilePicture) {
+    // Delete from Cloudinary if profilePictureId exists
+    if (user.profilePictureId) {
+      try {
+        console.log(
+          `🗑️ Deleting Cloudinary image with public_id: ${user.profilePictureId}`
+        );
+        const cloudinary = require("cloudinary").v2;
+
+        // Configure Cloudinary
+        cloudinary.config({
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+          api_key: process.env.CLOUDINARY_API_KEY,
+          api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+
+        await cloudinary.uploader.destroy(user.profilePictureId);
+        console.log(`✅ Cloudinary image deleted successfully`);
+      } catch (deleteError) {
+        console.log(
+          `⚠️ Could not delete Cloudinary image: ${deleteError.message}`
+        );
+        // Continue with database update even if Cloudinary deletion fails
+      }
+    }
+
+    // Delete the actual file from disk if it exists (legacy support)
+    if (user.profilePicture && !user.profilePicture.startsWith("http")) {
       const fs = require("fs");
       const path = require("path");
       const imagePath = path.join(
@@ -1248,14 +1273,20 @@ const deleteProfilePicture = async (req, res) => {
       );
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
-        console.log(`✅ Deleted profile picture file: ${imagePath}`);
+        console.log(`✅ Deleted local profile picture file: ${imagePath}`);
       }
     }
 
-    // Update user to remove profile picture from database
+    // Update user to remove profile picture fields from database
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $unset: { profilePicture: 1 } },
+      {
+        $unset: {
+          profilePicture: 1,
+          profilePictureUrl: 1,
+          profilePictureId: 1,
+        },
+      },
       { new: true }
     ).select(
       "-password -verificationToken -resetPasswordToken -resetPasswordExpires"
@@ -1263,7 +1294,8 @@ const deleteProfilePicture = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Profile picture deleted successfully",
+      message: "Profile picture removed successfully",
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Delete profile picture error:", error);

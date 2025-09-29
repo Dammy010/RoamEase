@@ -9,6 +9,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RoamEase - Logistics Made Easy</title>
   <script src="https://js.paystack.co/v1/inline.js"></script>
+  
+  <!-- Suppress MetaMask/Web3 extension errors -->
+  <script>
+    // Suppress MetaMask and other wallet extension errors
+    window.addEventListener('error', function(e) {
+      if (e.message && (
+        e.message.includes('User rejected the request') ||
+        e.message.includes('Could not establish connection') ||
+        e.message.includes('Receiving end does not exist') ||
+        e.message.includes('pageProvider.js') ||
+        e.message.includes('content-script.js')
+      )) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    // Suppress unhandled promise rejections from extensions
+    window.addEventListener('unhandledrejection', function(e) {
+      if (e.reason && (
+        e.reason.message && (
+          e.reason.message.includes('User rejected the request') ||
+          e.reason.message.includes('Could not establish connection') ||
+          e.reason.message.includes('Receiving end does not exist')
+        ) ||
+        e.reason.code === 4001
+      )) {
+        e.preventDefault();
+        return false;
+      }
+    });
+  </script>
 </head>
 
 <body class="h-full">

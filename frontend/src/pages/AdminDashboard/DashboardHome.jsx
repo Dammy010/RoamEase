@@ -104,7 +104,9 @@ const AdminDashboardHome = () => {
     name: user?.name || "Admin",
     role: user?.role || "Administrator",
     avatar:
-      user?.profilePictureUrl || getProfilePictureUrl(user?.profilePicture), // Modified: Use the constructed URL
+      user?.profilePictureUrl ||
+      getProfilePictureUrl(user?.profilePicture) ||
+      "/default-avatar.svg",
   };
 
   const modules = [

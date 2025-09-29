@@ -325,6 +325,16 @@ const authSlice = createSlice({
           state.user.profilePictureId = action.payload.profilePictureId;
           // Keep old field for backward compatibility
           state.user.profilePicture = action.payload.profilePictureUrl;
+        } else if (action.payload && typeof action.payload === "object") {
+          // Handle removal case - when payload is an object with empty strings
+          state.user.profilePictureUrl = action.payload.profilePictureUrl || "";
+          state.user.profilePictureId = action.payload.profilePictureId || "";
+          state.user.profilePicture = action.payload.profilePicture || "";
+        } else if (action.payload === null) {
+          // Handle null case - clear all profile picture fields
+          state.user.profilePictureUrl = "";
+          state.user.profilePictureId = "";
+          state.user.profilePicture = "";
         }
         // Update localStorage as well
         localStorage.setItem("user", JSON.stringify(state.user));
