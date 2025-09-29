@@ -67,9 +67,12 @@ export const getProfilePictureUrl = (profilePicture) => {
 
   // Get the backend base URL
   const backendBaseUrl = (() => {
+    // Check if we're in production by looking at the current hostname
     if (
-      typeof process !== "undefined" &&
-      process.env?.NODE_ENV === "production"
+      window.location.hostname === "roam-ease.vercel.app" ||
+      window.location.hostname === "roamease-3wg1.onrender.com" ||
+      (window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1")
     ) {
       return "https://roamease-3wg1.onrender.com";
     }
@@ -168,9 +171,12 @@ export const getStaticAssetUrl = (assetPath) => {
 
   // Get the backend base URL
   const backendBaseUrl = (() => {
+    // Check if we're in production by looking at the current hostname
     if (
-      typeof process !== "undefined" &&
-      process.env?.NODE_ENV === "production"
+      window.location.hostname === "roam-ease.vercel.app" ||
+      window.location.hostname === "roamease-3wg1.onrender.com" ||
+      (window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1")
     ) {
       return "https://roamease-3wg1.onrender.com";
     }
