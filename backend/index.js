@@ -109,11 +109,21 @@ app.use((req, res, next) => {
 // Static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Rate limiting
+// Rate limiting - Very lenient for development
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 500,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 2000, // Increased to 2000 requests per 15 minutes
   message: "Too many requests, please try again later.",
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for development (localhost)
+    return (
+      req.ip === "127.0.0.1" ||
+      req.ip === "::1" ||
+      req.ip === "::ffff:127.0.0.1"
+    );
+  },
 });
 app.use("/api", limiter);
 

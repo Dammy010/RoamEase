@@ -1,5 +1,6 @@
 // src/services/api.js
 import axios from "axios";
+import { reconnectSocketAfterTokenRefresh } from "./socket";
 
 // Auto-detect environment and use appropriate API URL
 const getApiBaseURL = () => {
@@ -50,6 +51,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Handle rate limiting (429)
+    if (error.response?.status === 429) {
+      console.warn("🚦 Rate limit exceeded, retrying after delay...");
+      // Wait 5 seconds before retrying
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      return api(originalRequest);
+    }
 
     // Only handle 401s once
     if (error.response?.status === 401 && !originalRequest._retry) {

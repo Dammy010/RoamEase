@@ -103,10 +103,19 @@ function App() {
 
   useEffect(() => {
     // Fetch data when user is authenticated to get counts for sidebar
+    // Stagger API calls to prevent rate limiting
     if (user) {
+      // Immediate call
       dispatch(fetchConversations());
-      dispatch(fetchBidsOnMyShipments());
-      dispatch(fetchDeliveredShipments());
+
+      // Delayed calls to prevent rate limiting
+      setTimeout(() => {
+        dispatch(fetchBidsOnMyShipments());
+      }, 500);
+
+      setTimeout(() => {
+        dispatch(fetchDeliveredShipments());
+      }, 1000);
     }
   }, [dispatch, user]);
 

@@ -11,6 +11,7 @@ export const initSocket = () => {
 
   // Only initialize socket if we have a valid token
   if (!token) {
+    console.log("⚠️ No token found, skipping socket initialization");
     return null;
   }
 
@@ -26,8 +27,11 @@ export const initSocket = () => {
     }
   };
 
-  socket = io(getSocketURL(), {
-    transports: ["polling", "websocket"],
+  const socketURL = getSocketURL();
+  console.log("🔌 Initializing Socket.IO connection to:", socketURL);
+
+  socket = io(socketURL, {
+    transports: ["websocket", "polling"], // Try websocket first, fallback to polling
     autoConnect: true,
     withCredentials: true,
     timeout: 20000,
@@ -35,11 +39,22 @@ export const initSocket = () => {
     auth: {
       token: token,
     },
+    // Socket.IO v4 specific options
+    upgrade: true,
+    rememberUpgrade: true,
   });
 
   socket.on("connect", () => {
-    console.log("✅ Socket.io connected successfully:", socket.id);
-    console.log("🔍 Socket transport:", socket.io.engine.transport.name);
+    console.log("✅ Socket.IO connected successfully!");
+    console.log("🔍 Connection details:", {
+      socketId: socket.id,
+      transport: socket.io.engine.transport.name,
+      url: socketURL,
+      authToken: socket.auth?.token
+        ? socket.auth.token.substring(0, 20) + "..."
+        : "none",
+      connected: socket.connected,
+    });
 
     // Send user-online event to join the user to their specific room
     const userStr = localStorage.getItem("user");
@@ -69,13 +84,21 @@ export const initSocket = () => {
       context: error.context,
       type: error.type,
     });
-    console.error("🔍 Socket URL:", getSocketURL());
+    console.error("🔍 Socket URL:", socketURL);
     console.error("🔍 Token present:", !!localStorage.getItem("token"));
+    console.error(
+      "🔍 Token value:",
+      localStorage.getItem("token")?.substring(0, 20) + "..."
+    );
 
     if (error.message.includes("Authentication error")) {
       console.error("🔐 Authentication error - token might be invalid");
-      // Don't automatically logout on socket auth errors
-      // Let the API interceptor handle authentication failures
+      // Try to refresh the token
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        console.log("🔄 Attempting to refresh token...");
+        // The API interceptor will handle token refresh
+      }
     }
   });
 
@@ -140,4 +163,19 @@ export const initializeSocketAfterLogin = () => {
     return initSocket();
   }
   return socket;
+};
+
+// Reconnect socket after token refresh
+export const reconnectSocketAfterTokenRefresh = () => {
+  if (socket) {
+    console.log("🔄 Reconnecting socket after token refresh...");
+    socket.disconnect();
+    socket = null;
+  }
+
+  const token = localStorage.getItem("token");
+  if (token) {
+    return initSocket();
+  }
+  return null;
 };

@@ -132,11 +132,15 @@ const SettingsPage = () => {
   // Initialize settings on mount
   useEffect(() => {
     dispatch(initializeSettings());
-    // Load settings in background without blocking UI
-    dispatch(getSettings());
 
-    // Fetch fresh profile data to ensure we have the latest profile picture
-    dispatch(fetchProfile());
+    // Stagger API calls to prevent rate limiting
+    setTimeout(() => {
+      dispatch(getSettings());
+    }, 200);
+
+    setTimeout(() => {
+      dispatch(fetchProfile());
+    }, 500);
 
     // Initialize currency from user settings
     if (user?.preferences?.currency) {

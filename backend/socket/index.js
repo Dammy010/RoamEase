@@ -15,12 +15,18 @@ const initSocket = (server) => {
         "http://localhost:3000",
         "http://localhost:5000",
         "http://localhost:5173",
+        "https://localhost:5173", // HTTPS localhost for Vite
       ],
       methods: ["GET", "POST"],
       credentials: true,
+      allowedHeaders: ["Authorization", "Content-Type"],
     },
     transports: ["websocket", "polling"],
     allowEIO3: true,
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    upgradeTimeout: 10000,
+    maxHttpBufferSize: 1e6, // 1MB
   });
 
   io.onlineUsers = {}; // Track online users
@@ -37,28 +43,58 @@ const initSocket = (server) => {
         hasHeaderToken: !!socket.handshake.headers.authorization,
         socketId: socket.id,
         origin: socket.handshake.headers.origin,
+        tokenPreview: token ? token.substring(0, 20) + "..." : "none",
+        authTokenValue: socket.handshake.auth.token
+          ? socket.handshake.auth.token.substring(0, 20) + "..."
+          : "none",
       });
 
       if (!token) {
-        console.log("Socket connection rejected: No token provided");
+        console.log("❌ Socket connection rejected: No token provided");
         return next(new Error("Authentication error: No token provided"));
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id).select("-password -__v");
+      // More detailed token validation
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("🔍 Token decoded successfully:", {
+          userId: decoded.id,
+          exp: decoded.exp,
+          iat: decoded.iat,
+          currentTime: Math.floor(Date.now() / 1000),
+          isExpired: decoded.exp < Math.floor(Date.now() / 1000),
+        });
 
-      if (!user) {
-        console.log("Socket connection rejected: User not found");
-        return next(new Error("Authentication error: User not found"));
+        const user = await User.findById(decoded.id).select("-password -__v");
+
+        if (!user) {
+          console.log(
+            "❌ Socket connection rejected: User not found for ID:",
+            decoded.id
+          );
+          return next(new Error("Authentication error: User not found"));
+        }
+
+        socket.userId = user._id.toString();
+        socket.user = user;
+        socket.userRole = user.role;
+        console.log(
+          "✅ Socket authentication successful for user:",
+          user.email,
+          "ID:",
+          user._id
+        );
+        next();
+      } catch (jwtError) {
+        console.log("❌ JWT verification failed:", {
+          error: jwtError.message,
+          name: jwtError.name,
+          tokenPreview: token.substring(0, 20) + "...",
+        });
+        return next(new Error(`Authentication error: ${jwtError.message}`));
       }
-
-      socket.userId = user._id.toString();
-      socket.user = user;
-      socket.userRole = user.role;
-      console.log("✅ Socket authentication successful for user:", user.email);
-      next();
     } catch (error) {
-      console.log("Socket connection rejected:", error.message);
+      console.log("❌ Socket connection rejected:", error.message);
       next(new Error("Authentication error: Invalid token"));
     }
   });
