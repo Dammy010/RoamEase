@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+const fs = require("fs");
 require("express-async-errors");
 
 // 🎨 Beautiful utilities
@@ -29,6 +30,27 @@ process.env.MONGO_URI =
   process.env.MONGO_URI || "mongodb://localhost:27017/roamease";
 process.env.CLIENT_URL =
   process.env.CLIENT_URL || "https://roam-ease.vercel.app";
+
+// --- Create necessary directories ---
+const createDirectories = () => {
+  const directories = [
+    "uploads",
+    "uploads/temp",
+    "uploads/profiles",
+    "uploads/shipments",
+    "uploads/documents",
+  ];
+
+  directories.forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`📁 Created directory: ${dir}`);
+    }
+  });
+};
+
+// Create directories on startup
+createDirectories();
 
 // 🎨 Beautiful startup banner
 Logger.startupBanner();
@@ -131,12 +153,12 @@ const createRateLimiter = (windowMs, max, message, skipCondition = null) => {
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
           return `user:${decoded.id}`;
         } catch (error) {
-          // Use IP as fallback - let express-rate-limit handle IPv6
-          return req.ip;
+          // Use IP as fallback - use the proper IPv6 helper
+          return rateLimit.ipKeyGenerator(req);
         }
       }
-      // Use IP - let express-rate-limit handle IPv6
-      return req.ip;
+      // Use IP - use the proper IPv6 helper
+      return rateLimit.ipKeyGenerator(req);
     },
   });
 };

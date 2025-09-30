@@ -12,13 +12,28 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Ensure directories exist
+
+// Create uploads/temp directory if it doesn't exist
+const tempDir = "uploads/temp";
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+  console.log(`📁 Created temp directory: ${tempDir}`);
+}
+
 // Configure multer for temporary file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/temp");
+    // Ensure directory exists before saving
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    cb(null, tempDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    // Sanitize filename to avoid issues with special characters
+    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    cb(null, `${Date.now()}-${sanitizedName}`);
   },
 });
 
@@ -229,6 +244,10 @@ const uploadProfilePicture = async (req, res) => {
     const userId = req.user._id;
 
     console.log(`🔍 Profile picture upload attempt for user: ${userId}`);
+    console.log(`📁 Current working directory: ${process.cwd()}`);
+    console.log(`📁 Temp directory exists: ${fs.existsSync(tempDir)}`);
+    console.log(`📁 Temp directory path: ${path.resolve(tempDir)}`);
+
     console.log(
       `📁 Uploaded file:`,
       req.file
@@ -238,6 +257,8 @@ const uploadProfilePicture = async (req, res) => {
             mimetype: req.file.mimetype,
             size: req.file.size,
             path: req.file.path,
+            absolutePath: path.resolve(req.file.path),
+            fileExists: fs.existsSync(req.file.path),
           }
         : "No file"
     );
@@ -333,8 +354,18 @@ const uploadProfilePicture = async (req, res) => {
       }
     }
 
+    // Verify file exists before uploading to Cloudinary
+    if (!fs.existsSync(req.file.path)) {
+      console.log(`❌ File does not exist: ${req.file.path}`);
+      return res.status(500).json({
+        success: false,
+        message: "Uploaded file not found on server",
+        error: "File not found after upload",
+      });
+    }
+
     // Upload new image to Cloudinary
-    console.log(`☁️ Uploading to Cloudinary...`);
+    console.log(`☁️ Uploading to Cloudinary from: ${req.file.path}`);
     const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
       folder: "roamease/profiles",
       resource_type: "image",
