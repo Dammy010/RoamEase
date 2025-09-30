@@ -109,23 +109,68 @@ app.use((req, res, next) => {
 // Static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Rate limiting - Very lenient for development
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 2000, // Increased to 2000 requests per 15 minutes
-  message: "Too many requests, please try again later.",
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => {
-    // Skip rate limiting for development (localhost)
-    return (
+// Enhanced Rate Limiting Configuration
+const createRateLimiter = (windowMs, max, message, skipCondition = null) => {
+  return rateLimit({
+    windowMs,
+    max,
+    message: {
+      error: "Rate limit exceeded",
+      message,
+      retryAfter: Math.ceil(windowMs / 1000),
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: skipCondition,
+    keyGenerator: (req) => {
+      // Use user ID if authenticated, otherwise IP
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      if (token) {
+        try {
+          const jwt = require("jsonwebtoken");
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          return `user:${decoded.id}`;
+        } catch (error) {
+          // Use IP as fallback - let express-rate-limit handle IPv6
+          return req.ip;
+        }
+      }
+      // Use IP - let express-rate-limit handle IPv6
+      return req.ip;
+    },
+  });
+};
+
+// General API rate limiter - More generous for production
+const generalLimiter = createRateLimiter(
+  15 * 60 * 1000, // 15 minutes
+  parseInt(process.env.RATE_LIMIT_MAX) || 1000, // 1000 requests per 15 minutes
+  "Too many requests from this IP/user, please try again later.",
+  (req) => {
+    // Skip rate limiting for localhost in development
+    const isLocalhost =
       req.ip === "127.0.0.1" ||
       req.ip === "::1" ||
-      req.ip === "::ffff:127.0.0.1"
-    );
-  },
-});
-app.use("/api", limiter);
+      req.ip === "::ffff:127.0.0.1";
+    if (isLocalhost && process.env.NODE_ENV !== "production") {
+      console.log(`🔓 Skipping rate limit for localhost: ${req.ip}`);
+      return true;
+    }
+    return false;
+  }
+);
+
+// Stricter rate limiter for auth endpoints
+const authLimiter = createRateLimiter(
+  15 * 60 * 1000, // 15 minutes
+  50, // 50 auth requests per 15 minutes
+  "Too many authentication attempts, please try again later."
+);
+
+// Apply rate limiters
+// Apply rate limiting (temporarily disabled for debugging)
+// app.use("/api", generalLimiter);
+// app.use("/api/auth", authLimiter);
 
 // Routes
 app.use("/api/auth", require("./routes/authRoutes"));

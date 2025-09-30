@@ -35,6 +35,43 @@ try {
   user = null;
 }
 
+// ---------------- Cache Management ----------------
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const cache = {
+  profile: {
+    data: null,
+    timestamp: null,
+    isFetching: false,
+  },
+};
+
+// Helper function to check if cache is valid
+const isCacheValid = (cacheKey) => {
+  const cached = cache[cacheKey];
+  if (!cached || !cached.data || !cached.timestamp) return false;
+  return Date.now() - cached.timestamp < CACHE_DURATION;
+};
+
+// Helper function to set cache
+const setCache = (cacheKey, data) => {
+  cache[cacheKey] = {
+    data,
+    timestamp: Date.now(),
+    isFetching: false,
+  };
+};
+
+// Helper function to clear cache
+const clearAuthCache = (cacheKey) => {
+  if (cacheKey) {
+    cache[cacheKey] = { data: null, timestamp: null, isFetching: false };
+  } else {
+    Object.keys(cache).forEach((key) => {
+      cache[key] = { data: null, timestamp: null, isFetching: false };
+    });
+  }
+};
+
 // ---------------- Thunks ----------------
 
 // Login
@@ -68,9 +105,8 @@ export const loginUser = createAsyncThunk(
         profilePictureUrl,
         profilePictureId,
         ...restUser
-      } = res.data; // Capture other user fields
+      } = res.data;
 
-      // Construct userData with all relevant fields
       const userData = {
         _id,
         name,
@@ -83,12 +119,12 @@ export const loginUser = createAsyncThunk(
         ...restUser,
       };
 
-      if (role === "logistics") {
-      }
-
       localStorage.setItem("token", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(userData));
+
+      // Clear cache on login to ensure fresh data
+      clearAuthCache();
 
       toast.success("Login successful");
       return userData;
@@ -122,7 +158,6 @@ export const signupUser = createAsyncThunk(
         data instanceof FormData ? {} : { "Content-Type": "application/json" };
       const res = await api.post("/auth/register", data, { headers });
 
-      // Check if email verification is required
       if (
         res.data.needsVerification ||
         (res.data.message && res.data.message.includes("verify your account"))
@@ -147,7 +182,7 @@ export const signupUser = createAsyncThunk(
         profilePictureUrl,
         profilePictureId,
         ...restUser
-      } = res.data; // Capture other user fields
+      } = res.data;
       const userData = {
         _id,
         name,
@@ -164,6 +199,9 @@ export const signupUser = createAsyncThunk(
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(userData));
 
+      // Clear cache on signup to ensure fresh data
+      clearAuthCache();
+
       toast.success("Signup successful");
       return userData;
     } catch (err) {
@@ -174,7 +212,7 @@ export const signupUser = createAsyncThunk(
       const email = err.response?.data?.email;
 
       if (needsVerification) {
-        toast.success(message); // Show as success since verification email was sent
+        toast.success(message);
         return thunkAPI.rejectWithValue({
           message,
           needsVerification: true,
@@ -239,14 +277,50 @@ export const checkVerificationStatus = createAsyncThunk(
   }
 );
 
-// Fetch Profile
+// Fetch Profile - WITH CACHING AND DUPLICATE PREVENTION
 export const fetchProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, thunkAPI) => {
     try {
+      // Check if we already have valid cached data
+      if (isCacheValid("profile")) {
+        console.log("📦 Using cached profile data");
+        return cache.profile.data;
+      }
+
+      // Check if we're already fetching
+      if (cache.profile.isFetching) {
+        console.log("⏳ Profile fetch already in progress, waiting...");
+        // Wait for the current fetch to complete
+        return new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!cache.profile.isFetching) {
+              clearInterval(checkInterval);
+              if (cache.profile.data) {
+                resolve(cache.profile.data);
+              } else {
+                reject(new Error("Profile fetch failed"));
+              }
+            }
+          }, 100);
+        });
+      }
+
+      // Mark as fetching
+      cache.profile.isFetching = true;
+      console.log("🌐 Fetching fresh profile data from API");
+
       const res = await api.get("/auth/profile");
-      return res.data;
+      const profileData = res.data;
+
+      // Cache the result
+      setCache("profile", profileData);
+
+      return profileData;
     } catch (err) {
+      // Reset fetching flag on error
+      cache.profile.isFetching = false;
+
       const message = err.response?.data?.message || "Failed to load profile";
       console.error("❌ fetchProfile: Error:", err);
       toast.error(message);
@@ -282,6 +356,9 @@ export const updateProfile = createAsyncThunk(
       }
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
+      // Clear profile cache since data has changed
+      clearAuthCache("profile");
+
       return updatedUser;
     } catch (err) {
       const message = err.response?.data?.message || "Update failed";
@@ -299,6 +376,13 @@ const authSlice = createSlice({
     isAuthenticated: !!accessToken && !!user,
     loading: false,
     error: null,
+    // Add cache status for debugging
+    cacheStatus: {
+      profile: {
+        isValid: isCacheValid("profile"),
+        lastFetched: cache.profile.timestamp,
+      },
+    },
   },
   reducers: {
     logout: (state) => {
@@ -309,36 +393,44 @@ const authSlice = createSlice({
       state.role = null;
       state.isAuthenticated = false;
       state.error = null;
+      // Clear all caches on logout
+      clearAuthCache();
     },
     clearError: (state) => {
       state.error = null;
     },
     updateProfilePicture: (state, action) => {
       if (state.user) {
-        // Handle both old format (string) and new format (object with profilePictureUrl and profilePictureId)
         if (typeof action.payload === "string") {
-          // Old format - just the URL
           state.user.profilePicture = action.payload;
         } else if (action.payload && action.payload.profilePictureUrl) {
-          // New format - object with profilePictureUrl and profilePictureId
           state.user.profilePictureUrl = action.payload.profilePictureUrl;
           state.user.profilePictureId = action.payload.profilePictureId;
-          // Keep old field for backward compatibility
           state.user.profilePicture = action.payload.profilePictureUrl;
         } else if (action.payload && typeof action.payload === "object") {
-          // Handle removal case - when payload is an object with empty strings
           state.user.profilePictureUrl = action.payload.profilePictureUrl || "";
           state.user.profilePictureId = action.payload.profilePictureId || "";
           state.user.profilePicture = action.payload.profilePicture || "";
         } else if (action.payload === null) {
-          // Handle null case - clear all profile picture fields
           state.user.profilePictureUrl = "";
           state.user.profilePictureId = "";
           state.user.profilePicture = "";
         }
-        // Update localStorage as well
         localStorage.setItem("user", JSON.stringify(state.user));
+
+        // Clear profile cache since picture has changed
+        clearAuthCache("profile");
       }
+    },
+    // Add action to manually clear cache (for debugging)
+    clearCache: (state) => {
+      clearAuthCache();
+      state.cacheStatus = {
+        profile: {
+          isValid: false,
+          lastFetched: null,
+        },
+      };
     },
   },
   extraReducers: (builder) => {
@@ -353,6 +445,9 @@ const authSlice = createSlice({
         state.user = payload;
         state.role = payload.role;
         state.isAuthenticated = true;
+        // Update cache status
+        state.cacheStatus.profile.isValid = isCacheValid("profile");
+        state.cacheStatus.profile.lastFetched = cache.profile.timestamp;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -370,6 +465,9 @@ const authSlice = createSlice({
         state.user = payload;
         state.role = payload.role;
         state.isAuthenticated = true;
+        // Update cache status
+        state.cacheStatus.profile.isValid = isCacheValid("profile");
+        state.cacheStatus.profile.lastFetched = cache.profile.timestamp;
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
@@ -400,10 +498,16 @@ const authSlice = createSlice({
         state.role = (payload.user || payload).role;
         // Update localStorage with fresh profile data
         localStorage.setItem("user", JSON.stringify(payload.user || payload));
+        // Update cache status
+        state.cacheStatus.profile.isValid = isCacheValid("profile");
+        state.cacheStatus.profile.lastFetched = cache.profile.timestamp;
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Failed to fetch profile";
+        // Update cache status
+        state.cacheStatus.profile.isValid = false;
+        state.cacheStatus.profile.lastFetched = null;
       })
 
       // Update Profile
@@ -416,6 +520,9 @@ const authSlice = createSlice({
         state.user = payload;
         state.role = payload.role;
         state.isAuthenticated = true;
+        // Update cache status
+        state.cacheStatus.profile.isValid = isCacheValid("profile");
+        state.cacheStatus.profile.lastFetched = cache.profile.timestamp;
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
@@ -453,5 +560,6 @@ const authSlice = createSlice({
 });
 
 // ---------------- Exports ----------------
-export const { logout, clearError, updateProfilePicture } = authSlice.actions;
+export const { logout, clearError, updateProfilePicture, clearCache } =
+  authSlice.actions;
 export default authSlice.reducer;

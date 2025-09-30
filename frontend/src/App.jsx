@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import React, { useEffect } from "react";
+import { safeDispatchWithDelays } from "./utils/reduxUtils";
 import {
   initSocket,
   getSocket,
@@ -73,6 +74,8 @@ import AdminDashboardHome from "./pages/AdminDashboard/DashboardHome";
 import PendingLogisticsList from "./pages/AdminDashboard/PendingLogisticsList";
 import VerifiedLogisticsList from "./pages/AdminDashboard/VerifiedLogisticsList";
 import ShipmentsList from "./pages/AdminDashboard/ShipmentsList";
+import AdminShipmentDetail from "./pages/AdminDashboard/ShipmentDetail";
+import AdminBidDetail from "./pages/AdminDashboard/BidDetail";
 import BidsList from "./pages/AdminDashboard/BidsList";
 import AdminChatList from "./pages/AdminDashboard/AdminChatList";
 import AdminChatWindow from "./pages/AdminDashboard/AdminChatWindow";
@@ -103,21 +106,37 @@ function App() {
 
   useEffect(() => {
     // Fetch data when user is authenticated to get counts for sidebar
-    // Stagger API calls to prevent rate limiting
+    // Use optimized API calls with proper dependency arrays
     if (user) {
-      // Immediate call
-      dispatch(fetchConversations());
+      console.log("🔄 Initializing user data fetch...");
 
-      // Delayed calls to prevent rate limiting
-      setTimeout(() => {
-        dispatch(fetchBidsOnMyShipments());
-      }, 500);
+      // Stagger API calls to prevent rate limiting
+      const fetchUserData = async () => {
+        try {
+          // Use safe dispatch with delays to prevent rate limiting
+          const actionConfigs = [
+            { action: fetchConversations(), delay: 0 },
+            { action: fetchBidsOnMyShipments(), delay: 1000 },
+            { action: fetchDeliveredShipments(), delay: 2000 },
+          ];
 
-      setTimeout(() => {
-        dispatch(fetchDeliveredShipments());
-      }, 1000);
+          await safeDispatchWithDelays(dispatch, actionConfigs, {
+            logPrefix: "User data initialization",
+            onError: (errors) => {
+              console.error("❌ Some user data actions failed:", errors);
+            },
+            onSuccess: (results) => {
+              console.log("✅ User data initialization completed successfully");
+            },
+          });
+        } catch (error) {
+          console.error("❌ Error fetching user data:", error.message);
+        }
+      };
+
+      fetchUserData();
     }
-  }, [dispatch, user]);
+  }, [dispatch, user?._id]); // Only depend on user ID, not the entire user object
 
   useEffect(() => {
     if (user) {
@@ -272,7 +291,15 @@ function App() {
                     path="/admin/shipments-list"
                     element={<ShipmentsList />}
                   />
+                  <Route
+                    path="/admin/shipments/:id"
+                    element={<AdminShipmentDetail />}
+                  />
                   <Route path="/admin/bids-list" element={<BidsList />} />
+                  <Route
+                    path="/admin/bid-details/:id"
+                    element={<AdminBidDetail />}
+                  />
                   <Route path="/admin/chat" element={<AdminChatDashboard />} />
                   <Route
                     path="/admin/chat/:conversationId"

@@ -1,12 +1,51 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 
+// ---------------- Cache Management ----------------
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const cache = {
+  settings: {
+    data: null,
+    timestamp: null,
+    isFetching: false,
+  },
+};
+
+// Helper function to check if cache is valid
+const isCacheValid = (cacheKey) => {
+  const cached = cache[cacheKey];
+  if (!cached || !cached.data || !cached.timestamp) return false;
+  return Date.now() - cached.timestamp < CACHE_DURATION;
+};
+
+// Helper function to set cache
+const setCache = (cacheKey, data) => {
+  cache[cacheKey] = {
+    data,
+    timestamp: Date.now(),
+    isFetching: false,
+  };
+};
+
+// Helper function to clear cache
+const clearSettingsCache = (cacheKey) => {
+  if (cacheKey) {
+    cache[cacheKey] = { data: null, timestamp: null, isFetching: false };
+  } else {
+    Object.keys(cache).forEach((key) => {
+      cache[key] = { data: null, timestamp: null, isFetching: false };
+    });
+  }
+};
+
 // Async thunks for settings management
 export const updateSettings = createAsyncThunk(
   "settings/updateSettings",
   async (settingsData, { rejectWithValue }) => {
     try {
       const response = await api.put("/settings/settings", settingsData);
+      // Clear cache after update
+      clearSettingsCache("settings");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -22,6 +61,8 @@ export const updateNotifications = createAsyncThunk(
         "/settings/notifications",
         notificationData
       );
+      // Clear cache after update
+      clearSettingsCache("settings");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -34,6 +75,8 @@ export const updatePrivacy = createAsyncThunk(
   async (privacyData, { rejectWithValue }) => {
     try {
       const response = await api.put("/settings/privacy", privacyData);
+      // Clear cache after update
+      clearSettingsCache("settings");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -41,13 +84,48 @@ export const updatePrivacy = createAsyncThunk(
   }
 );
 
+// Get Settings - WITH CACHING AND DUPLICATE PREVENTION
 export const getSettings = createAsyncThunk(
   "settings/getSettings",
   async (_, { rejectWithValue }) => {
     try {
+      // Check if we already have valid cached data
+      if (isCacheValid("settings")) {
+        console.log("📦 Using cached settings data");
+        return cache.settings.data;
+      }
+
+      // Check if we're already fetching
+      if (cache.settings.isFetching) {
+        console.log("⏳ Settings fetch already in progress, waiting...");
+        // Wait for the current fetch to complete
+        return new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!cache.settings.isFetching) {
+              clearInterval(checkInterval);
+              if (cache.settings.data) {
+                resolve(cache.settings.data);
+              } else {
+                reject(new Error("Settings fetch failed"));
+              }
+            }
+          }, 100);
+        });
+      }
+
+      // Mark as fetching
+      cache.settings.isFetching = true;
+      console.log("🌐 Fetching fresh settings data from API");
+
       const response = await api.get("/settings");
+
+      // Cache the result
+      setCache("settings", response.data);
+
       return response.data;
     } catch (error) {
+      // Reset fetching flag on error
+      cache.settings.isFetching = false;
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -76,6 +154,10 @@ export const uploadProfilePicture = createAsyncThunk(
           },
         }
       );
+
+      // Clear settings cache since profile picture affects settings
+      clearSettingsCache("settings");
+
       return response.data;
     } catch (error) {
       console.error("❌ Redux: Upload error:", error);
@@ -101,6 +183,8 @@ export const removeProfilePicture = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.delete("/auth/profile-picture");
+      // Clear settings cache since profile picture affects settings
+      clearSettingsCache("settings");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -137,6 +221,8 @@ export const updateProfile = createAsyncThunk(
   async (profileData, { rejectWithValue }) => {
     try {
       const response = await api.put("/profile/profile", profileData);
+      // Clear settings cache since profile affects settings
+      clearSettingsCache("settings");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -184,6 +270,13 @@ const settingsSlice = createSlice({
     loading: false,
     error: null,
     updateLoading: false,
+    // Add cache status for debugging
+    cacheStatus: {
+      settings: {
+        isValid: isCacheValid("settings"),
+        lastFetched: cache.settings.timestamp,
+      },
+    },
   },
   reducers: {
     clearSettingsError: (state) => {
@@ -238,6 +331,16 @@ const settingsSlice = createSlice({
         }
       }
     },
+    // Add action to manually clear cache (for debugging)
+    clearCache: (state) => {
+      clearSettingsCache();
+      state.cacheStatus = {
+        settings: {
+          isValid: false,
+          lastFetched: null,
+        },
+      };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -250,6 +353,9 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.settings = { ...state.settings, ...action.payload.settings };
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(updateSettings.rejected, (state, action) => {
         state.updateLoading = false;
@@ -268,6 +374,9 @@ const settingsSlice = createSlice({
           ...action.payload.notifications,
         };
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(updateNotifications.rejected, (state, action) => {
         state.updateLoading = false;
@@ -283,6 +392,9 @@ const settingsSlice = createSlice({
         state.updateLoading = false;
         state.privacy = { ...state.privacy, ...action.payload.privacy };
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(updatePrivacy.rejected, (state, action) => {
         state.updateLoading = false;
@@ -303,10 +415,16 @@ const settingsSlice = createSlice({
         };
         state.privacy = { ...state.privacy, ...action.payload.privacy };
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(getSettings.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        // Update cache status
+        state.cacheStatus.settings.isValid = false;
+        state.cacheStatus.settings.lastFetched = null;
       })
 
       // Upload Profile Picture
@@ -319,6 +437,9 @@ const settingsSlice = createSlice({
         // Update the user profile picture in the auth state
         // This will be handled by the auth slice
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(uploadProfilePicture.rejected, (state, action) => {
         state.updateLoading = false;
@@ -335,6 +456,9 @@ const settingsSlice = createSlice({
         // Update the user profile picture in the auth state
         // This will be handled by the auth slice
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(removeProfilePicture.rejected, (state, action) => {
         state.updateLoading = false;
@@ -363,6 +487,9 @@ const settingsSlice = createSlice({
       .addCase(updateProfile.fulfilled, (state) => {
         state.updateLoading = false;
         state.error = null;
+        // Update cache status
+        state.cacheStatus.settings.isValid = isCacheValid("settings");
+        state.cacheStatus.settings.lastFetched = cache.settings.timestamp;
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.updateLoading = false;
@@ -377,5 +504,6 @@ export const {
   updateNotificationPreference,
   updatePrivacyPreference,
   initializeSettings,
+  clearCache,
 } = settingsSlice.actions;
 export default settingsSlice.reducer;

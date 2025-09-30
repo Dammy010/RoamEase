@@ -540,7 +540,13 @@ const refreshAccessToken = async (req, res) => {
 // ===== GET PROFILE =====
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    console.log("🔍 getProfile: Starting profile fetch");
+    console.log("🔍 getProfile: req.user:", req.user ? "Present" : "Missing");
+    console.log("🔍 getProfile: req.user._id:", req.user?._id);
+
+    const user = await User.findById(req.user._id).select("-password");
+    console.log("🔍 getProfile: User found:", user ? "Yes" : "No");
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (user.profilePicture)
@@ -577,7 +583,7 @@ const getProfile = async (req, res) => {
 // ===== UPDATE PROFILE =====
 const updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("+password");
+    const user = await User.findById(req.user._id).select("+password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // Handle password change

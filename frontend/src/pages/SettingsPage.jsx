@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { safeDispatchWithDelays } from "../utils/reduxUtils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 // Removed getProfilePictureUrl import - now using profilePictureUrl directly
@@ -129,25 +130,48 @@ const SettingsPage = () => {
   const [passwordErrors, setPasswordErrors] = useState({});
   const [profileErrors, setProfileErrors] = useState({});
 
-  // Initialize settings on mount
+  // Initialize settings on mount with optimized API calls
   useEffect(() => {
-    dispatch(initializeSettings());
+    console.log("🔄 Initializing settings page...");
 
-    // Stagger API calls to prevent rate limiting
-    setTimeout(() => {
-      dispatch(getSettings());
-    }, 200);
+    const initializeSettingsPage = async () => {
+      try {
+        // Initialize settings first (synchronous action)
+        dispatch(initializeSettings());
 
-    setTimeout(() => {
-      dispatch(fetchProfile());
-    }, 500);
+        // Use safe dispatch with delays to prevent rate limiting
+        const actionConfigs = [
+          { action: getSettings(), delay: 500 },
+          { action: fetchProfile(), delay: 1000 },
+        ];
 
-    // Initialize currency from user settings
-    if (user?.preferences?.currency) {
-      setCurrencyContext(user.preferences.currency);
-      dispatch(setCurrency(user.preferences.currency));
-    }
-  }, [dispatch, user, setCurrencyContext]);
+        await safeDispatchWithDelays(dispatch, actionConfigs, {
+          logPrefix: "Settings page initialization",
+          onError: (errors) => {
+            console.error(
+              "❌ Some actions failed during initialization:",
+              errors
+            );
+          },
+          onSuccess: (results) => {
+            console.log(
+              "✅ Settings page initialization completed successfully"
+            );
+          },
+        });
+
+        // Initialize currency from user settings
+        if (user?.preferences?.currency) {
+          setCurrencyContext(user.preferences.currency);
+          dispatch(setCurrency(user.preferences.currency));
+        }
+      } catch (error) {
+        console.error("❌ Error initializing settings page:", error.message);
+      }
+    };
+
+    initializeSettingsPage();
+  }, [dispatch, user?._id, setCurrencyContext]); // Only depend on user ID
 
   // Sync currency when settings are loaded
   useEffect(() => {

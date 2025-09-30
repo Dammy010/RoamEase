@@ -547,7 +547,7 @@ const ShipmentsList = () => {
                       {/* Action Button */}
                       <button
                         onClick={() =>
-                          alert("View Shipment Details: " + shipment._id)
+                          navigate(`/admin/shipments/${shipment._id}`)
                         }
                         className="w-full bg-blue-500 text-white py-3 px-4 rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                       >

@@ -444,23 +444,35 @@ const getShipmentHistory = async (req, res) => {
 // Fetch single shipment by ID
 const getShipmentById = async (req, res) => {
   try {
-    console.log(
-      "DEBUG: getShipmentById - Requesting shipment with ID:",
-      req.params.id
+    // Populate user data when fetching shipment
+    const shipment = await Shipment.findById(req.params.id).populate(
+      "user",
+      "name email phoneNumber phone companyName profilePicture profilePictureUrl role"
     );
-    const shipment = await Shipment.findById(req.params.id);
-    console.log("DEBUG: getShipmentById - Result of findById:", shipment);
+
     if (!shipment) {
-      console.log(
-        "DEBUG: getShipmentById - Shipment not found for ID:",
-        req.params.id
-      );
       return res
         .status(404)
         .json({ success: false, message: "Shipment not found" });
     }
-    console.log("DEBUG: getShipmentById - Sending shipment data:", shipment);
-    return res.json({ success: true, shipment });
+
+    // Find accepted bid and populate logistics company data
+    const Bid = require("../models/Bid");
+    const acceptedBid = await Bid.findOne({
+      shipment: req.params.id,
+      status: "accepted",
+    }).populate(
+      "carrier",
+      "name email phoneNumber phone companyName profilePicture profilePictureUrl role"
+    );
+
+    // Add accepted bid information to shipment
+    const shipmentWithBid = {
+      ...shipment.toObject(),
+      acceptedBid: acceptedBid,
+    };
+
+    return res.json({ success: true, shipment: shipmentWithBid });
   } catch (err) {
     console.error("ERROR: getShipmentById - Error fetching shipment:", err);
     return res.status(500).json({

@@ -475,7 +475,10 @@ exports.getBidsForAdmin = async (req, res) => {
 
     const [items, total] = await Promise.all([
       Bid.find(q)
-        .populate("carrier", "name email role companyName country phone")
+        .populate(
+          "carrier",
+          "name email role companyName country phone profilePicture profilePictureUrl"
+        )
         .populate(
           "shipment",
           "shipmentTitle status pickupAddress deliveryAddress pickupCity deliveryCity typeOfGoods weight budget createdAt user modeOfTransport"

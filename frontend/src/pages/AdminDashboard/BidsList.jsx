@@ -81,7 +81,8 @@ const BidsList = () => {
         (bid.carrier?.companyName || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        bid.amount?.toString().includes(searchTerm);
+        bid.price?.toString().includes(searchTerm) ||
+        (bid.currency || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus =
         filterStatus === "all" || bid.status === filterStatus;
 
@@ -92,8 +93,8 @@ const BidsList = () => {
 
       switch (sortBy) {
         case "amount":
-          aValue = a.amount || 0;
-          bValue = b.amount || 0;
+          aValue = a.price || 0;
+          bValue = b.price || 0;
           break;
         case "status":
           aValue = (a.status || "").toLowerCase();
@@ -110,6 +111,10 @@ const BidsList = () => {
         case "shipment":
           aValue = (a.shipment?.shipmentTitle || "").toLowerCase();
           bValue = (b.shipment?.shipmentTitle || "").toLowerCase();
+          break;
+        case "currency":
+          aValue = (a.currency || "").toLowerCase();
+          bValue = (b.currency || "").toLowerCase();
           break;
         default:
           aValue = new Date(a.createdAt || 0);
@@ -161,8 +166,60 @@ const BidsList = () => {
     return allBids.filter((bid) => bid.status === status).length;
   };
 
+  const formatBidAmount = (amount, currency) => {
+    if (!amount || isNaN(amount)) return "₦0.00";
+
+    const symbols = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      NGN: "₦",
+      JPY: "¥",
+      CAD: "C$",
+      AUD: "A$",
+      CHF: "CHF",
+      CNY: "¥",
+      INR: "₹",
+      BRL: "R$",
+      MXN: "$",
+      ZAR: "R",
+      AED: "د.إ",
+      SGD: "S$",
+    };
+
+    const symbol = symbols[currency] || "₦";
+    return `${symbol}${amount.toLocaleString()}`;
+  };
+
   const getTotalBidValue = () => {
-    return allBids.reduce((total, bid) => total + (bid.amount || 0), 0);
+    // Since bids can be in different currencies, we'll show a count instead
+    return allBids.length;
+  };
+
+  const getTotalBidValueInNGN = () => {
+    // Convert all bids to NGN for a rough total
+    const exchangeRates = {
+      USD: 460,
+      EUR: 500,
+      GBP: 580,
+      NGN: 1,
+      JPY: 3.2,
+      CAD: 340,
+      AUD: 300,
+      CHF: 500,
+      CNY: 64,
+      INR: 5.5,
+      BRL: 88,
+      MXN: 25,
+      ZAR: 30,
+      AED: 125,
+      SGD: 340,
+    };
+
+    return allBids.reduce((total, bid) => {
+      const rate = exchangeRates[bid.currency] || 1;
+      return total + bid.price * rate;
+    }, 0);
   };
 
   if (loading) {
@@ -294,6 +351,8 @@ const BidsList = () => {
                     <option value="createdAt-asc">Oldest First</option>
                     <option value="amount-desc">Highest Amount</option>
                     <option value="amount-asc">Lowest Amount</option>
+                    <option value="currency-asc">Currency A-Z</option>
+                    <option value="currency-desc">Currency Z-A</option>
                     <option value="status-asc">Status A-Z</option>
                     <option value="status-desc">Status Z-A</option>
                     <option value="carrier-asc">Carrier A-Z</option>
@@ -355,9 +414,11 @@ const BidsList = () => {
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(getTotalBidValue())}
+                        ₦{getTotalBidValueInNGN().toLocaleString()}
                       </div>
-                      <div className="text-sm text-blue-600">Total Value</div>
+                      <div className="text-sm text-blue-600">
+                        Total Value (NGN)
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -419,11 +480,16 @@ const BidsList = () => {
                           </div>
                           <div>
                             <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors duration-300">
-                              {formatCurrency(bid.amount)}
+                              {formatBidAmount(bid.price, bid.currency)}
                             </h3>
-                            <p className="text-sm text-gray-500">
-                              Bid ID: {bid._id.slice(-8)}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-gray-500">
+                                Bid ID: {bid._id.slice(-8)}
+                              </p>
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                {bid.currency || "USD"}
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <div
@@ -511,7 +577,14 @@ const BidsList = () => {
                           </>
                         )}
                         <button
-                          onClick={() => alert("View Bid Details: " + bid._id)}
+                          onClick={() => {
+                            console.log("Navigating to bid:", bid._id);
+                            console.log(
+                              "Navigation URL:",
+                              `/admin/bid-details/${bid._id}`
+                            );
+                            navigate(`/admin/bid-details/${bid._id}`);
+                          }}
                           className="flex-1 bg-blue-500 text-white py-3 px-4 rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                         >
                           <Eye size={16} />

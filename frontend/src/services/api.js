@@ -1,4 +1,4 @@
-// src/services/api.js
+// Enhanced API service with retry logic and exponential backoff
 import axios from "axios";
 import { reconnectSocketAfterTokenRefresh } from "./socket";
 
@@ -34,6 +34,29 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// Exponential backoff retry function
+const retryWithExponentialBackoff = async (
+  fn,
+  maxRetries = 3,
+  baseDelay = 1000
+) => {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(
+        `🔄 Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+};
+
 // Attach access token to every request
 api.interceptors.request.use(
   (config) => {
@@ -52,12 +75,21 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle rate limiting (429)
+    // Handle rate limiting (429) with exponential backoff
     if (error.response?.status === 429) {
-      console.warn("🚦 Rate limit exceeded, retrying after delay...");
-      // Wait 5 seconds before retrying
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      return api(originalRequest);
+      const retryAfter = error.response.headers["retry-after"] || 5;
+      console.warn(`🚦 Rate limit exceeded, retrying after ${retryAfter}s...`);
+
+      return retryWithExponentialBackoff(
+        async () => {
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryAfter * 1000)
+          );
+          return api(originalRequest);
+        },
+        2,
+        retryAfter * 1000
+      );
     }
 
     // Only handle 401s once
@@ -144,6 +176,12 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // Handle network errors with retry
+    if (!error.response && error.code === "NETWORK_ERROR") {
+      console.warn("🌐 Network error detected, retrying...");
+      return retryWithExponentialBackoff(() => api(originalRequest), 2, 1000);
     }
 
     return Promise.reject(error);

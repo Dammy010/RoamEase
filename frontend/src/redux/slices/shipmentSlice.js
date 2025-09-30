@@ -1,44 +1,149 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../services/api';
-import { toast } from 'react-toastify';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import api from "../../services/api";
+import { toast } from "react-toastify";
+
+// ---------------- Cache Management ----------------
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes for shipments (shorter than profile)
+const cache = {
+  userShipments: {
+    data: null,
+    timestamp: null,
+    isFetching: false,
+  },
+  deliveredShipments: {
+    data: null,
+    timestamp: null,
+    isFetching: false,
+  },
+  availableShipments: {
+    data: null,
+    timestamp: null,
+    isFetching: false,
+  },
+  shipmentById: {}, // Dynamic cache by ID
+};
+
+// Helper function to check if cache is valid
+const isCacheValid = (cacheKey, id = null) => {
+  const cached = id ? cache[cacheKey][id] : cache[cacheKey];
+  if (!cached || !cached.data || !cached.timestamp) return false;
+  return Date.now() - cached.timestamp < CACHE_DURATION;
+};
+
+// Helper function to set cache
+const setCache = (cacheKey, data, id = null) => {
+  if (id) {
+    if (!cache[cacheKey][id]) {
+      cache[cacheKey][id] = {};
+    }
+    cache[cacheKey][id] = {
+      data,
+      timestamp: Date.now(),
+      isFetching: false,
+    };
+  } else {
+    cache[cacheKey] = {
+      data,
+      timestamp: Date.now(),
+      isFetching: false,
+    };
+  }
+};
+
+// Helper function to clear cache
+const clearShipmentCache = (cacheKey, id = null) => {
+  if (id && cache[cacheKey] && cache[cacheKey][id]) {
+    cache[cacheKey][id] = { data: null, timestamp: null, isFetching: false };
+  } else if (cacheKey) {
+    cache[cacheKey] = { data: null, timestamp: null, isFetching: false };
+  } else {
+    Object.keys(cache).forEach((key) => {
+      if (key === "shipmentById") {
+        cache[key] = {};
+      } else {
+        cache[key] = { data: null, timestamp: null, isFetching: false };
+      }
+    });
+  }
+};
 
 // --- Async Thunks ---
 // Post shipment
 export const postShipment = createAsyncThunk(
-  'shipment/post',
+  "shipment/post",
   async ({ data, contentType }, thunkAPI) => {
     try {
       console.log("🔍 postShipment - Sending data:", { contentType, data });
-      
+
       const headers = {};
-      if (contentType === 'multipart/form-data') {
+      if (contentType === "multipart/form-data") {
         // Don't set Content-Type for FormData, let browser set it with boundary
         // The browser will automatically set: multipart/form-data; boundary=----WebKitFormBoundary...
       } else {
-        headers['Content-Type'] = 'application/json';
+        headers["Content-Type"] = "application/json";
       }
-      
-      const res = await api.post('/shipments', data, { headers });
-      toast.success('Shipment posted successfully');
+
+      const res = await api.post("/shipments", data, { headers });
+      toast.success("Shipment posted successfully");
+
+      // Clear user shipments cache since we added a new one
+      clearShipmentCache("userShipments");
+
       return res.data; // { success, shipment }
     } catch (err) {
       console.error("❌ postShipment error:", err);
-      const message = err.response?.data?.message || 'Failed to post shipment';
+      const message = err.response?.data?.message || "Failed to post shipment";
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
-// Fetch user shipments (active/open)
+// Fetch user shipments (active/open) - WITH CACHING
 export const fetchUserShipments = createAsyncThunk(
-  'shipment/fetchUser',
+  "shipment/fetchUser",
   async (_, thunkAPI) => {
     try {
-      const res = await api.get('/shipments');
+      // Check if we already have valid cached data
+      if (isCacheValid("userShipments")) {
+        console.log("📦 Using cached user shipments data");
+        return cache.userShipments.data;
+      }
+
+      // Check if we're already fetching
+      if (cache.userShipments.isFetching) {
+        console.log("⏳ User shipments fetch already in progress, waiting...");
+        // Wait for the current fetch to complete
+        return new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!cache.userShipments.isFetching) {
+              clearInterval(checkInterval);
+              if (cache.userShipments.data) {
+                resolve(cache.userShipments.data);
+              } else {
+                reject(new Error("User shipments fetch failed"));
+              }
+            }
+          }, 100);
+        });
+      }
+
+      // Mark as fetching
+      cache.userShipments.isFetching = true;
+      console.log("🌐 Fetching fresh user shipments data from API");
+
+      const res = await api.get("/shipments");
+
+      // Cache the result
+      setCache("userShipments", res.data);
+
       return res.data; // { success, shipments }
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to fetch shipments';
+      // Reset fetching flag on error
+      cache.userShipments.isFetching = false;
+
+      const message =
+        err.response?.data?.message || "Failed to fetch shipments";
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -47,27 +152,71 @@ export const fetchUserShipments = createAsyncThunk(
 
 // ✅ Fetch shipment history
 export const fetchShipmentHistory = createAsyncThunk(
-  'shipment/fetchHistory',
+  "shipment/fetchHistory",
   async (_, thunkAPI) => {
     try {
-      const res = await api.get('/shipments/history');
+      const res = await api.get("/shipments/history");
       return res.data; // { success, history }
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to fetch shipment history';
+      const message =
+        err.response?.data?.message || "Failed to fetch shipment history";
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
+// Fetch shipment by ID - WITH CACHING
 export const fetchShipmentById = createAsyncThunk(
-  'shipment/fetchById',
+  "shipment/fetchById",
   async (id, thunkAPI) => {
     try {
+      // Check if we already have valid cached data for this specific shipment
+      if (isCacheValid("shipmentById", id)) {
+        console.log(`📦 Using cached shipment data for ID: ${id}`);
+        return cache.shipmentById[id].data;
+      }
+
+      // Check if we're already fetching this specific shipment
+      if (cache.shipmentById[id] && cache.shipmentById[id].isFetching) {
+        console.log(`⏳ Shipment ${id} fetch already in progress, waiting...`);
+        // Wait for the current fetch to complete
+        return new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!cache.shipmentById[id] || !cache.shipmentById[id].isFetching) {
+              clearInterval(checkInterval);
+              if (cache.shipmentById[id] && cache.shipmentById[id].data) {
+                resolve(cache.shipmentById[id].data);
+              } else {
+                reject(new Error(`Shipment ${id} fetch failed`));
+              }
+            }
+          }, 100);
+        });
+      }
+
+      // Initialize cache entry if it doesn't exist
+      if (!cache.shipmentById[id]) {
+        cache.shipmentById[id] = {};
+      }
+
+      // Mark as fetching
+      cache.shipmentById[id].isFetching = true;
+      console.log(`🌐 Fetching fresh shipment data for ID: ${id}`);
+
       const res = await api.get(`/shipments/${id}`);
+
+      // Cache the result
+      setCache("shipmentById", res.data, id);
+
       return res.data; // { success, shipment }
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to fetch shipment';
+      // Reset fetching flag on error
+      if (cache.shipmentById[id]) {
+        cache.shipmentById[id].isFetching = false;
+      }
+
+      const message = err.response?.data?.message || "Failed to fetch shipment";
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -75,28 +224,71 @@ export const fetchShipmentById = createAsyncThunk(
 );
 
 export const updateShipmentStatus = createAsyncThunk(
-  'shipment/updateStatus',
+  "shipment/updateStatus",
   async ({ id, status }, thunkAPI) => {
     try {
       const res = await api.put(`/shipments/${id}/status`, { status });
-      toast.success('Shipment status updated successfully');
+      toast.success("Shipment status updated successfully");
+
+      // Clear relevant caches since status changed
+      clearShipmentCache("userShipments");
+      clearShipmentCache("shipmentById", id);
+      clearShipmentCache("deliveredShipments");
+
       return res.data; // { success, shipment }
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to update shipment status';
+      const message =
+        err.response?.data?.message || "Failed to update shipment status";
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
-// New: Fetch open shipments not created by the current user (for carriers to bid on)
+// New: Fetch open shipments not created by the current user (for carriers to bid on) - WITH CACHING
 export const fetchAvailableShipments = createAsyncThunk(
-  'shipment/fetchAvailable',
+  "shipment/fetchAvailable",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/shipments/available-for-bidding'); // Corrected: removed extra /api
+      // Check if we already have valid cached data
+      if (isCacheValid("availableShipments")) {
+        console.log("📦 Using cached available shipments data");
+        return cache.availableShipments.data;
+      }
+
+      // Check if we're already fetching
+      if (cache.availableShipments.isFetching) {
+        console.log(
+          "⏳ Available shipments fetch already in progress, waiting..."
+        );
+        // Wait for the current fetch to complete
+        return new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!cache.availableShipments.isFetching) {
+              clearInterval(checkInterval);
+              if (cache.availableShipments.data) {
+                resolve(cache.availableShipments.data);
+              } else {
+                reject(new Error("Available shipments fetch failed"));
+              }
+            }
+          }, 100);
+        });
+      }
+
+      // Mark as fetching
+      cache.availableShipments.isFetching = true;
+      console.log("🌐 Fetching fresh available shipments data from API");
+
+      const response = await api.get("/shipments/available-for-bidding");
+
+      // Cache the result
+      setCache("availableShipments", response.data.shipments);
+
       return response.data.shipments;
     } catch (error) {
+      // Reset fetching flag on error
+      cache.availableShipments.isFetching = false;
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -104,10 +296,10 @@ export const fetchAvailableShipments = createAsyncThunk(
 
 // Public: Fetch open shipments (no authentication required)
 export const fetchPublicOpenShipments = createAsyncThunk(
-  'shipment/fetchPublicOpen',
+  "shipment/fetchPublicOpen",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/shipments/public/open-shipments');
+      const response = await api.get("/shipments/public/open-shipments");
       return response.data.shipments;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -117,36 +309,47 @@ export const fetchPublicOpenShipments = createAsyncThunk(
 
 // New: Fetch full shipment details by ID (for viewing complete information)
 export const fetchShipmentDetailsById = createAsyncThunk(
-  'shipment/fetchDetailsById',
+  "shipment/fetchDetailsById",
   async (shipmentId, thunkAPI) => {
     try {
       const res = await api.get(`/shipments/${shipmentId}`, {
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       });
       return res.data; // { success, shipment }
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to fetch shipment details';
-      console.error("ERROR: fetchShipmentDetailsById - API call failed:", message, err.response?.data);
+      const message =
+        err.response?.data?.message || "Failed to fetch shipment details";
+      console.error(
+        "ERROR: fetchShipmentDetailsById - API call failed:",
+        message,
+        err.response?.data
+      );
       return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
-// Removed: markShipmentAsDeliveredAndRate (replaced with separate rate and deliver actions)
-
 // New: Mark shipment as delivered by logistics company
 export const markShipmentAsDeliveredByLogistics = createAsyncThunk(
-  'shipment/markAsDeliveredByLogistics',
+  "shipment/markAsDeliveredByLogistics",
   async (id, { rejectWithValue }) => {
     try {
       const res = await api.put(`/shipments/${id}/mark-delivered-by-logistics`);
+
+      // Clear relevant caches since status changed
+      clearShipmentCache("userShipments");
+      clearShipmentCache("shipmentById", id);
+      clearShipmentCache("deliveredShipments");
+
       return res.data.shipment;
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to mark shipment as delivered by logistics.';
+      const message =
+        err.response?.data?.message ||
+        "Failed to mark shipment as delivered by logistics.";
       return rejectWithValue(message);
     }
   }
@@ -154,13 +357,20 @@ export const markShipmentAsDeliveredByLogistics = createAsyncThunk(
 
 // New: Mark shipment as delivered by user
 export const markShipmentAsDeliveredByUser = createAsyncThunk(
-  'shipment/markAsDeliveredByUser',
+  "shipment/markAsDeliveredByUser",
   async (id, { rejectWithValue }) => {
     try {
       const res = await api.put(`/shipments/${id}/mark-delivered-by-user`);
+
+      // Clear relevant caches since status changed
+      clearShipmentCache("userShipments");
+      clearShipmentCache("shipmentById", id);
+      clearShipmentCache("deliveredShipments");
+
       return res.data.shipment;
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to mark shipment as delivered.';
+      const message =
+        err.response?.data?.message || "Failed to mark shipment as delivered.";
       return rejectWithValue(message);
     }
   }
@@ -168,38 +378,32 @@ export const markShipmentAsDeliveredByUser = createAsyncThunk(
 
 // Rate a completed shipment
 export const rateCompletedShipment = createAsyncThunk(
-  'shipment/rateCompleted',
+  "shipment/rateCompleted",
   async ({ id, rating, feedback }, { rejectWithValue }) => {
     try {
       // Validate rating on frontend
       if (!rating || rating < 1 || rating > 5) {
-        throw new Error('Rating must be between 1 and 5 stars');
+        throw new Error("Rating must be between 1 and 5 stars");
       }
-      
-      const res = await api.put(`/shipments/${id}/rate`, { 
-        rating: parseInt(rating), 
-        feedback: feedback || '' 
+
+      const res = await api.put(`/shipments/${id}/rate`, {
+        rating: parseInt(rating),
+        feedback: feedback || "",
       });
-      
+
       toast.success(`Rating of ${rating} stars submitted successfully!`);
+
+      // Clear relevant caches since rating changed
+      clearShipmentCache("shipmentById", id);
+      clearShipmentCache("deliveredShipments");
+
       return res.data.shipment;
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Failed to submit rating.';
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to submit rating.";
       toast.error(message);
-      return rejectWithValue(message);
-    }
-  }
-);
-
-// Fetch delivered shipments (completed shipments that can be rated)
-export const fetchDeliveredShipments = createAsyncThunk(
-  'shipment/fetchDelivered',
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await api.get('/shipments/delivered');
-      return res.data.shipments || [];
-    } catch (err) {
-      const message = err.response?.data?.message || 'Failed to fetch delivered shipments.';
       return rejectWithValue(message);
     }
   }
@@ -207,336 +411,418 @@ export const fetchDeliveredShipments = createAsyncThunk(
 
 // Delete shipment
 export const deleteShipment = createAsyncThunk(
-  'shipment/delete',
-  async (shipmentId, thunkAPI) => {
+  "shipment/delete",
+  async (shipmentId, { rejectWithValue }) => {
     try {
       const res = await api.delete(`/shipments/${shipmentId}`);
-      toast.success('Shipment deleted successfully');
-      return { shipmentId, message: res.data.message };
+      toast.success("Shipment deleted successfully");
+
+      // Clear relevant caches since data has changed
+      clearShipmentCache("userShipments");
+
+      return shipmentId;
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to delete shipment';
+      const message =
+        err.response?.data?.message || "Failed to delete shipment";
       toast.error(message);
-      return thunkAPI.rejectWithValue(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// Fetch delivered shipments (completed shipments that can be rated) - WITH CACHING
+export const fetchDeliveredShipments = createAsyncThunk(
+  "shipment/fetchDelivered",
+  async (_, { rejectWithValue }) => {
+    try {
+      // Check if we already have valid cached data
+      if (isCacheValid("deliveredShipments")) {
+        console.log("📦 Using cached delivered shipments data");
+        return cache.deliveredShipments.data;
+      }
+
+      // Check if we're already fetching
+      if (cache.deliveredShipments.isFetching) {
+        console.log(
+          "⏳ Delivered shipments fetch already in progress, waiting..."
+        );
+        // Wait for the current fetch to complete
+        return new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (!cache.deliveredShipments.isFetching) {
+              clearInterval(checkInterval);
+              if (cache.deliveredShipments.data) {
+                resolve(cache.deliveredShipments.data);
+              } else {
+                reject(new Error("Delivered shipments fetch failed"));
+              }
+            }
+          }, 100);
+        });
+      }
+
+      // Mark as fetching
+      cache.deliveredShipments.isFetching = true;
+      console.log("🌐 Fetching fresh delivered shipments data from API");
+
+      const res = await api.get("/shipments/delivered");
+
+      // Cache the result
+      setCache("deliveredShipments", res.data.shipments || []);
+
+      return res.data.shipments || [];
+    } catch (err) {
+      // Reset fetching flag on error
+      cache.deliveredShipments.isFetching = false;
+
+      const message =
+        err.response?.data?.message || "Failed to fetch delivered shipments";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
 // --- Slice ---
 const shipmentSlice = createSlice({
-  name: 'shipment',
+  name: "shipment",
   initialState: {
-    shipments: [], // For user's own shipments
+    shipments: [],
     history: [],
-    deliveredShipments: [], // For completed shipments that can be rated
+    availableShipments: [],
+    deliveredShipments: [],
+    deliveredShipmentsCount: 0,
     currentShipment: null,
-    availableShipments: [], // For shipments available for carriers to bid on
     loading: false,
     error: null,
-    success: false,
-    userInfo: null, // Placeholder for user information, if needed for real-time logic
+    // Add cache status for debugging
+    cacheStatus: {
+      userShipments: {
+        isValid: isCacheValid("userShipments"),
+        lastFetched: cache.userShipments.timestamp,
+      },
+      deliveredShipments: {
+        isValid: isCacheValid("deliveredShipments"),
+        lastFetched: cache.deliveredShipments.timestamp,
+      },
+      availableShipments: {
+        isValid: isCacheValid("availableShipments"),
+        lastFetched: cache.availableShipments.timestamp,
+      },
+    },
   },
   reducers: {
-    resetShipmentState: (state) => {
-      state.loading = false;
+    clearError: (state) => {
       state.error = null;
-      state.success = false;
+    },
+    clearCurrentShipment: (state) => {
       state.currentShipment = null;
-      state.availableShipments = [];
-      state.shipments = [];
-      state.history = [];
     },
-    // Clear delivered shipments count when user visits delivered shipments page
     clearDeliveredShipmentsCount: (state) => {
-      state.deliveredShipments = [];
+      // Clear any delivered shipments notification count
+      // This could be used to mark delivered shipments as "viewed"
+      // For now, we'll just reset any count-related state
+      state.deliveredShipmentsCount = 0;
     },
-    // New: Reducers for Socket.io real-time updates
-    addShipmentRealtime: (state, { payload }) => {
-      // Add to user's shipments if it's their own
-      if (state.shipments.some(s => s._id === payload._id)) {
-        // Already exists, do nothing or update if needed (handled by updateShipmentRealtime)
-      } else if (payload.user && state.userInfo && payload.user._id === state.userInfo._id) { // Assuming userInfo is available in state for context
-        state.shipments.unshift(payload);
-      }
-      
-      // Add to available shipments if it's open and not their own
-      if (payload.status === 'open' && (!state.userInfo || payload.user._id !== state.userInfo._id)) {
-        if (!state.availableShipments.some(s => s._id === payload._id)) {
-            state.availableShipments.unshift(payload);
-        }
+    addShipmentRealtime: (state, action) => {
+      // Add a new shipment to the state (received via socket)
+      const shipment = action.payload;
+      const existingIndex = state.shipments.findIndex(
+        (s) => s._id === shipment._id
+      );
+      if (existingIndex === -1) {
+        state.shipments.unshift(shipment); // Add to beginning
       }
     },
-    updateShipmentRealtime: (state, { payload }) => {
-      // Update in user's shipments
-      let index = state.shipments.findIndex(s => s._id === payload._id);
+    updateShipmentRealtime: (state, action) => {
+      // Update an existing shipment in the state (received via socket)
+      const updatedShipment = action.payload;
+      const index = state.shipments.findIndex(
+        (s) => s._id === updatedShipment._id
+      );
       if (index !== -1) {
-        state.shipments[index] = payload;
+        state.shipments[index] = updatedShipment;
       }
-
-      // Update in history
-      index = state.history.findIndex(s => s._id === payload._id);
-      if (index !== -1) {
-        state.history[index] = payload;
-      } else if (['completed', 'delivered', 'returned'].includes(payload.status) && payload.user && state.userInfo && payload.user._id === state.userInfo._id) {
-          state.history.unshift(payload); // Add to history if it wasn't there and now qualifies
-          state.shipments = state.shipments.filter(s => s._id !== payload._id); // Remove from active shipments
-      }
-
-      // Update in current shipment if it's the one being viewed
-      if (state.currentShipment && state.currentShipment._id === payload._id) {
-        state.currentShipment = payload;
-      }
-
-      // Update in available shipments (remove if no longer open, or update)
-      index = state.availableShipments.findIndex(s => s._id === payload._id);
-      if (index !== -1) {
-        if (payload.status !== 'open' || (state.userInfo && payload.user._id === state.userInfo._id)) {
-          state.availableShipments.splice(index, 1); // Remove if no longer open or if it's the user's own
-        } else {
-          state.availableShipments[index] = payload;
-        }
-      } else if (payload.status === 'open' && (!state.userInfo || payload.user._id !== state.userInfo._id)) {
-        state.availableShipments.unshift(payload); // Add if it's now available for bidding
-      }
+    },
+    // Add action to manually clear cache (for debugging)
+    clearCache: (state) => {
+      clearShipmentCache();
+      state.cacheStatus = {
+        userShipments: {
+          isValid: false,
+          lastFetched: null,
+        },
+        deliveredShipments: {
+          isValid: false,
+          lastFetched: null,
+        },
+        availableShipments: {
+          isValid: false,
+          lastFetched: null,
+        },
+      };
     },
   },
   extraReducers: (builder) => {
     builder
-      // --- Post Shipment ---
+      // Post shipment
       .addCase(postShipment.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
       })
       .addCase(postShipment.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.success = true;
-        if (payload?.shipment) {
-          state.shipments.unshift(payload.shipment); // add new shipment to top
-        }
+        state.shipments.push(payload.shipment);
+        state.error = null;
+        // Update cache status
+        state.cacheStatus.userShipments.isValid = isCacheValid("userShipments");
+        state.cacheStatus.userShipments.lastFetched =
+          cache.userShipments.timestamp;
       })
-      .addCase(postShipment.rejected, (state, { payload }) => {
+      .addCase(postShipment.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
+        state.error = action.payload;
       })
 
-      // --- Fetch User Shipments ---
+      // Fetch user shipments
       .addCase(fetchUserShipments.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchUserShipments.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.shipments = Array.isArray(payload?.shipments)
-          ? payload.shipments
-          : [];
+        state.shipments = payload.shipments || [];
+        state.error = null;
+        // Update cache status
+        state.cacheStatus.userShipments.isValid = isCacheValid("userShipments");
+        state.cacheStatus.userShipments.lastFetched =
+          cache.userShipments.timestamp;
       })
-      .addCase(fetchUserShipments.rejected, (state, { payload }) => {
+      .addCase(fetchUserShipments.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
+        state.error = action.payload;
+        // Update cache status
+        state.cacheStatus.userShipments.isValid = false;
+        state.cacheStatus.userShipments.lastFetched = null;
       })
 
-      // --- Fetch Shipment History ---
+      // Fetch shipment history
       .addCase(fetchShipmentHistory.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchShipmentHistory.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.history = Array.isArray(payload?.history)
-          ? payload.history
-          : [];
+        state.history = payload.history || [];
+        state.error = null;
       })
-      .addCase(fetchShipmentHistory.rejected, (state, { payload }) => {
+      .addCase(fetchShipmentHistory.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
+        state.error = action.payload;
       })
 
-      // --- Fetch Shipment By ID ---
+      // Fetch shipment by ID
       .addCase(fetchShipmentById.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
-        state.currentShipment = null;
       })
       .addCase(fetchShipmentById.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.success = true;
-        state.currentShipment = payload?.shipment || null;
+        state.currentShipment = payload.shipment;
+        state.error = null;
       })
-      .addCase(fetchShipmentById.rejected, (state, { payload }) => {
+      .addCase(fetchShipmentById.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
-        state.currentShipment = null;
+        state.error = action.payload;
       })
 
-      // --- Update Shipment Status ---
+      // Update shipment status
       .addCase(updateShipmentStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
       })
       .addCase(updateShipmentStatus.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.success = true;
-        if (payload?.shipment) {
-          // Update the shipment in the shipments list if it exists
-          const index = state.shipments.findIndex(s => s._id === payload.shipment._id);
-          if (index !== -1) {
-            state.shipments[index] = payload.shipment;
-          }
-          // If the updated shipment is the current one, update it
-          if (state.currentShipment && state.currentShipment._id === payload.shipment._id) {
-            state.currentShipment = payload.shipment;
-          }
+        const index = state.shipments.findIndex(
+          (s) => s._id === payload.shipment._id
+        );
+        if (index !== -1) {
+          state.shipments[index] = payload.shipment;
         }
+        if (
+          state.currentShipment &&
+          state.currentShipment._id === payload.shipment._id
+        ) {
+          state.currentShipment = payload.shipment;
+        }
+        state.error = null;
+        // Update cache status
+        state.cacheStatus.userShipments.isValid = isCacheValid("userShipments");
+        state.cacheStatus.userShipments.lastFetched =
+          cache.userShipments.timestamp;
       })
-      .addCase(updateShipmentStatus.rejected, (state, { payload }) => {
+      .addCase(updateShipmentStatus.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
+        state.error = action.payload;
       })
 
-      // --- Fetch Available Shipments For Carrier (now using fetchAvailableShipments) ---
+      // Fetch available shipments
       .addCase(fetchAvailableShipments.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchAvailableShipments.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.availableShipments = Array.isArray(payload)
-          ? payload
-          : [];
+        state.availableShipments = payload;
+        state.error = null;
+        // Update cache status
+        state.cacheStatus.availableShipments.isValid =
+          isCacheValid("availableShipments");
+        state.cacheStatus.availableShipments.lastFetched =
+          cache.availableShipments.timestamp;
       })
-      .addCase(fetchAvailableShipments.rejected, (state, { payload }) => {
+      .addCase(fetchAvailableShipments.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
+        state.error = action.payload;
+        // Update cache status
+        state.cacheStatus.availableShipments.isValid = false;
+        state.cacheStatus.availableShipments.lastFetched = null;
       })
 
-      // --- Fetch Public Open Shipments ---
+      // Fetch public open shipments
       .addCase(fetchPublicOpenShipments.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchPublicOpenShipments.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.availableShipments = Array.isArray(payload)
-          ? payload
-          : [];
+        state.availableShipments = payload;
+        state.error = null;
       })
-      .addCase(fetchPublicOpenShipments.rejected, (state, { payload }) => {
+      .addCase(fetchPublicOpenShipments.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
+        state.error = action.payload;
       })
 
-      // --- Fetch Shipment Details By ID ---
+      // Fetch shipment details by ID
       .addCase(fetchShipmentDetailsById.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
-        state.currentShipment = null;
       })
       .addCase(fetchShipmentDetailsById.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.success = true;
-        state.currentShipment = payload?.shipment || null;
+        state.currentShipment = payload.shipment;
+        state.error = null;
       })
-      .addCase(fetchShipmentDetailsById.rejected, (state, { payload }) => {
+      .addCase(fetchShipmentDetailsById.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
-        state.currentShipment = null;
+        state.error = action.payload;
       })
 
-      // Removed: markShipmentAsDeliveredAndRate reducer cases (replaced with separate actions)
-
-      // --- Mark Shipment As Delivered By Logistics ---
+      // Mark shipment as delivered by logistics
       .addCase(markShipmentAsDeliveredByLogistics.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
       })
-      .addCase(markShipmentAsDeliveredByLogistics.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.success = true;
-        // Update in available shipments if it exists
-        const index = state.availableShipments.findIndex(s => s._id === payload._id);
-        if (index !== -1) {
-          state.availableShipments[index] = payload;
+      .addCase(
+        markShipmentAsDeliveredByLogistics.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          const index = state.shipments.findIndex((s) => s._id === payload._id);
+          if (index !== -1) {
+            state.shipments[index] = payload;
+          }
+          if (
+            state.currentShipment &&
+            state.currentShipment._id === payload._id
+          ) {
+            state.currentShipment = payload;
+          }
+          state.error = null;
+          // Update cache status
+          state.cacheStatus.userShipments.isValid =
+            isCacheValid("userShipments");
+          state.cacheStatus.userShipments.lastFetched =
+            cache.userShipments.timestamp;
+          state.cacheStatus.deliveredShipments.isValid =
+            isCacheValid("deliveredShipments");
+          state.cacheStatus.deliveredShipments.lastFetched =
+            cache.deliveredShipments.timestamp;
         }
-        // Update in current shipment if it's the one being viewed
-        if (state.currentShipment && state.currentShipment._id === payload._id) {
-          state.currentShipment = payload;
-        }
-      })
-      .addCase(markShipmentAsDeliveredByLogistics.rejected, (state, { payload }) => {
+      )
+      .addCase(markShipmentAsDeliveredByLogistics.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
+        state.error = action.payload;
       })
 
-      // --- Mark Shipment As Delivered By User ---
+      // Mark shipment as delivered by user
       .addCase(markShipmentAsDeliveredByUser.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
       })
-      .addCase(markShipmentAsDeliveredByUser.fulfilled, (state, { payload }) => {
+      .addCase(
+        markShipmentAsDeliveredByUser.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          const index = state.shipments.findIndex((s) => s._id === payload._id);
+          if (index !== -1) {
+            state.shipments[index] = payload;
+          }
+          if (
+            state.currentShipment &&
+            state.currentShipment._id === payload._id
+          ) {
+            state.currentShipment = payload;
+          }
+          state.error = null;
+          // Update cache status
+          state.cacheStatus.userShipments.isValid =
+            isCacheValid("userShipments");
+          state.cacheStatus.userShipments.lastFetched =
+            cache.userShipments.timestamp;
+          state.cacheStatus.deliveredShipments.isValid =
+            isCacheValid("deliveredShipments");
+          state.cacheStatus.deliveredShipments.lastFetched =
+            cache.deliveredShipments.timestamp;
+        }
+      )
+      .addCase(markShipmentAsDeliveredByUser.rejected, (state, action) => {
         state.loading = false;
-        state.success = true;
-        // Update in user's shipments
-        const index = state.shipments.findIndex(s => s._id === payload._id);
-        if (index !== -1) {
-          state.shipments[index] = payload;
-        }
-        // Update in history
-        const historyIndex = state.history.findIndex(s => s._id === payload._id);
-        if (historyIndex !== -1) {
-          state.history[historyIndex] = payload;
-        }
-        // Update in current shipment if it's the one being viewed
-        if (state.currentShipment && state.currentShipment._id === payload._id) {
-          state.currentShipment = payload;
-        }
-      })
-      .addCase(markShipmentAsDeliveredByUser.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload;
-        state.success = false;
+        state.error = action.payload;
       })
 
-      // --- Rate Completed Shipment ---
+      // Rate completed shipment
       .addCase(rateCompletedShipment.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
       })
       .addCase(rateCompletedShipment.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.success = true;
-        // Update in user's shipments
-        const index = state.shipments.findIndex(s => s._id === payload._id);
+        const index = state.deliveredShipments.findIndex(
+          (s) => s._id === payload._id
+        );
         if (index !== -1) {
-          state.shipments[index] = payload;
+          state.deliveredShipments[index] = payload;
         }
-        // Update in history
-        const historyIndex = state.history.findIndex(s => s._id === payload._id);
-        if (historyIndex !== -1) {
-          state.history[historyIndex] = payload;
-        }
-        // Update in current shipment if it's the one being viewed
-        if (state.currentShipment && state.currentShipment._id === payload._id) {
+        if (
+          state.currentShipment &&
+          state.currentShipment._id === payload._id
+        ) {
           state.currentShipment = payload;
         }
+        state.error = null;
+        // Update cache status
+        state.cacheStatus.deliveredShipments.isValid =
+          isCacheValid("deliveredShipments");
+        state.cacheStatus.deliveredShipments.lastFetched =
+          cache.deliveredShipments.timestamp;
       })
-      .addCase(rateCompletedShipment.rejected, (state, { payload }) => {
+      .addCase(rateCompletedShipment.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
+        state.error = action.payload;
       })
 
-      // --- Fetch Delivered Shipments ---
+      // Fetch delivered shipments
       .addCase(fetchDeliveredShipments.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -545,39 +831,47 @@ const shipmentSlice = createSlice({
         state.loading = false;
         state.deliveredShipments = payload;
         state.error = null;
+        // Update cache status
+        state.cacheStatus.deliveredShipments.isValid =
+          isCacheValid("deliveredShipments");
+        state.cacheStatus.deliveredShipments.lastFetched =
+          cache.deliveredShipments.timestamp;
       })
-      .addCase(fetchDeliveredShipments.rejected, (state, { payload }) => {
+      .addCase(fetchDeliveredShipments.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.deliveredShipments = [];
+        state.error = action.payload;
+        // Update cache status
+        state.cacheStatus.deliveredShipments.isValid = false;
+        state.cacheStatus.deliveredShipments.lastFetched = null;
       })
-      // --- Delete Shipment ---
+
+      // Delete shipment
       .addCase(deleteShipment.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(deleteShipment.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.success = true;
-        // Remove from user's shipments
-        state.shipments = state.shipments.filter(s => s._id !== payload.shipmentId);
-        // Remove from history
-        state.history = state.history.filter(s => s._id !== payload.shipmentId);
-        // Clear current shipment if it's the one being deleted
-        if (state.currentShipment && state.currentShipment._id === payload.shipmentId) {
-          state.currentShipment = null;
-        }
-        // Remove from available shipments
-        state.availableShipments = state.availableShipments.filter(s => s._id !== payload.shipmentId);
+        state.shipments = state.shipments.filter((s) => s._id !== payload);
+        state.error = null;
+        // Update cache status
+        state.cacheStatus.userShipments.isValid = isCacheValid("userShipments");
+        state.cacheStatus.userShipments.lastFetched =
+          cache.userShipments.timestamp;
       })
-      .addCase(deleteShipment.rejected, (state, { payload }) => {
+      .addCase(deleteShipment.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
-        state.success = false;
+        state.error = action.payload;
       });
   },
 });
 
-// Export all actions and thunks
-export const { resetShipmentState, addShipmentRealtime, updateShipmentRealtime, clearDeliveredShipmentsCount } = shipmentSlice.actions;
+export const {
+  clearError,
+  clearCurrentShipment,
+  clearDeliveredShipmentsCount,
+  addShipmentRealtime,
+  updateShipmentRealtime,
+  clearCache,
+} = shipmentSlice.actions;
 export default shipmentSlice.reducer;
