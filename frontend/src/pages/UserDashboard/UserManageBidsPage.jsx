@@ -278,8 +278,9 @@ const UserManageBidsPage = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Manage Bids</h1>
-                <p className="text-indigo-100 text-sm">
-                  Review and manage all bids on your shipments
+                <p className="text-black text-lg font-bold">
+                  Review, evaluate, and manage all logistics bids submitted for
+                  your shipments
                 </p>
               </div>
             </div>
