@@ -20,12 +20,16 @@ const getCloudinaryBaseUrl = () => {
  * @returns {string|null} - The full URL or null if no picture
  */
 export const getProfilePictureUrl = (profilePicture) => {
+  console.log("🔍 getProfilePictureUrl called with:", profilePicture);
+
   if (!profilePicture || typeof profilePicture !== "string") {
+    console.log("❌ getProfilePictureUrl: Invalid input");
     return null;
   }
 
   // If it's already a full URL, return as is
   if (profilePicture.startsWith("http")) {
+    console.log("✅ getProfilePictureUrl: Already full URL:", profilePicture);
     return profilePicture;
   }
 
@@ -88,6 +92,7 @@ export const getProfilePictureUrl = (profilePicture) => {
     const cloudinaryUrl = `${cloudinaryBaseUrl}/${profilePicture}`;
 
     console.log(`🔍 Cloudinary URL constructed: ${cloudinaryUrl}`);
+    console.log(`🔍 Cloudinary base URL: ${cloudinaryBaseUrl}`);
     return cloudinaryUrl;
   }
 

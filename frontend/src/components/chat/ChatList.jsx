@@ -111,6 +111,18 @@ const ChatList = () => {
                             ? otherParticipants[0]
                             : null;
 
+                        // Debug logging for profile picture
+                        console.log("🔍 ChatList Profile Picture Debug:", {
+                          conversationId: conv._id,
+                          participantId: participant?._id,
+                          participantName: participant?.name,
+                          profilePictureUrl: participant?.profilePictureUrl,
+                          profilePicture: participant?.profilePicture,
+                          hasProfilePictureUrl:
+                            !!participant?.profilePictureUrl,
+                          hasProfilePicture: !!participant?.profilePicture,
+                        });
+
                         // Check for profile picture
                         const avatarUrl =
                           participant?.profilePictureUrl ||
@@ -120,6 +132,9 @@ const ChatList = () => {
                           const fullAvatarUrl =
                             participant?.profilePictureUrl ||
                             getProfilePictureUrl(participant?.profilePicture);
+
+                          console.log("🔍 ChatList Avatar URL:", fullAvatarUrl);
+
                           return (
                             <img
                               src={fullAvatarUrl}
@@ -130,9 +145,19 @@ const ChatList = () => {
                               }
                               className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md"
                               onError={(e) => {
+                                console.log(
+                                  "❌ ChatList Image load error:",
+                                  fullAvatarUrl
+                                );
                                 // Fallback to initials if image fails to load
                                 e.target.style.display = "none";
                                 e.target.nextSibling.style.display = "flex";
+                              }}
+                              onLoad={() => {
+                                console.log(
+                                  "✅ ChatList Image loaded successfully:",
+                                  fullAvatarUrl
+                                );
                               }}
                             />
                           );

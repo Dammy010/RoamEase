@@ -104,6 +104,16 @@ const ChatBox = () => {
           {/* Participant Avatar */}
           <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
             {(() => {
+              // Debug logging for profile picture
+              console.log("🔍 ChatBox Profile Picture Debug:", {
+                participantId: otherParticipant?._id,
+                participantName: otherParticipant?.name,
+                profilePictureUrl: otherParticipant?.profilePictureUrl,
+                profilePicture: otherParticipant?.profilePicture,
+                hasProfilePictureUrl: !!otherParticipant?.profilePictureUrl,
+                hasProfilePicture: !!otherParticipant?.profilePicture,
+              });
+
               // Check for profile picture
               const avatarUrl =
                 otherParticipant?.profilePictureUrl ||
@@ -113,6 +123,9 @@ const ChatBox = () => {
                 const fullAvatarUrl =
                   otherParticipant?.profilePictureUrl ||
                   getProfilePictureUrl(otherParticipant?.profilePicture);
+
+                console.log("🔍 ChatBox Avatar URL:", fullAvatarUrl);
+
                 return (
                   <>
                     <img
@@ -124,9 +137,19 @@ const ChatBox = () => {
                       }
                       className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
                       onError={(e) => {
+                        console.log(
+                          "❌ ChatBox Image load error:",
+                          fullAvatarUrl
+                        );
                         // Fallback to initials if image fails to load
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
+                      }}
+                      onLoad={() => {
+                        console.log(
+                          "✅ ChatBox Image loaded successfully:",
+                          fullAvatarUrl
+                        );
                       }}
                     />
                     <span className="text-lg font-bold text-white hidden">
