@@ -35,7 +35,6 @@ process.env.CLIENT_URL =
 const createDirectories = () => {
   const directories = [
     "uploads",
-    "uploads/temp",
     "uploads/profiles",
     "uploads/shipments",
     "uploads/documents",

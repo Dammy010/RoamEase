@@ -1,52 +1,16 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const fs = require("fs");
-const path = require("path");
 const cloudinary = require("cloudinary").v2;
-const multer = require("multer");
+const {
+  upload,
+  uploadToCloudinary,
+} = require("../middlewares/cloudinaryUploadMiddleware");
 
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Ensure directories exist
-
-// Create uploads/temp directory if it doesn't exist
-const tempDir = "uploads/temp";
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
-  console.log(`📁 Created temp directory: ${tempDir}`);
-}
-
-// Configure multer for temporary file storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Ensure directory exists before saving
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    cb(null, tempDir);
-  },
-  filename: (req, file, cb) => {
-    // Sanitize filename to avoid issues with special characters
-    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
-    cb(null, `${Date.now()}-${sanitizedName}`);
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed!"), false);
-    }
-  },
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
 // Update user profile
@@ -244,24 +208,6 @@ const uploadProfilePicture = async (req, res) => {
     const userId = req.user._id;
 
     console.log(`🔍 Profile picture upload attempt for user: ${userId}`);
-    console.log(`📁 Current working directory: ${process.cwd()}`);
-    console.log(`📁 Temp directory exists: ${fs.existsSync(tempDir)}`);
-    console.log(`📁 Temp directory path: ${path.resolve(tempDir)}`);
-
-    console.log(
-      `📁 Uploaded file:`,
-      req.file
-        ? {
-            filename: req.file.filename,
-            originalname: req.file.originalname,
-            mimetype: req.file.mimetype,
-            size: req.file.size,
-            path: req.file.path,
-            absolutePath: path.resolve(req.file.path),
-            fileExists: fs.existsSync(req.file.path),
-          }
-        : "No file"
-    );
 
     // Validate file upload
     if (!req.file) {
@@ -272,20 +218,16 @@ const uploadProfilePicture = async (req, res) => {
       });
     }
 
+    console.log(`📁 Uploaded file:`, {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      bufferSize: req.file.buffer.length,
+    });
+
     // Validate file type
     if (!req.file.mimetype.startsWith("image/")) {
       console.log("❌ Invalid file type:", req.file.mimetype);
-      // Clean up temporary file
-      try {
-        fs.unlinkSync(req.file.path);
-        console.log(
-          `🗑️ Temporary file deleted after validation error: ${req.file.path}`
-        );
-      } catch (cleanupError) {
-        console.log(
-          `⚠️ Could not delete temporary file: ${cleanupError.message}`
-        );
-      }
       return res.status(400).json({
         success: false,
         message: "Only image files are allowed",
@@ -302,17 +244,6 @@ const uploadProfilePicture = async (req, res) => {
         maxFileSize,
         "bytes)"
       );
-      // Clean up temporary file
-      try {
-        fs.unlinkSync(req.file.path);
-        console.log(
-          `🗑️ Temporary file deleted after size validation error: ${req.file.path}`
-        );
-      } catch (cleanupError) {
-        console.log(
-          `⚠️ Could not delete temporary file: ${cleanupError.message}`
-        );
-      }
       return res.status(400).json({
         success: false,
         message: "Your file is too large. Please upload an image under 10MB.",
@@ -323,17 +254,6 @@ const uploadProfilePicture = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       console.log("❌ User not found:", userId);
-      // Clean up temporary file
-      try {
-        fs.unlinkSync(req.file.path);
-        console.log(
-          `🗑️ Temporary file deleted after user not found: ${req.file.path}`
-        );
-      } catch (cleanupError) {
-        console.log(
-          `⚠️ Could not delete temporary file: ${cleanupError.message}`
-        );
-      }
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -354,26 +274,9 @@ const uploadProfilePicture = async (req, res) => {
       }
     }
 
-    // Verify file exists before uploading to Cloudinary
-    if (!fs.existsSync(req.file.path)) {
-      console.log(`❌ File does not exist: ${req.file.path}`);
-      return res.status(500).json({
-        success: false,
-        message: "Uploaded file not found on server",
-        error: "File not found after upload",
-      });
-    }
-
-    // Upload new image to Cloudinary
-    console.log(`☁️ Uploading to Cloudinary from: ${req.file.path}`);
-    const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "roamease/profiles",
-      resource_type: "image",
-      transformation: [
-        { width: 400, height: 400, crop: "fill", gravity: "face" },
-        { quality: "auto", fetch_format: "auto" },
-      ],
-    });
+    // Upload new image to Cloudinary using memory buffer
+    console.log(`☁️ Uploading to Cloudinary from memory buffer`);
+    const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
 
     console.log(`✅ Cloudinary upload successful:`, {
       public_id: cloudinaryResult.public_id,
@@ -392,16 +295,6 @@ const uploadProfilePicture = async (req, res) => {
       { new: true }
     ).select("-password");
 
-    // Clean up temporary file after successful upload
-    try {
-      fs.unlinkSync(req.file.path);
-      console.log(`🗑️ Temporary file deleted: ${req.file.path}`);
-    } catch (cleanupError) {
-      console.log(
-        `⚠️ Could not delete temporary file: ${cleanupError.message}`
-      );
-    }
-
     console.log(`✅ Profile picture uploaded successfully`);
     console.log(`🌐 Cloudinary URL: ${cloudinaryResult.secure_url}`);
     console.log(`🔍 Public ID: ${cloudinaryResult.public_id}`);
@@ -409,26 +302,11 @@ const uploadProfilePicture = async (req, res) => {
     res.json({
       success: true,
       message: "Profile picture uploaded successfully",
-      profilePictureUrl: cloudinaryResult.secure_url,
-      profilePictureId: cloudinaryResult.public_id,
-      user: updatedUser,
+      url: cloudinaryResult.secure_url,
+      public_id: cloudinaryResult.public_id,
     });
   } catch (error) {
     console.error("❌ Profile picture upload error:", error);
-
-    // Clean up temporary file on error
-    if (req.file && req.file.path) {
-      try {
-        fs.unlinkSync(req.file.path);
-        console.log(
-          `🗑️ Temporary file cleaned up after error: ${req.file.path}`
-        );
-      } catch (cleanupError) {
-        console.log(
-          `⚠️ Could not clean up temporary file: ${cleanupError.message}`
-        );
-      }
-    }
 
     res.status(500).json({
       success: false,
