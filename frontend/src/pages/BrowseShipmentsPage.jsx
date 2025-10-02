@@ -29,10 +29,7 @@ import {
   Star,
   TrendingUp,
   Globe,
-  ArrowLeft,
   ExternalLink,
-  LogIn,
-  UserPlus,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -158,69 +155,41 @@ const BrowseShipmentsPage = () => {
   }
 
   return (
-    <div className="min-h-screen py-6">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">Back to Home</span>
-              </Link>
-              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Open Shipments
               </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Browse shipments that are currently open for bidding
+              </p>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {user ? (
+            {/* Action Buttons */}
+            {user && (
+              <div className="flex items-center gap-3">
                 <Link
                   to="/dashboard"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
                   <Package className="w-4 h-4" />
                   Go to Dashboard
                 </Link>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <Link
-                    to="/login"
-                    className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Sign Up
-                  </Link>
-                </div>
-              )}
+              </div>
+            )}
+          </div>
+
+          {/* Status Badge */}
+          <div className="mt-4">
+            <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-4 py-2 rounded-full text-sm font-medium">
+              <CheckCircle className="w-4 h-4" />
+              Only Open Shipments Available
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Description */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <CheckCircle className="w-4 h-4" />
-            Only Open Shipments
-          </div>
-          <p className="text-base text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Browse shipments that are currently open for bidding. These are
-            active opportunities waiting for logistics providers to place
-            competitive bids.
-          </p>
         </div>
 
         {/* Search and Sort Section */}
@@ -349,7 +318,7 @@ const BrowseShipmentsPage = () => {
                       to="/signup"
                       className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
+                      <Package className="w-4 h-4 mr-2" />
                       Sign Up to Post Shipments
                     </Link>
                     <Link
@@ -487,7 +456,7 @@ const BrowseShipmentsPage = () => {
                             to="/signup"
                             className="px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2 font-semibold"
                           >
-                            <UserPlus className="w-4 h-4" />
+                            <Truck className="w-4 h-4" />
                             Join as Provider
                           </Link>
                         </div>

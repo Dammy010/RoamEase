@@ -35,6 +35,14 @@ class ErrorBoundary extends React.Component {
   }
 
   handleRetry = () => {
+    // Clear any problematic localStorage data
+    try {
+      localStorage.removeItem("socket");
+      localStorage.removeItem("socketConnected");
+    } catch (e) {
+      console.log("Could not clear socket data:", e);
+    }
+
     this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
@@ -60,6 +68,23 @@ class ErrorBoundary extends React.Component {
               We encountered an unexpected error. This might be a temporary
               issue.
             </p>
+
+            {/* Mobile-specific help */}
+            {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              navigator.userAgent
+            ) && (
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                  📱 Mobile User Tips:
+                </h3>
+                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                  <li>• Try refreshing the page</li>
+                  <li>• Clear your browser cache</li>
+                  <li>• Make sure you have a stable internet connection</li>
+                  <li>• Try using a different browser</li>
+                </ul>
+              </div>
+            )}
 
             {/* Error details for development */}
             {process.env.NODE_ENV === "development" && this.state.error && (
