@@ -24,7 +24,10 @@ const {
 } = require("../controllers/shipmentController");
 
 const { protect, allowRoles } = require("../middlewares/authMiddleware"); // Destructure both protect and allowRoles
-const { flexibleUpload, handleUploadError } = require("../middlewares/uploadMiddleware");
+const {
+  flexibleUpload,
+  handleUploadError,
+} = require("../middlewares/cloudinaryUploadMiddleware");
 const { locationUpdateRateLimit } = require("../middlewares/locationRateLimit");
 
 // Routes
@@ -118,6 +121,5 @@ router.post(
   allowRoles("user", "logistics", "admin"),
   stopTracking
 ); // Stop tracking
-
 
 module.exports = router;

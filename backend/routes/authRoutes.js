@@ -16,7 +16,7 @@ const {
   deleteProfilePicture,
 } = require("../controllers/authController");
 const { protect } = require("../middlewares/authMiddleware"); // Destructure protect
-const { upload } = require("../middlewares/uploadMiddleware");
+const { upload } = require("../middlewares/cloudinaryUploadMiddleware");
 
 // Consolidate all possible file uploads for profile update into one fields middleware
 const profileUpdateUpload = upload.fields([

@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
 const {
   upload,
-  uploadToCloudinary,
+  uploadProfilePicture: uploadProfilePictureToCloudinary,
 } = require("../middlewares/cloudinaryUploadMiddleware");
 
 // Configure Cloudinary
@@ -276,7 +276,9 @@ const uploadProfilePicture = async (req, res) => {
 
     // Upload new image to Cloudinary using memory buffer
     console.log(`☁️ Uploading to Cloudinary from memory buffer`);
-    const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+    const cloudinaryResult = await uploadProfilePictureToCloudinary(
+      req.file.buffer
+    );
 
     console.log(`✅ Cloudinary upload successful:`, {
       public_id: cloudinaryResult.public_id,
