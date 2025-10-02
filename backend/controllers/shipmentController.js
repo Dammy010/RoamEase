@@ -54,7 +54,7 @@ const uploadMultipleFilesToCloudinary = async (
   resourceType = "image"
 ) => {
   const uploadPromises = files.map((file) =>
-    uploadToCloudinary(file.path, folder, resourceType)
+    uploadToCloudinary(file.buffer, folder, resourceType)
   );
   return Promise.all(uploadPromises);
 };
@@ -62,8 +62,7 @@ const uploadMultipleFilesToCloudinary = async (
 // Create a new shipment
 const createShipment = async (req, res) => {
   try {
-    const data = req.body;
-    const uploadedFiles = []; // Track uploaded files for cleanup
+    const data = req.body; // Track uploaded files for cleanup
 
     // Handle file uploads to Cloudinary
     if (req.files) {
@@ -80,7 +79,6 @@ const createShipment = async (req, res) => {
           );
           data.photos = photoResults.map((result) => result.secure_url);
           data.photoIds = photoResults.map((result) => result.public_id);
-          uploadedFiles.push(...req.files.photos.map((f) => f.path));
           console.log(`✅ Photos uploaded successfully:`, data.photos);
           console.log(`🔍 Photo IDs stored:`, data.photoIds);
         }
@@ -97,25 +95,11 @@ const createShipment = async (req, res) => {
           );
           data.documents = documentResults.map((result) => result.secure_url);
           data.documentIds = documentResults.map((result) => result.public_id);
-          uploadedFiles.push(...req.files.documents.map((f) => f.path));
           console.log(`✅ Documents uploaded successfully:`, data.documents);
           console.log(`🔍 Document IDs stored:`, data.documentIds);
         }
       } catch (uploadError) {
         console.error("❌ File upload to Cloudinary failed:", uploadError);
-
-        // Clean up uploaded files on error
-        uploadedFiles.forEach((filePath) => {
-          try {
-            fs.unlinkSync(filePath);
-            console.log(`🗑️ Cleaned up temporary file: ${filePath}`);
-          } catch (cleanupError) {
-            console.log(
-              `⚠️ Could not clean up file ${filePath}:`,
-              cleanupError.message
-            );
-          }
-        });
 
         return res.status(500).json({
           success: false,
@@ -140,21 +124,6 @@ const createShipment = async (req, res) => {
       "user",
       "name email companyName country"
     );
-
-    // Clean up temporary files after successful shipment creation
-    uploadedFiles.forEach((filePath) => {
-      try {
-        fs.unlinkSync(filePath);
-        console.log(
-          `🗑️ Cleaned up temporary file after successful upload: ${filePath}`
-        );
-      } catch (cleanupError) {
-        console.log(
-          `⚠️ Could not clean up file ${filePath}:`,
-          cleanupError.message
-        );
-      }
-    });
 
     // Send response immediately
     res.status(201).json({
