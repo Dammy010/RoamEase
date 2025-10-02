@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Eye,
   ArrowRight,
+  XCircle,
 } from "lucide-react";
 import NotificationBell from "../../components/NotificationBell";
 import { initializeSocketAfterLogin } from "../../services/socket";
@@ -65,35 +66,43 @@ const UserDashboardHome = () => {
 
   useEffect(() => {
     if (user) {
-      const socket = initializeSocketAfterLogin();
-      if (socket) {
-        socket.emit("user-online", user._id);
+      try {
+        const socket = initializeSocketAfterLogin();
+        if (socket) {
+          socket.emit("user-online", user._id);
 
-        socket.on("new-message", () => {
-          // Ideally you'd dispatch an action to update chat unread count
-        });
+          socket.on("new-message", () => {
+            // Ideally you'd dispatch an action to update chat unread count
+          });
 
-        // Listen for notification refresh events
-        socket.on("notification-refresh", (data) => {
-          // You could dispatch actions to refresh notification counts here
-        });
+          // Listen for notification refresh events
+          socket.on("notification-refresh", (data) => {
+            // You could dispatch actions to refresh notification counts here
+          });
 
-        return () => {
-          socket.off("new-message");
-          socket.off("notification-refresh");
-          socket.disconnect();
-        };
+          return () => {
+            socket.off("new-message");
+            socket.off("notification-refresh");
+            socket.disconnect();
+          };
+        }
+      } catch (error) {
+        console.error("Socket initialization error:", error);
+        // Don't let socket errors break the dashboard
       }
     }
   }, [user]);
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+      <div className="flex justify-center items-center min-h-screen bg-white dark:bg-gray-900 p-4">
+        <div className="text-center max-w-sm mx-auto">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base font-medium">
             Loading dashboard...
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 text-xs sm:text-sm mt-2">
+            Please wait while we prepare your dashboard
           </p>
         </div>
       </div>
@@ -139,10 +148,21 @@ const UserDashboardHome = () => {
   // Only show loading if we have no data and are loading
   if (loading && shipments.length === 0 && history.length === 0) {
     return (
-      <div className="text-center py-8 bg-white dark:bg-gray-900 min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <div className="text-gray-600 dark:text-gray-400">
-          Loading dashboard data...
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 p-4">
+        <div className="text-center max-w-sm mx-auto">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base font-medium mb-2">
+            Loading dashboard data...
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 text-xs sm:text-sm">
+            Fetching your shipments and history
+          </p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          >
+            Refresh Data
+          </button>
         </div>
       </div>
     );
@@ -150,8 +170,22 @@ const UserDashboardHome = () => {
 
   if (error) {
     return (
-      <div className="text-center py-8 bg-white dark:bg-gray-900 min-h-screen">
-        <div className="text-red-600 dark:text-red-400">Error: {error}</div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 p-4">
+        <div className="text-center max-w-sm mx-auto">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Error Loading Dashboard
+          </h3>
+          <p className="text-red-600 dark:text-red-400 text-sm mb-4">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }

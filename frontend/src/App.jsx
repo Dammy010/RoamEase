@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import React, { useEffect } from "react";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 import { safeDispatchWithDelays } from "./utils/reduxUtils";
 import {
   initSocket,
@@ -164,229 +165,248 @@ function App() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <ScrollToTop />
-      <div className="min-h-screen">
-        {user ? (
-          <>
-            <FloatingDrawer role={user.role} />
-            <div className="bg-white dark:bg-gray-900">
-              <Routes>
-                {/* Notifications route - MUST be first to avoid catch-all */}
-                <Route path="/notifications" element={<NotificationPage />} />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+        <ToastContainer position="top-right" autoClose={3000} />
+        <ScrollToTop />
+        <div className="min-h-screen">
+          {user ? (
+            <>
+              <FloatingDrawer role={user.role} />
+              <div className="bg-white dark:bg-gray-900">
+                <Routes>
+                  {/* Notifications route - MUST be first to avoid catch-all */}
+                  <Route path="/notifications" element={<NotificationPage />} />
 
-                {/* User Protected Routes */}
-                <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
-                  <Route
-                    path="/user/dashboard"
-                    element={<UserDashboardHome />}
-                  />
-                  <Route
-                    path="/user/post-shipment"
-                    element={<PostShipment />}
-                  />
-                  <Route path="/user/my-shipments" element={<MyShipments />} />
-                  <Route
-                    path="/user/my-shipments/:id"
-                    element={<ShipmentDetail />}
-                  />
-                  <Route
-                    path="/user/manage-bids/:shipmentId"
-                    element={<AcceptRejectBidPage />}
-                  />{" "}
-                  {/* New: Route for bid management page (per shipment) */}
-                  <Route
-                    path="/user/manage-bids"
-                    element={<UserManageBidsPage />}
-                  />{" "}
-                  {/* New: Route for consolidated bid management page */}
-                  <Route path="/user/chat" element={<ChatLogistics />} />
-                  <Route
-                    path="/user/chat/:conversationId"
-                    element={<ChatLogistics />}
-                  />
-                  <Route
-                    path="/user/shipment-history"
-                    element={<ShipmentHistory />}
-                  />
-                  <Route
-                    path="/user/delivered-shipments"
-                    element={<DeliveredShipments />}
-                  />{" "}
-                  {/* New: Route for confirming delivered shipments */}
-                  <Route
-                    path="/user/rate-shipment"
-                    element={<RateShipment />}
-                  />{" "}
-                  {/* New: Route for rating completed shipments */}
-                  <Route path="/user/profile" element={<UserProfile />} />
-                  <Route
-                    path="/user/deliver-shipment/:shipmentId"
-                    element={<DeliverShipmentPage />}
-                  />{" "}
-                  {/* New: Route for marking shipment as delivered and rating */}
-                </Route>
-
-                {/* Logistics Protected Routes */}
-                <Route
-                  element={<ProtectedRoute allowedRoles={["logistics"]} />}
-                >
-                  <Route
-                    path="/logistics/dashboard"
-                    element={<LogisticsDashboardHome />}
-                  />
-                  <Route
-                    path="/logistics/subscriptions"
-                    element={<Subscriptions />}
-                  />
-                  <Route
-                    path="/logistics/upload-documents"
-                    element={<UploadDocuments />}
-                  />
-                  <Route
-                    path="/logistics/available-shipments"
-                    element={<AvailableShipments />}
-                  />
-                  <Route
-                    path="/logistics/active-shipments"
-                    element={<ActiveShipments />}
-                  />
-                  <Route path="/logistics/my-bids" element={<MyBids />} />
-                  <Route
-                    path="/logistics/history"
-                    element={<LogisticsHistory />}
-                  />
-                  <Route path="/logistics/chat" element={<ChatWithUsers />} />
-                  <Route
-                    path="/logistics/profile"
-                    element={<LogisticsProfile />}
-                  />
-                  <Route path="/logistics/ratings" element={<Ratings />} />
-                </Route>
-
-                {/* Admin Protected Routes */}
-                <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-                  <Route
-                    path="/admin/dashboard"
-                    element={<AdminDashboardHome />}
-                  />
-                  <Route
-                    path="/admin/users/total"
-                    element={<AllUsersListPage />}
-                  />
-                  <Route
-                    path="/admin/users/normal-count"
-                    element={<NormalUsers />}
-                  />
-                  <Route
-                    path="/admin/logistics-list"
-                    element={<VerifiedLogisticsList />}
-                  />
-                  <Route
-                    path="/admin/verify-logistics"
-                    element={<PendingLogisticsList />}
-                  />
-                  <Route
-                    path="/admin/shipments-list"
-                    element={<ShipmentsList />}
-                  />
-                  <Route
-                    path="/admin/shipments/:id"
-                    element={<AdminShipmentDetail />}
-                  />
-                  <Route path="/admin/bids-list" element={<BidsList />} />
-                  <Route
-                    path="/admin/bid-details/:id"
-                    element={<AdminBidDetail />}
-                  />
-                  <Route path="/admin/chat" element={<AdminChatDashboard />} />
-                  <Route
-                    path="/admin/chat/:conversationId"
-                    element={<AdminChatDashboard />}
-                  />
-                  <Route path="/admin/reports" element={<ReportManagement />} />
-                  <Route
-                    path="/admin/subscriptions"
-                    element={<AdminSubscriptions />}
-                  />
-                  <Route
-                    path="/admin/platform-analytics"
-                    element={<PlatformAnalytics />}
-                  />
-                  <Route path="/admin/profile" element={<AdminProfile />} />
-                </Route>
-
-                {/* Common routes for all authenticated users */}
-                <Route
-                  element={
-                    <ProtectedRoute
-                      allowedRoles={["user", "logistics", "admin"]}
+                  {/* User Protected Routes */}
+                  <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
+                    <Route
+                      path="/user/dashboard"
+                      element={<UserDashboardHome />}
                     />
-                  }
-                >
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/reports" element={<ReportsPage />} />
-                </Route>
+                    <Route
+                      path="/user/post-shipment"
+                      element={<PostShipment />}
+                    />
+                    <Route
+                      path="/user/my-shipments"
+                      element={<MyShipments />}
+                    />
+                    <Route
+                      path="/user/my-shipments/:id"
+                      element={<ShipmentDetail />}
+                    />
+                    <Route
+                      path="/user/manage-bids/:shipmentId"
+                      element={<AcceptRejectBidPage />}
+                    />{" "}
+                    {/* New: Route for bid management page (per shipment) */}
+                    <Route
+                      path="/user/manage-bids"
+                      element={<UserManageBidsPage />}
+                    />{" "}
+                    {/* New: Route for consolidated bid management page */}
+                    <Route path="/user/chat" element={<ChatLogistics />} />
+                    <Route
+                      path="/user/chat/:conversationId"
+                      element={<ChatLogistics />}
+                    />
+                    <Route
+                      path="/user/shipment-history"
+                      element={<ShipmentHistory />}
+                    />
+                    <Route
+                      path="/user/delivered-shipments"
+                      element={<DeliveredShipments />}
+                    />{" "}
+                    {/* New: Route for confirming delivered shipments */}
+                    <Route
+                      path="/user/rate-shipment"
+                      element={<RateShipment />}
+                    />{" "}
+                    {/* New: Route for rating completed shipments */}
+                    <Route path="/user/profile" element={<UserProfile />} />
+                    <Route
+                      path="/user/deliver-shipment/:shipmentId"
+                      element={<DeliverShipmentPage />}
+                    />{" "}
+                    {/* New: Route for marking shipment as delivered and rating */}
+                  </Route>
 
-                {/* Public pages accessible to authenticated users */}
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/help" element={<HelpCenterPage />} />
-                <Route path="/terms" element={<TermsOfServicePage />} />
-                <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/services" element={<ServicesPage />} />
+                  {/* Logistics Protected Routes */}
+                  <Route
+                    element={<ProtectedRoute allowedRoles={["logistics"]} />}
+                  >
+                    <Route
+                      path="/logistics/dashboard"
+                      element={<LogisticsDashboardHome />}
+                    />
+                    <Route
+                      path="/logistics/subscriptions"
+                      element={<Subscriptions />}
+                    />
+                    <Route
+                      path="/logistics/upload-documents"
+                      element={<UploadDocuments />}
+                    />
+                    <Route
+                      path="/logistics/available-shipments"
+                      element={<AvailableShipments />}
+                    />
+                    <Route
+                      path="/logistics/active-shipments"
+                      element={<ActiveShipments />}
+                    />
+                    <Route path="/logistics/my-bids" element={<MyBids />} />
+                    <Route
+                      path="/logistics/history"
+                      element={<LogisticsHistory />}
+                    />
+                    <Route path="/logistics/chat" element={<ChatWithUsers />} />
+                    <Route
+                      path="/logistics/profile"
+                      element={<LogisticsProfile />}
+                    />
+                    <Route path="/logistics/ratings" element={<Ratings />} />
+                  </Route>
 
-                {/* Catch-all for authenticated users to redirect to their dashboard */}
-                <Route
-                  path="*"
-                  element={<Navigate to={`/${user.role}/dashboard`} replace />}
-                />
-              </Routes>
+                  {/* Admin Protected Routes */}
+                  <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                    <Route
+                      path="/admin/dashboard"
+                      element={<AdminDashboardHome />}
+                    />
+                    <Route
+                      path="/admin/users/total"
+                      element={<AllUsersListPage />}
+                    />
+                    <Route
+                      path="/admin/users/normal-count"
+                      element={<NormalUsers />}
+                    />
+                    <Route
+                      path="/admin/logistics-list"
+                      element={<VerifiedLogisticsList />}
+                    />
+                    <Route
+                      path="/admin/verify-logistics"
+                      element={<PendingLogisticsList />}
+                    />
+                    <Route
+                      path="/admin/shipments-list"
+                      element={<ShipmentsList />}
+                    />
+                    <Route
+                      path="/admin/shipments/:id"
+                      element={<AdminShipmentDetail />}
+                    />
+                    <Route path="/admin/bids-list" element={<BidsList />} />
+                    <Route
+                      path="/admin/bid-details/:id"
+                      element={<AdminBidDetail />}
+                    />
+                    <Route
+                      path="/admin/chat"
+                      element={<AdminChatDashboard />}
+                    />
+                    <Route
+                      path="/admin/chat/:conversationId"
+                      element={<AdminChatDashboard />}
+                    />
+                    <Route
+                      path="/admin/reports"
+                      element={<ReportManagement />}
+                    />
+                    <Route
+                      path="/admin/subscriptions"
+                      element={<AdminSubscriptions />}
+                    />
+                    <Route
+                      path="/admin/platform-analytics"
+                      element={<PlatformAnalytics />}
+                    />
+                    <Route path="/admin/profile" element={<AdminProfile />} />
+                  </Route>
+
+                  {/* Common routes for all authenticated users */}
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["user", "logistics", "admin"]}
+                      />
+                    }
+                  >
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/reports" element={<ReportsPage />} />
+                  </Route>
+
+                  {/* Public pages accessible to authenticated users */}
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/help" element={<HelpCenterPage />} />
+                  <Route path="/terms" element={<TermsOfServicePage />} />
+                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/services" element={<ServicesPage />} />
+
+                  {/* Catch-all for authenticated users to redirect to their dashboard */}
+                  <Route
+                    path="*"
+                    element={
+                      <Navigate to={`/${user.role}/dashboard`} replace />
+                    }
+                  />
+                </Routes>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col flex-1 bg-white dark:bg-gray-900">
+              <Navbar />
+              <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+                <Routes>
+                  {/* Public Routes - Always Accessible */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route
+                    path="/browse-shipments"
+                    element={<BrowseShipmentsPage />}
+                  />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/services" element={<ServicesPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/help" element={<HelpCenterPage />} />
+                  <Route path="/terms" element={<TermsOfServicePage />} />
+                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route
+                    path="/verify-notice"
+                    element={<EmailVerifyNotice />}
+                  />
+                  <Route
+                    path="/verify-email/:token"
+                    element={<EmailVerificationPage />}
+                  />
+                  <Route path="/verify-email" element={<VerifyEmailPage />} />
+                  <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                  />
+                  <Route
+                    path="/reset-password"
+                    element={<ResetPasswordPage />}
+                  />
+
+                  {/* Catch-all for public users */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </div>
             </div>
-          </>
-        ) : (
-          <div className="flex flex-col flex-1 bg-white dark:bg-gray-900">
-            <Navbar />
-            <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-              <Routes>
-                {/* Public Routes - Always Accessible */}
-                <Route path="/" element={<LandingPage />} />
-                <Route
-                  path="/browse-shipments"
-                  element={<BrowseShipmentsPage />}
-                />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/help" element={<HelpCenterPage />} />
-                <Route path="/terms" element={<TermsOfServicePage />} />
-                <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/verify-notice" element={<EmailVerifyNotice />} />
-                <Route
-                  path="/verify-email/:token"
-                  element={<EmailVerificationPage />}
-                />
-                <Route path="/verify-email" element={<VerifyEmailPage />} />
-                <Route
-                  path="/forgot-password"
-                  element={<ForgotPasswordPage />}
-                />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-                {/* Catch-all for public users */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 
