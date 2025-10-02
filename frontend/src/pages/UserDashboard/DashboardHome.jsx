@@ -121,7 +121,44 @@ const UserDashboardHome = () => {
   };
 
   const modules = [
-    // All modules removed as requested
+    {
+      name: "Post Shipment",
+      description: "Create a new shipment request.",
+      icon: <PlusCircle size={24} />,
+      color: "from-blue-500 to-blue-600",
+      path: "/user/post-shipment",
+    },
+    {
+      name: "My Shipments",
+      description: "View and manage your shipments.",
+      icon: <Package size={24} />,
+      color: "from-green-500 to-green-600",
+      path: "/user/my-shipments",
+      count: shipments.length,
+    },
+    {
+      name: "Chat",
+      description: "Communicate with logistics partners.",
+      icon: <MessageSquare size={24} />,
+      color: "from-purple-500 to-purple-600",
+      path: "/user/chat",
+      notification: unreadCount > 0 ? unreadCount : null,
+    },
+    {
+      name: "Shipment History",
+      description: "View your completed shipments.",
+      icon: <Clock size={24} />,
+      color: "from-orange-500 to-orange-600",
+      path: "/user/shipment-history",
+      count: history.length,
+    },
+    {
+      name: "Profile",
+      description: "Manage your account settings.",
+      icon: <UserCircle size={24} />,
+      color: "from-gray-500 to-gray-600",
+      path: "/user/profile",
+    },
   ];
 
   const navigateToShipmentDetail = (id) => {
@@ -448,6 +485,58 @@ const UserDashboardHome = () => {
 
             {/* Content */}
             <div className="p-4 sm:p-6 md:p-8">
+              {/* Quick Access Modules */}
+              <section className="mb-8 sm:mb-12">
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2 sm:mb-3">
+                    Quick Access
+                  </h2>
+                  <p className="text-gray-600 text-sm sm:text-base md:text-lg">
+                    Access your most important features and tools
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {modules.map((mod, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => navigate(mod.path)}
+                      className="group relative cursor-pointer p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                    >
+                      {/* Count Badge */}
+                      {(mod.count > 0 || mod.notification) && (
+                        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          {mod.count || mod.notification}
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <div className="scale-75 sm:scale-100">
+                            {mod.icon}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+                            {mod.name}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">
+                            {mod.description}
+                          </p>
+                          <div className="flex items-center text-indigo-600 font-medium text-xs sm:text-sm group-hover:text-indigo-700 transition-colors duration-300">
+                            <span>Access Module</span>
+                            <ArrowRight
+                              size={12}
+                              className="ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-300 sm:w-4 sm:h-4"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
               {shipments.length === 0 && history.length === 0 ? (
                 <div className="text-center py-8 sm:py-16">
                   <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
