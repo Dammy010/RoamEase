@@ -13,8 +13,17 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log the error to console
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    // Log the error to console with more details
+    console.error("🚨 ErrorBoundary caught an error:", error);
+    console.error("📋 Error Info:", errorInfo);
+    console.error("🔍 Component Stack:", errorInfo.componentStack);
+    console.error("🌐 Current URL:", window.location.href);
+    console.error("📱 User Agent:", navigator.userAgent);
+    console.error("💾 Local Storage:", {
+      token: !!localStorage.getItem("token"),
+      user: !!localStorage.getItem("user"),
+      refreshToken: !!localStorage.getItem("refreshToken"),
+    });
 
     this.setState({
       error: error,

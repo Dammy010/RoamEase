@@ -66,6 +66,19 @@ const UserDashboardHome = () => {
 
   useEffect(() => {
     if (user) {
+      // Skip socket initialization on mobile to prevent errors
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+
+      if (isMobile) {
+        console.log(
+          "📱 Mobile device detected - skipping socket initialization"
+        );
+        return;
+      }
+
       try {
         const socket = initializeSocketAfterLogin();
         if (socket) {
@@ -88,7 +101,7 @@ const UserDashboardHome = () => {
         }
       } catch (error) {
         console.error("Socket initialization error:", error);
-        // Don't let socket errors break the dashboard
+        // Don't let socket errors break the dashboard - continue without socket
       }
     }
   }, [user]);
