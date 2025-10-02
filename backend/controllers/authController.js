@@ -2,6 +2,7 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
+const { uploadDocument } = require("../middlewares/cloudinaryUploadMiddleware");
 
 // 🎨 Beautiful utilities
 const ResponseHelper = require("../utils/responseHelper");
@@ -211,11 +212,55 @@ const registerUser = async (req, res) => {
       userData.agreements = agreements === "true" || agreements === true;
       userData.terms = terms === "true" || terms === true;
 
-      userData.documents = {
-        businessLicense: req.files?.businessLicense?.[0]?.path || "",
-        insuranceCertificate: req.files?.insuranceCertificate?.[0]?.path || "",
-        governmentId: req.files?.governmentId?.[0]?.path || "",
-      };
+      // Handle document uploads to Cloudinary
+      const documents = {};
+
+      if (req.files?.businessLicense?.[0]) {
+        try {
+          const result = await uploadDocument(
+            req.files.businessLicense[0].buffer,
+            "businessLicense"
+          );
+          documents.businessLicense = result.secure_url;
+        } catch (error) {
+          console.error("Error uploading business license:", error);
+          documents.businessLicense = "";
+        }
+      } else {
+        documents.businessLicense = "";
+      }
+
+      if (req.files?.insuranceCertificate?.[0]) {
+        try {
+          const result = await uploadDocument(
+            req.files.insuranceCertificate[0].buffer,
+            "insuranceCertificate"
+          );
+          documents.insuranceCertificate = result.secure_url;
+        } catch (error) {
+          console.error("Error uploading insurance certificate:", error);
+          documents.insuranceCertificate = "";
+        }
+      } else {
+        documents.insuranceCertificate = "";
+      }
+
+      if (req.files?.governmentId?.[0]) {
+        try {
+          const result = await uploadDocument(
+            req.files.governmentId[0].buffer,
+            "governmentId"
+          );
+          documents.governmentId = result.secure_url;
+        } catch (error) {
+          console.error("Error uploading government ID:", error);
+          documents.governmentId = "";
+        }
+      } else {
+        documents.governmentId = "";
+      }
+
+      userData.documents = documents;
     } else {
       // For normal users, explicitly ensure registrationNumber is not included
       // This prevents any accidental inclusion that might cause unique constraint issues
