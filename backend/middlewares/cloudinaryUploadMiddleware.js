@@ -4,11 +4,36 @@ const { Readable } = require("stream");
 const path = require("path");
 
 // Configure Cloudinary
+const configureCloudinary = () => {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    console.error("❌ Cloudinary configuration missing:");
+    console.error("   CLOUDINARY_CLOUD_NAME:", cloudName ? "Set" : "Missing");
+    console.error("   CLOUDINARY_API_KEY:", apiKey ? "Set" : "Missing");
+    console.error("   CLOUDINARY_API_SECRET:", apiSecret ? "Set" : "Missing");
+    throw new Error(
+      "Cloudinary configuration is incomplete. Please check your environment variables."
+    );
+  }
+
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
   });
+
+  console.log("✅ Cloudinary configured successfully");
+};
+
+// Initialize Cloudinary configuration
+try {
+  configureCloudinary();
+} catch (error) {
+  console.error("❌ Failed to configure Cloudinary:", error.message);
+}
 
 // Configure multer to use memory storage
 const storage = multer.memoryStorage();
@@ -85,8 +110,8 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-        },
-      });
+  },
+});
 
 // Helper function to upload buffer to Cloudinary with different configurations
 const uploadToCloudinary = (buffer, options = {}) => {
