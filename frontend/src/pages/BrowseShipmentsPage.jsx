@@ -30,6 +30,7 @@ import {
   TrendingUp,
   Globe,
   ExternalLink,
+  LogIn,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 

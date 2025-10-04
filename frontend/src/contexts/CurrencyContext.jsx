@@ -12,6 +12,18 @@ export const useCurrency = () => {
 
 export const CurrencyProvider = ({ children }) => {
   const [currency, setCurrency] = useState(() => {
+    // Check if user is logistics and set default to NGN
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+        const user = JSON.parse(storedUser);
+        if (user && user.role === "logistics") {
+          return localStorage.getItem("currency") || "NGN";
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to parse stored user for currency default:", err);
+    }
     return localStorage.getItem("currency") || "USD";
   });
 
