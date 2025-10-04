@@ -4,11 +4,11 @@ const { Readable } = require("stream");
 const path = require("path");
 
 // Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
 
 // Configure multer to use memory storage
 const storage = multer.memoryStorage();
@@ -85,8 +85,8 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-});
+        },
+      });
 
 // Helper function to upload buffer to Cloudinary with different configurations
 const uploadToCloudinary = (buffer, options = {}) => {

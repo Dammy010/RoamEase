@@ -14,6 +14,7 @@ import { fetchProfile } from "../../redux/slices/authSlice";
 import { toast } from "react-toastify";
 import { getSocket } from "../../services/socket";
 import { getLogisticsDisplayName } from "../../utils/logisticsUtils";
+import FullScreenImageViewer from "../../components/shared/FullScreenImageViewer";
 import {
   Package,
   Search,
@@ -69,6 +70,9 @@ const AvailableShipments = () => {
   const [filterBy, setFilterBy] = useState("all");
   const [showEditBidModal, setShowEditBidModal] = useState(false);
   const [editingBid, setEditingBid] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
+  const [SelectedImageAlt, setSelectedImageAlt] = useState("");
 
   useEffect(() => {
     dispatch(fetchAvailableShipments());
@@ -281,6 +285,12 @@ const AvailableShipments = () => {
       }
       return newSet;
     });
+  };
+
+  const handlePhotoClick = (photoUrl, photoIndex, shipmentTitle) => {
+    setSelectedImageUrl(getStaticAssetUrl(photoUrl));
+    setSelectedImageAlt(`${shipmentTitle} - Photo ${photoIndex + 1}`);
+    setShowImageModal(true);
   };
 
   // Filter and sort shipments
@@ -1122,18 +1132,16 @@ const AvailableShipments = () => {
                                     src={getStaticAssetUrl(photo)}
                                     alt={`Shipment photo ${index + 1}`}
                                     className="w-full h-24 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                                    onClick={() =>
-                                      window.open(
-                                        getStaticAssetUrl(photo),
-                                        "_blank"
-                                      )
-                                    }
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handlePhotoClick(
+                                        photo,
+                                        index,
+                                        shipment.shipmentTitle
+                                      );
+                                    }}
                                   />
-                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                    <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">
-                                      Click to view
-                                    </span>
-                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -1420,16 +1428,20 @@ const AvailableShipments = () => {
                                   src={getStaticAssetUrl(photo)}
                                   alt={`Shipment photo ${index + 1}`}
                                   className="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300"
-                                  onClick={() =>
-                                    window.open(
-                                      getStaticAssetUrl(photo),
-                                      "_blank"
-                                    )
-                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handlePhotoClick(
+                                      photo,
+                                      index,
+                                      shipment.shipmentTitle
+                                    );
+                                  }}
                                 />
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-xl flex items-center justify-center">
                                   <Eye
-                                    className="text-white opacity-0 group-hover:opacity-100"
+                                    className="text<｜tool▁call▁begin｜>
+white opacity-0 group-hover:opacity-100"
                                     size={16}
                                   />
                                 </div>
@@ -1813,6 +1825,18 @@ const AvailableShipments = () => {
             </div>
           </div>
         )}
+
+        {/* Full Screen Image Viewer */}
+        <FullScreenImageViewer
+          isOpen={showImageModal}
+          onClose={() => {
+            setShowImageModal(false);
+            setSelectedImageUrl("");
+            setSelectedImageAlt("");
+          }}
+          imageUrl={selectedImageUrl}
+          altText={SelectedImageAlt}
+        />
       </div>
     </div>
   );

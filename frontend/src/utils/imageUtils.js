@@ -71,7 +71,6 @@ export const getProfilePictureUrl = (profilePicture) => {
 
   // Get the backend base URL
   const backendBaseUrl = (() => {
-    // Check if we're in production by looking at the current hostname
     if (
       window.location.hostname === "roam-ease.vercel.app" ||
       window.location.hostname === "roamease-3wg1.onrender.com" ||
@@ -176,7 +175,6 @@ export const getStaticAssetUrl = (assetPath) => {
 
   // Get the backend base URL
   const backendBaseUrl = (() => {
-    // Check if we're in production by looking at the current hostname
     if (
       window.location.hostname === "roam-ease.vercel.app" ||
       window.location.hostname === "roamease-3wg1.onrender.com" ||

@@ -1,29 +1,31 @@
-import React, { useEffect } from 'react';
-import { X, Download } from 'lucide-react';
+import React, { useEffect } from "react";
+import { X, Download } from "lucide-react";
 
-const ProfilePicturePopup = ({ 
-  isOpen, 
-  onClose, 
-  imageUrl, 
-  alt = "Profile picture"
+const FullScreenImageViewer = ({
+  isOpen,
+  onClose,
+  imageUrl,
+  altText = "Image",
 }) => {
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isOpen) return;
 
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
   }, [isOpen, onClose]);
 
   const handleDownload = () => {
     if (imageUrl) {
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = imageUrl;
       link.download = `profile-picture-${Date.now()}.jpg`;
       document.body.appendChild(link);
@@ -35,7 +37,7 @@ const ProfilePicturePopup = ({
   if (!isOpen || !imageUrl) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={onClose}
     >
@@ -52,12 +54,12 @@ const ProfilePicturePopup = ({
         {/* Just the image - no container, no background, no rounded corners */}
         <img
           src={imageUrl}
-          alt={alt}
-          className="max-w-full max-h-[60vh] object-contain"
+          alt={altText}
+          className="max-w-full max-h-[90vh] object-contain"
           onClick={(e) => e.stopPropagation()}
           onError={(e) => {
-            console.error('Failed to load image:', e.target.src);
-            e.target.style.display = 'none';
+            console.error("Failed to load image:", e.target.src);
+            e.target.style.display = "none";
           }}
         />
       </div>
@@ -65,4 +67,4 @@ const ProfilePicturePopup = ({
   );
 };
 
-export default ProfilePicturePopup;
+export default FullScreenImageViewer;

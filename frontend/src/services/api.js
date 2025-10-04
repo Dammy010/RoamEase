@@ -4,7 +4,6 @@ import { reconnectSocketAfterTokenRefresh } from "./socket";
 
 // Auto-detect environment and use appropriate API URL
 const getApiBaseURL = () => {
-  // Check if we're in development (localhost) or production
   if (
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1"

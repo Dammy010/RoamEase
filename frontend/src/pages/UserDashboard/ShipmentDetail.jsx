@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import ShipmentTracking from "../../components/shipment/ShipmentTracking";
 import { getStaticAssetUrl } from "../../utils/imageUtils";
+import FullScreenImageViewer from "../../components/shared/FullScreenImageViewer";
 import {
   ArrowRight,
   Package,
@@ -76,6 +77,9 @@ const ShipmentDetail = () => {
   // Popup state
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
+  const [selectedImageAlt, setSelectedImageAlt] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -136,6 +140,12 @@ const ShipmentDetail = () => {
         result.payload || "Failed to mark shipment as delivered";
       toast.error(errorMessage);
     }
+  };
+
+  const handlePhotoClick = (photoUrl, photoIndex) => {
+    setSelectedImageUrl(getStaticAssetUrl(photoUrl));
+    setSelectedImageAlt(`Shipment photo ${photoIndex + 1}`);
+    setShowImageModal(true);
   };
 
   const cancelMarkAsDelivered = () => {
@@ -622,16 +632,13 @@ const ShipmentDetail = () => {
                                 getStaticAssetUrl(photo)
                               );
                             }}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onClick={() =>
-                              window.open(getStaticAssetUrl(photo), "_blank")
-                            }
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handlePhotoClick(photo, index);
+                            }}
                           />
-                        </div>
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-xl flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <ExternalLink className="text-white" size={24} />
-                          </div>
                         </div>
                       </div>
                     ))}
@@ -879,6 +886,18 @@ const ShipmentDetail = () => {
           onClose={() => setShowTrackingModal(false)}
         />
       )}
+
+      {/* Full Screen Image Viewer */}
+      <FullScreenImageViewer
+        isOpen={showImageModal}
+        onClose={() => {
+          setShowImageModal(false);
+          setSelectedImageUrl("");
+          setSelectedImageAlt("");
+        }}
+        imageUrl={selectedImageUrl}
+        altText={selectedImageAlt}
+      />
     </div>
   );
 };

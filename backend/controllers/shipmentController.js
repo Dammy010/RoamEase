@@ -19,33 +19,10 @@ const parseNumber = (val) =>
 
 const parseDate = (val) => (val ? new Date(val) : undefined);
 
-// Helper function to upload files to Cloudinary
-const uploadToCloudinary = async (filePath, folder, resourceType = "image") => {
-  try {
-    console.log(`☁️ Uploading to Cloudinary: ${filePath} in folder: ${folder}`);
-
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: folder,
-      resource_type: resourceType,
-      transformation:
-        resourceType === "image"
-          ? [{ quality: "auto", fetch_format: "auto" }]
-          : undefined,
-    });
-
-    console.log(`✅ Cloudinary upload successful:`, {
-      public_id: result.public_id,
-      secure_url: result.secure_url,
-      format: result.format,
-      bytes: result.bytes,
-    });
-
-    return result;
-  } catch (error) {
-    console.error(`❌ Cloudinary upload failed:`, error);
-    throw error;
-  }
-};
+// Import the uploadToCloudinary function from cloudinaryUploadMiddleware
+const {
+  uploadToCloudinary,
+} = require("../middlewares/cloudinaryUploadMiddleware");
 
 // Helper function to upload multiple files to Cloudinary
 const uploadMultipleFilesToCloudinary = async (
@@ -54,7 +31,14 @@ const uploadMultipleFilesToCloudinary = async (
   resourceType = "image"
 ) => {
   const uploadPromises = files.map((file) =>
-    uploadToCloudinary(file.buffer, folder, resourceType)
+    uploadToCloudinary(file.buffer, {
+      folder: folder,
+      resource_type: resourceType,
+      transformation:
+        resourceType === "image"
+          ? [{ quality: "auto", fetch_format: "auto" }]
+          : undefined,
+    })
   );
   return Promise.all(uploadPromises);
 };

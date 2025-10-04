@@ -80,24 +80,24 @@ const UserDashboardHome = () => {
       }
 
       try {
-        const socket = initializeSocketAfterLogin();
-        if (socket) {
-          socket.emit("user-online", user._id);
+      const socket = initializeSocketAfterLogin();
+      if (socket) {
+        socket.emit("user-online", user._id);
 
-          socket.on("new-message", () => {
-            // Ideally you'd dispatch an action to update chat unread count
-          });
+        socket.on("new-message", () => {
+          // Ideally you'd dispatch an action to update chat unread count
+        });
 
-          // Listen for notification refresh events
-          socket.on("notification-refresh", (data) => {
-            // You could dispatch actions to refresh notification counts here
-          });
+        // Listen for notification refresh events
+        socket.on("notification-refresh", (data) => {
+          // You could dispatch actions to refresh notification counts here
+        });
 
-          return () => {
-            socket.off("new-message");
-            socket.off("notification-refresh");
-            socket.disconnect();
-          };
+        return () => {
+          socket.off("new-message");
+          socket.off("notification-refresh");
+          socket.disconnect();
+        };
         }
       } catch (error) {
         console.error("Socket initialization error:", error);
@@ -202,7 +202,7 @@ const UserDashboardHome = () => {
         <div className="text-center max-w-sm mx-auto">
           <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base font-medium mb-2">
-            Loading dashboard data...
+          Loading dashboard data...
           </p>
           <p className="text-gray-500 dark:text-gray-500 text-xs sm:text-sm">
             Fetching your shipments and history
