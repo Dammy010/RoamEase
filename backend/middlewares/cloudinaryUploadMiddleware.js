@@ -10,10 +10,6 @@ const configureCloudinary = () => {
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
   if (!cloudName || !apiKey || !apiSecret) {
-    console.error("❌ Cloudinary configuration missing:");
-    console.error("   CLOUDINARY_CLOUD_NAME:", cloudName ? "Set" : "Missing");
-    console.error("   CLOUDINARY_API_KEY:", apiKey ? "Set" : "Missing");
-    console.error("   CLOUDINARY_API_SECRET:", apiSecret ? "Set" : "Missing");
     throw new Error(
       "Cloudinary configuration is incomplete. Please check your environment variables."
     );
@@ -24,15 +20,13 @@ const configureCloudinary = () => {
     api_key: apiKey,
     api_secret: apiSecret,
   });
-
-  console.log("✅ Cloudinary configured successfully");
 };
 
 // Initialize Cloudinary configuration
 try {
   configureCloudinary();
-} catch (error) {
-  console.error("❌ Failed to configure Cloudinary:", error.message);
+    } catch (error) {
+  // Configuration error will be handled when upload is attempted
 }
 
 // Configure multer to use memory storage
@@ -40,17 +34,9 @@ const storage = multer.memoryStorage();
 
 // File filter for different file types
 const fileFilter = (req, file, cb) => {
-  console.log("🔍 Cloudinary Upload Middleware: File filter check:", {
-    fieldname: file.fieldname,
-    originalname: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
-  });
-
   // Profile pictures - only images
   if (file.fieldname === "profilePicture") {
     if (file.mimetype.startsWith("image/")) {
-      console.log("✅ Profile picture accepted");
       return cb(null, true);
     }
     return cb(
@@ -65,7 +51,6 @@ const fileFilter = (req, file, cb) => {
     const extname = allowedTypes.test(path.extname(file.originalname));
     const mimetype = allowedTypes.test(file.mimetype);
     if (extname && mimetype) {
-      console.log("✅ Chat attachment accepted");
       return cb(null, true);
     }
     return cb(
@@ -78,8 +63,7 @@ const fileFilter = (req, file, cb) => {
 
   // Shipment photos - only images
   if (file.fieldname === "photos") {
-    if (file.mimetype.startsWith("image/")) {
-      console.log("✅ Shipment photo accepted");
+  if (file.mimetype.startsWith("image/")) {
       return cb(null, true);
     }
     return cb(
@@ -97,11 +81,9 @@ const fileFilter = (req, file, cb) => {
       "governmentId",
     ].includes(file.fieldname)
   ) {
-    console.log("✅ Document accepted");
     return cb(null, true);
   }
 
-  console.log("❌ Invalid file field:", file.fieldname);
   return cb(new Error(`Invalid file field: ${file.fieldname}`), false);
 };
 
@@ -183,18 +165,11 @@ const uploadDocument = async (buffer, fieldname) => {
 
 // Create a middleware that handles both file uploads and no files
 const flexibleUpload = (req, res, next) => {
-  console.log("🔍 flexibleUpload - Content-Type:", req.headers["content-type"]);
-  console.log(
-    "🔍 flexibleUpload - Request body keys:",
-    Object.keys(req.body || {})
-  );
-
   // If no files are being uploaded, skip multer entirely
   if (
     !req.headers["content-type"] ||
     !req.headers["content-type"].includes("multipart/form-data")
   ) {
-    console.log("🔍 flexibleUpload - No multipart data, skipping multer");
     // Set empty files object for consistency
     req.files = {};
     return next();
@@ -209,14 +184,6 @@ const flexibleUpload = (req, res, next) => {
 
 // Add error handling middleware
 const handleUploadError = (error, req, res, next) => {
-  console.error("❌ Upload middleware error:", error);
-  console.error("❌ Upload error details:", {
-    message: error.message,
-    code: error.code,
-    field: error.field,
-    name: error.name,
-  });
-
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({

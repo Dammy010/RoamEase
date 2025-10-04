@@ -46,17 +46,6 @@ const uploadMultipleFilesToCloudinary = async (
 // Create a new shipment
 const createShipment = async (req, res) => {
   try {
-    console.log("🚀 Starting shipment creation process...");
-    console.log("🔍 Request body keys:", Object.keys(req.body || {}));
-    console.log(
-      "🔍 Request files:",
-      req.files ? Object.keys(req.files) : "No files"
-    );
-    console.log(
-      "🔍 User authenticated:",
-      req.user ? req.user.email : "No user"
-    );
-
     // Validate required fields
     const requiredFields = [
       "shipmentTitle",
@@ -66,7 +55,6 @@ const createShipment = async (req, res) => {
     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length > 0) {
-      console.error("❌ Missing required fields:", missingFields);
       return res.status(400).json({
         success: false,
         message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -85,7 +73,6 @@ const createShipment = async (req, res) => {
           !process.env.CLOUDINARY_API_KEY ||
           !process.env.CLOUDINARY_API_SECRET
         ) {
-          console.error("❌ Cloudinary configuration missing");
           return res.status(500).json({
             success: false,
             message:
@@ -96,9 +83,6 @@ const createShipment = async (req, res) => {
 
         // Upload photos to Cloudinary
         if (req.files.photos && req.files.photos.length > 0) {
-          console.log(
-            `📸 Uploading ${req.files.photos.length} photos to Cloudinary...`
-          );
           const photoResults = await uploadMultipleFilesToCloudinary(
             req.files.photos,
             "roamease/shipments/photos",
@@ -106,15 +90,10 @@ const createShipment = async (req, res) => {
           );
           data.photos = photoResults.map((result) => result.secure_url);
           data.photoIds = photoResults.map((result) => result.public_id);
-          console.log(`✅ Photos uploaded successfully:`, data.photos);
-          console.log(`🔍 Photo IDs stored:`, data.photoIds);
         }
 
         // Upload documents to Cloudinary
         if (req.files.documents && req.files.documents.length > 0) {
-          console.log(
-            `📄 Uploading ${req.files.documents.length} documents to Cloudinary...`
-          );
           const documentResults = await uploadMultipleFilesToCloudinary(
             req.files.documents,
             "roamease/shipments/documents",
@@ -122,17 +101,8 @@ const createShipment = async (req, res) => {
           );
           data.documents = documentResults.map((result) => result.secure_url);
           data.documentIds = documentResults.map((result) => result.public_id);
-          console.log(`✅ Documents uploaded successfully:`, data.documents);
-          console.log(`🔍 Document IDs stored:`, data.documentIds);
         }
       } catch (uploadError) {
-        console.error("❌ File upload to Cloudinary failed:", uploadError);
-        console.error("❌ Upload error details:", {
-          message: uploadError.message,
-          stack: uploadError.stack,
-          name: uploadError.name,
-        });
-
         return res.status(500).json({
           success: false,
           message: "Failed to upload files. Please try again.",
@@ -158,29 +128,11 @@ const createShipment = async (req, res) => {
     // Add user ID to data
     data.user = req.user._id;
 
-    console.log("🔍 Final shipment data before creation:", {
-      shipmentTitle: data.shipmentTitle,
-      descriptionOfGoods: data.descriptionOfGoods,
-      typeOfGoods: data.typeOfGoods,
-      user: data.user,
-      hasPhotos: !!data.photos?.length,
-      hasDocuments: !!data.documents?.length,
-    });
-
     // Create shipment with error handling
     let shipment;
     try {
       shipment = await Shipment.create(data);
-      console.log("✅ Shipment created successfully with ID:", shipment._id);
     } catch (createError) {
-      console.error("❌ Error creating shipment in database:", createError);
-      console.error("❌ Create error details:", {
-        message: createError.message,
-        name: createError.name,
-        code: createError.code,
-        errors: createError.errors,
-      });
-
       // Handle specific validation errors
       if (createError.name === "ValidationError") {
         const validationErrors = Object.values(createError.errors).map(
@@ -215,9 +167,7 @@ const createShipment = async (req, res) => {
         "user",
         "name email companyName country"
       );
-      console.log("✅ Shipment populated with user data");
     } catch (populateError) {
-      console.error("❌ Error populating shipment:", populateError);
       // Don't fail the request, just use the shipment without population
       populatedShipment = shipment;
     }

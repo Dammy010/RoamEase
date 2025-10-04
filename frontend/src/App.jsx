@@ -48,6 +48,7 @@ import ProtectedRoute from "./components/shared/ProtectedRoute";
 import UserDashboardHome from "./pages/UserDashboard/DashboardHome";
 import PostShipment from "./pages/UserDashboard/PostShipment";
 import MyShipments from "./pages/UserDashboard/MyShipments";
+import AllShipments from "./pages/UserDashboard/AllShipments";
 import ChatLogistics from "./pages/UserDashboard/ChatLogistics";
 import ShipmentHistory from "./pages/UserDashboard/ShipmentHistory";
 import UserProfile from "./pages/UserDashboard/Profile";
@@ -191,6 +192,10 @@ function App() {
                     <Route
                       path="/user/my-shipments"
                       element={<MyShipments />}
+                    />
+                    <Route
+                      path="/user/all-shipments"
+                      element={<AllShipments />}
                     />
                     <Route
                       path="/user/my-shipments/:id"
