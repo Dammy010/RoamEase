@@ -11,6 +11,7 @@ import {
 } from "../../redux/slices/shipmentSlice";
 import { getSocket } from "../../services/socket";
 import { toast } from "react-toastify";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 import {
   Package,
   MapPin,
@@ -55,20 +56,25 @@ const MyShipments = () => {
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
 
+  // Confirmation dialog states
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
   // Expanded shipments state
   const [expandedShipments, setExpandedShipments] = useState(new Set());
 
   const handleDeleteShipment = async (shipmentId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this shipment? This action cannot be undone."
-      )
-    ) {
-      const result = await dispatch(deleteShipment(shipmentId));
-      if (deleteShipment.fulfilled.match(result)) {
-        toast.success("Shipment deleted successfully");
-      }
+    setPendingDeleteId(shipmentId);
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteShipment = async () => {
+    const result = await dispatch(deleteShipment(pendingDeleteId));
+    if (deleteShipment.fulfilled.match(result)) {
+      toast.success("Shipment deleted successfully");
     }
+    setShowDeleteConfirmDialog(false);
+    setPendingDeleteId(null);
   };
 
   const handleMarkAsDelivered = (shipmentId) => {
@@ -556,6 +562,21 @@ const MyShipments = () => {
               </div>
             </div>
           )}
+
+          {/* Modern Confirmation Dialog */}
+          <ConfirmationDialog
+            isOpen={showDeleteConfirmDialog}
+            onClose={() => {
+              setShowDeleteConfirmDialog(false);
+              setPendingDeleteId(null);
+            }}
+            onConfirm={confirmDeleteShipment}
+            title="Delete Shipment"
+            message="Are you sure you want to delete this shipment? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            type="danger"
+          />
         </div>
       </div>
     </>

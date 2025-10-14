@@ -21,6 +21,7 @@ import {
 } from "lucide-react"; // Updated: Imported more icons
 import FormSection from "./FormSection";
 import { isEqual } from "lodash"; // Added isEqual for document comparison
+import Logo from "../shared/Logo";
 
 const ROLES = {
   USER: "user",
@@ -529,8 +530,8 @@ const SignupForm = () => {
 
         {/* Header Section */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-500 rounded-full mb-6 shadow-lg">
-            <Truck className="w-10 h-10 text-white" />
+          <div className="flex justify-center mb-6">
+            <Logo size="xl" animated={true} />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Join RoamEase

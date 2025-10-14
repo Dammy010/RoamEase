@@ -30,6 +30,7 @@ import {
   clearReportError,
 } from "../../redux/slices/reportSlice";
 import ReportDetail from "../../components/reports/ReportDetail";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 
 const ReportManagement = () => {
   const dispatch = useDispatch();
@@ -57,6 +58,10 @@ const ReportManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showStats, setShowStats] = useState(true);
+
+  // Confirmation dialog states
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const categories = [
     {
@@ -185,15 +190,20 @@ const ReportManagement = () => {
   };
 
   const handleDeleteReport = async (reportId) => {
-    if (window.confirm("Are you sure you want to delete this report?")) {
-      try {
-        await dispatch(deleteReport(reportId)).unwrap();
-        toast.success("Report deleted successfully");
-        loadReports();
-      } catch (error) {
-        console.error("Error deleting report:", error);
-      }
+    setPendingDeleteId(reportId);
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteReport = async () => {
+    try {
+      await dispatch(deleteReport(pendingDeleteId)).unwrap();
+      toast.success("Report deleted successfully");
+      loadReports();
+    } catch (error) {
+      console.error("Error deleting report:", error);
     }
+    setShowDeleteConfirmDialog(false);
+    setPendingDeleteId(null);
   };
 
   const getCategoryInfo = (category) => {
@@ -750,6 +760,21 @@ const ReportManagement = () => {
             isAdmin={true}
           />
         )}
+
+        {/* Modern Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showDeleteConfirmDialog}
+          onClose={() => {
+            setShowDeleteConfirmDialog(false);
+            setPendingDeleteId(null);
+          }}
+          onConfirm={confirmDeleteReport}
+          title="Delete Report"
+          message="Are you sure you want to delete this report? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+        />
       </div>
     </div>
   );

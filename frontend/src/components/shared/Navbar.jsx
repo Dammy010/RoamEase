@@ -1,7 +1,8 @@
 import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Truck, User, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, User, LogIn, UserPlus } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import Logo from "./Logo";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,13 +30,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
-              RoamEase
-            </span>
+          <Link to="/" className="group">
+            <Logo
+              size="md"
+              animated={true}
+              className="group-hover:scale-105 transition-transform duration-200"
+            />
           </Link>
 
           {/* Desktop Navigation Links */}

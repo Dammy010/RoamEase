@@ -8,6 +8,7 @@ import {
 } from "../../redux/slices/adminSlice";
 import { toast } from "react-toastify";
 import UserEditModal from "../../components/shared/UserEditModal";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 import {
   Users,
   Search,
@@ -43,6 +44,13 @@ const AllUsersListPage = () => {
   const { users, loading, error } = useSelector((state) => state.admin);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUserToEdit, setCurrentUserToEdit] = useState(null);
+  // Confirmation dialog states
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [showQuickUnsuspendConfirmDialog, setShowQuickUnsuspendConfirmDialog] =
+    useState(false);
+  const [showBulkUnsuspendConfirmDialog, setShowBulkUnsuspendConfirmDialog] =
+    useState(false);
+  const [pendingActionData, setPendingActionData] = useState(null);
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [currentUserToSuspend, setCurrentUserToSuspend] = useState(null);
   const [suspensionEndDate, setSuspensionEndDate] = useState("");
@@ -62,13 +70,35 @@ const AllUsersListPage = () => {
   }, [dispatch]);
 
   const handleDeleteUser = async (userId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
-      )
-    ) {
-      await dispatch(deleteUser(userId));
-    }
+    setPendingActionData({ userId, action: "delete" });
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!pendingActionData) return;
+    await dispatch(deleteUser(pendingActionData.userId));
+    setShowDeleteConfirmDialog(false);
+    setPendingActionData(null);
+  };
+
+  const handleQuickUnsuspend = async (user) => {
+    setPendingActionData({ user, action: "unsuspend" });
+    setShowQuickUnsuspendConfirmDialog(true);
+  };
+
+  const confirmQuickUnsuspend = async () => {
+    if (!pendingActionData) return;
+    const { user } = pendingActionData;
+    await dispatch(
+      suspendUser({
+        userId: user._id,
+        newStatus: "active",
+        suspensionEndDate: null,
+        suspensionReason: "",
+      })
+    );
+    setShowQuickUnsuspendConfirmDialog(false);
+    setPendingActionData(null);
   };
 
   const handleSuspendUser = (user) => {
@@ -102,41 +132,9 @@ const AllUsersListPage = () => {
     setSuspensionReason("");
   };
 
-  const handleQuickUnsuspend = async (user) => {
-    if (
-      window.confirm(
-        `Are you sure you want to unsuspend ${
-          user.name || user.companyName || user.email
-        }?`
-      )
-    ) {
-      await dispatch(
-        suspendUser({
-          userId: user._id,
-          newStatus: "active",
-          suspensionEndDate: null,
-          suspensionReason: "",
-        })
-      );
-    }
-  };
-
   const handleQuickSuspend = async (user) => {
-    const reason = prompt(
-      `Enter reason for suspending ${
-        user.name || user.companyName || user.email
-      }:`
-    );
-    if (reason !== null) {
-      await dispatch(
-        suspendUser({
-          userId: user._id,
-          newStatus: "suspended",
-          suspensionEndDate: null,
-          suspensionReason: reason || "Account suspended by administrator",
-        })
-      );
-    }
+    setCurrentUserToSuspend(user);
+    setIsSuspendModalOpen(true);
   };
 
   const handleSelectUser = (userId) => {
@@ -165,24 +163,29 @@ const AllUsersListPage = () => {
       (user) => selectedUsers.includes(user._id) && user.isActive === false
     );
 
-    if (
-      window.confirm(
-        `Are you sure you want to unsuspend ${suspendedUsers.length} user(s)?`
-      )
-    ) {
-      for (const user of suspendedUsers) {
-        await dispatch(
-          suspendUser({
-            userId: user._id,
-            newStatus: "active",
-            suspensionEndDate: null,
-            suspensionReason: "",
-          })
-        );
-      }
-      setSelectedUsers([]);
-      setShowBulkActions(false);
+    setPendingActionData({ suspendedUsers, action: "bulkUnsuspend" });
+    setShowBulkUnsuspendConfirmDialog(true);
+  };
+
+  const confirmBulkUnsuspend = async () => {
+    if (!pendingActionData) return;
+
+    const { suspendedUsers } = pendingActionData;
+    for (const user of suspendedUsers) {
+      await dispatch(
+        suspendUser({
+          userId: user._id,
+          newStatus: "active",
+          suspensionEndDate: null,
+          suspensionReason: "",
+        })
+      );
     }
+
+    setShowBulkUnsuspendConfirmDialog(false);
+    setPendingActionData(null);
+    setSelectedUsers([]);
+    setShowBulkActions(false);
   };
 
   const handleEditUser = (user) => {
@@ -936,6 +939,56 @@ const AllUsersListPage = () => {
           </div>
         </div>
       )}
+
+      {/* Modern Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmDialog}
+        onClose={() => {
+          setShowDeleteConfirmDialog(false);
+          setPendingActionData(null);
+        }}
+        onConfirm={confirmDeleteUser}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      <ConfirmationDialog
+        isOpen={showQuickUnsuspendConfirmDialog}
+        onClose={() => {
+          setShowQuickUnsuspendConfirmDialog(false);
+          setPendingActionData(null);
+        }}
+        onConfirm={confirmQuickUnsuspend}
+        title="Unsuspend User"
+        message={`Are you sure you want to unsuspend ${
+          pendingActionData?.user?.name ||
+          pendingActionData?.user?.companyName ||
+          pendingActionData?.user?.email
+        }?`}
+        confirmText="Unsuspend"
+        cancelText="Cancel"
+        type="success"
+      />
+
+      {/* Bulk Unsuspend Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showBulkUnsuspendConfirmDialog}
+        onClose={() => {
+          setShowBulkUnsuspendConfirmDialog(false);
+          setPendingActionData(null);
+        }}
+        onConfirm={confirmBulkUnsuspend}
+        title="Bulk Unsuspend Users"
+        message={`Are you sure you want to unsuspend ${
+          pendingActionData?.suspendedUsers?.length || 0
+        } user(s)?`}
+        confirmText="Unsuspend All"
+        cancelText="Cancel"
+        type="success"
+      />
     </div>
   );
 };

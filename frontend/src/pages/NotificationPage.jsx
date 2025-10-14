@@ -20,6 +20,7 @@ import {
   updateNotification,
   removeNotification,
 } from "../redux/slices/notificationSlice";
+import ConfirmationDialog from "../components/shared/ConfirmationDialog";
 import {
   Bell,
   Check,
@@ -71,6 +72,10 @@ const NotificationPage = () => {
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
   const refreshIntervalRef = useRef(null);
   const notificationSoundRef = useRef(null);
+
+  // Confirmation dialog states
+  const [showBulkDeleteConfirmDialog, setShowBulkDeleteConfirmDialog] =
+    useState(false);
 
   // Initial data fetch
   useEffect(() => {
@@ -291,12 +296,8 @@ const NotificationPage = () => {
     async (action) => {
       if (selectedNotifications.length === 0) return;
 
-      if (
-        action === "delete" &&
-        !window.confirm(
-          `Are you sure you want to delete ${selectedNotifications.length} notifications?`
-        )
-      ) {
+      if (action === "delete") {
+        setShowBulkDeleteConfirmDialog(true);
         return;
       }
 
@@ -310,6 +311,17 @@ const NotificationPage = () => {
     },
     [dispatch, selectedNotifications]
   );
+
+  const confirmBulkDelete = async () => {
+    try {
+      await dispatch(
+        bulkAction({ action: "delete", notificationIds: selectedNotifications })
+      );
+    } catch (error) {
+      console.error("Error performing bulk delete:", error);
+    }
+    setShowBulkDeleteConfirmDialog(false);
+  };
 
   const getNotificationIcon = (type) => {
     const iconMap = {
@@ -1008,6 +1020,18 @@ const NotificationPage = () => {
           )}
         </div>
       </div>
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showBulkDeleteConfirmDialog}
+        onClose={() => setShowBulkDeleteConfirmDialog(false)}
+        onConfirm={confirmBulkDelete}
+        title="Delete Notifications"
+        message={`Are you sure you want to delete ${selectedNotifications.length} notifications? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

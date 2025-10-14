@@ -1,0 +1,44 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="modernGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E40AF" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+  </defs>
+  
+  <style>
+    .rotate-icon {
+      animation: spin 8s linear infinite;
+      transform-origin: center;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  
+  <!-- Modern Icon -->
+  <g stroke="white" stroke-width="2" fill="none" class="rotate-icon">
+    <!-- Central hub -->
+    <circle cx="16" cy="16" r="3" fill="white" />
+    
+    <!-- Connection lines -->
+    <path d="M16 3C16 3 8 8 8 16C8 20 12 24 16 24C20 24 24 20 24 16C24 8 16 3 16 3Z" 
+          stroke-width="1.5" opacity="0.8" />
+    <path d="M16 3C16 3 24 8 24 16C24 20 20 24 16 24C12 24 8 20 8 16C8 8 16 3 16 3Z" 
+          stroke-width="1.5" opacity="0.8" />
+    
+    <!-- Movement indicators -->
+    <circle cx="8" cy="8" r="1.5" fill="white" opacity="0.9" />
+    <circle cx="24" cy="8" r="1.5" fill="white" opacity="0.9" />
+    <circle cx="8" cy="24" r="1.5" fill="white" opacity="0.9" />
+    <circle cx="24" cy="24" r="1.5" fill="white" opacity="0.9" />
+    
+    <!-- Flow lines -->
+    <path d="M6 6L10 10" stroke-width="1" opacity="0.6" />
+    <path d="M26 6L22 10" stroke-width="1" opacity="0.6" />
+    <path d="M6 26L10 22" stroke-width="1" opacity="0.6" />
+    <path d="M26 26L22 22" stroke-width="1" opacity="0.6" />
+  </g>
+</svg>

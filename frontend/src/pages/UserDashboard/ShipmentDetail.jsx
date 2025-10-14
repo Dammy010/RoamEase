@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import ShipmentTracking from "../../components/shipment/ShipmentTracking";
 import { getStaticAssetUrl } from "../../utils/imageUtils";
 import FullScreenImageViewer from "../../components/shared/FullScreenImageViewer";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 import {
   ArrowRight,
   Package,
@@ -81,6 +82,11 @@ const ShipmentDetail = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [selectedImageAlt, setSelectedImageAlt] = useState("");
 
+  // Confirmation dialog states
+  const [showStatusConfirmDialog, setShowStatusConfirmDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState("");
+
   useEffect(() => {
     if (id) {
       dispatch(fetchShipmentById(id));
@@ -96,32 +102,32 @@ const ShipmentDetail = () => {
   };
 
   const handleUpdateShipmentStatus = async (newStatus) => {
-    if (
-      window.confirm(
-        `Are you sure you want to update shipment status to "${newStatus}"?`
-      )
-    ) {
-      const result = await dispatch(
-        updateShipmentStatus({ id, status: newStatus })
-      );
-      if (updateShipmentStatus.fulfilled.match(result)) {
-        toast.success(`Shipment status updated to ${newStatus}`);
-      }
+    setPendingStatus(newStatus);
+    setShowStatusConfirmDialog(true);
+  };
+
+  const confirmStatusUpdate = async () => {
+    const result = await dispatch(
+      updateShipmentStatus({ id, status: pendingStatus })
+    );
+    if (updateShipmentStatus.fulfilled.match(result)) {
+      toast.success(`Shipment status updated to ${pendingStatus}`);
     }
+    setShowStatusConfirmDialog(false);
+    setPendingStatus("");
   };
 
   const handleDeleteShipment = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this shipment? This action cannot be undone."
-      )
-    ) {
-      const result = await dispatch(deleteShipment(id));
-      if (deleteShipment.fulfilled.match(result)) {
-        toast.success("Shipment deleted successfully");
-        navigate("/user/my-shipments");
-      }
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteShipment = async () => {
+    const result = await dispatch(deleteShipment(id));
+    if (deleteShipment.fulfilled.match(result)) {
+      toast.success("Shipment deleted successfully");
+      navigate("/user/my-shipments");
     }
+    setShowDeleteConfirmDialog(false);
   };
 
   const handleMarkAsDelivered = () => {
@@ -878,6 +884,32 @@ const ShipmentDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Modern Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showStatusConfirmDialog}
+        onClose={() => {
+          setShowStatusConfirmDialog(false);
+          setPendingStatus("");
+        }}
+        onConfirm={confirmStatusUpdate}
+        title="Update Shipment Status"
+        message={`Are you sure you want to update shipment status to "${pendingStatus}"?`}
+        confirmText="Update Status"
+        cancelText="Cancel"
+        type="info"
+      />
+
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmDialog}
+        onClose={() => setShowDeleteConfirmDialog(false)}
+        onConfirm={confirmDeleteShipment}
+        title="Delete Shipment"
+        message="Are you sure you want to delete this shipment? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
 
       {/* Tracking Modal */}
       {showTrackingModal && (

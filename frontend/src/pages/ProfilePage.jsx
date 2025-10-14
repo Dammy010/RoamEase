@@ -5,6 +5,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { getProfilePictureUrl } from "../utils/imageUtils";
 import FullScreenImageViewer from "../components/shared/FullScreenImageViewer";
 import { ProfilePictureModal } from "../components/forms/ProfileForm";
+import ConfirmationDialog from "../components/shared/ConfirmationDialog";
 import {
   User,
   Mail,
@@ -65,6 +66,8 @@ const ProfilePage = () => {
     (state) => state.settings
   );
 
+  // Confirmation dialog states
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
   const [showFullScreenImage, setShowFullScreenImage] = useState(false);
 
@@ -154,25 +157,24 @@ const ProfilePage = () => {
       return;
     }
 
-    if (
-      window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
-      )
-    ) {
-      try {
-        const result = await dispatch(
-          deleteAccount(passwordData.currentPassword)
-        );
-        if (deleteAccount.fulfilled.match(result)) {
-          toast.success("Account deleted successfully");
-          // User will be redirected by the auth system
-        } else if (deleteAccount.rejected.match(result)) {
-          toast.error(result.payload || "Failed to delete account");
-        }
-      } catch (error) {
-        toast.error("An error occurred while deleting account");
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      const result = await dispatch(
+        deleteAccount(passwordData.currentPassword)
+      );
+      if (deleteAccount.fulfilled.match(result)) {
+        toast.success("Account deleted successfully");
+        // User will be redirected by the auth system
+      } else if (deleteAccount.rejected.match(result)) {
+        toast.error(result.payload || "Failed to delete account");
       }
+    } catch (error) {
+      toast.error("An error occurred while deleting account");
     }
+    setShowDeleteConfirmDialog(false);
   };
 
   const handleProfilePictureUpload = async (file) => {
@@ -952,6 +954,18 @@ const ProfilePage = () => {
           alt="Profile Picture"
         />
       )}
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmDialog}
+        onClose={() => setShowDeleteConfirmDialog(false)}
+        onConfirm={confirmDeleteAccount}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed."
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

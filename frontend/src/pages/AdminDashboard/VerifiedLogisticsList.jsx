@@ -8,6 +8,7 @@ import {
 } from "../../redux/slices/adminSlice";
 import { toast } from "react-toastify";
 import UserEditModal from "../../components/shared/UserEditModal";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 import {
   Truck,
   Search,
@@ -51,6 +52,11 @@ const VerifiedLogisticsList = () => {
     (state) => state.admin
   );
 
+  // Confirmation dialog states
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [showSuspendConfirmDialog, setShowSuspendConfirmDialog] =
+    useState(false);
+  const [pendingActionData, setPendingActionData] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUserToEdit, setCurrentUserToEdit] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,24 +71,33 @@ const VerifiedLogisticsList = () => {
   }, [dispatch]);
 
   const handleDeleteUser = async (userId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this logistics company? This action cannot be undone."
-      )
-    ) {
-      await dispatch(deleteUser(userId));
-    }
+    setPendingActionData({ userId, action: "delete" });
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!pendingActionData) return;
+    await dispatch(deleteUser(pendingActionData.userId));
+    setShowDeleteConfirmDialog(false);
+    setPendingActionData(null);
   };
 
   const handleSuspendUser = async (userId, currentStatus) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
-    if (
-      window.confirm(
-        `Are you sure you want to ${newStatus} this logistics company?`
-      )
-    ) {
-      await dispatch(suspendUser({ userId, newStatus }));
-    }
+    setPendingActionData({ userId, newStatus, action: "suspend" });
+    setShowSuspendConfirmDialog(true);
+  };
+
+  const confirmSuspendUser = async () => {
+    if (!pendingActionData) return;
+    await dispatch(
+      suspendUser({
+        userId: pendingActionData.userId,
+        newStatus: pendingActionData.newStatus,
+      })
+    );
+    setShowSuspendConfirmDialog(false);
+    setPendingActionData(null);
   };
 
   const handleEditUser = (user) => {
@@ -621,6 +636,39 @@ const VerifiedLogisticsList = () => {
           }}
         />
       )}
+
+      {/* Modern Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmDialog}
+        onClose={() => {
+          setShowDeleteConfirmDialog(false);
+          setPendingActionData(null);
+        }}
+        onConfirm={confirmDeleteUser}
+        title="Delete Logistics Company"
+        message="Are you sure you want to delete this logistics company? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      <ConfirmationDialog
+        isOpen={showSuspendConfirmDialog}
+        onClose={() => {
+          setShowSuspendConfirmDialog(false);
+          setPendingActionData(null);
+        }}
+        onConfirm={confirmSuspendUser}
+        title={`${
+          pendingActionData?.newStatus === "suspended" ? "Suspend" : "Activate"
+        } Logistics Company`}
+        message={`Are you sure you want to ${pendingActionData?.newStatus} this logistics company?`}
+        confirmText={
+          pendingActionData?.newStatus === "suspended" ? "Suspend" : "Activate"
+        }
+        cancelText="Cancel"
+        type="warning"
+      />
     </div>
   );
 };

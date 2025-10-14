@@ -7,6 +7,7 @@ import { fetchMyBids, cancelBid, updateBid } from "../../redux/slices/bidSlice";
 import { getSocket } from "../../services/socket";
 import { toast } from "react-toastify";
 import api from "../../services/api";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 import {
   Wallet,
   Clock,
@@ -40,7 +41,9 @@ const MyBids = () => {
   const { myBids, loading, error } = useSelector((state) => state.bid);
   const { user } = useSelector((state) => state.auth);
   const [expandedBids, setExpandedBids] = useState(new Set());
-  const [showEditBidModal, setShowEditBidModal] = useState(false);
+  // Confirmation dialog states
+  const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
+  const [pendingCancelData, setPendingCancelData] = useState(null);
   const [editingBid, setEditingBid] = useState(null);
   const [editBidPrice, setEditBidPrice] = useState("");
   const [editBidCurrency, setEditBidCurrency] = useState("USD");
@@ -59,28 +62,30 @@ const MyBids = () => {
   };
 
   const handleCancelBid = async (bidId, shipmentTitle) => {
-    if (
-      window.confirm(
-        `Are you sure you want to cancel your bid for "${
-          shipmentTitle || "this shipment"
-        }"? This action cannot be undone.`
-      )
-    ) {
-      setActionLoading((prev) => ({ ...prev, [bidId]: true }));
-      try {
-        const result = await dispatch(cancelBid(bidId));
-        if (cancelBid.fulfilled.match(result)) {
-          toast.success("Bid cancelled successfully");
-          dispatch(fetchMyBids());
-        } else if (cancelBid.rejected.match(result)) {
-          toast.error(result.payload || "Failed to cancel bid");
-        }
-      } catch (error) {
-        console.error("Error cancelling bid:", error);
-        toast.error("Failed to cancel bid");
-      } finally {
-        setActionLoading((prev) => ({ ...prev, [bidId]: false }));
+    setPendingCancelData({ bidId, shipmentTitle });
+    setShowCancelConfirmDialog(true);
+  };
+
+  const confirmCancelBid = async () => {
+    if (!pendingCancelData) return;
+
+    const { bidId } = pendingCancelData;
+    setActionLoading((prev) => ({ ...prev, [bidId]: true }));
+    try {
+      const result = await dispatch(cancelBid(bidId));
+      if (cancelBid.fulfilled.match(result)) {
+        toast.success("Bid cancelled successfully");
+        dispatch(fetchMyBids());
+      } else if (cancelBid.rejected.match(result)) {
+        toast.error(result.payload || "Failed to cancel bid");
       }
+    } catch (error) {
+      console.error("Error cancelling bid:", error);
+      toast.error("Failed to cancel bid");
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [bidId]: false }));
+      setShowCancelConfirmDialog(false);
+      setPendingCancelData(null);
     }
   };
 
@@ -288,10 +293,7 @@ const MyBids = () => {
                   onClick={() => navigate(-1)}
                   className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20 hover:bg-white/30 transition-all duration-300"
                 >
-                  <ArrowLeft
-                    className="text-white sm:w-6 sm:h-6"
-                    size={20}
-                  />
+                  <ArrowLeft className="text-white sm:w-6 sm:h-6" size={20} />
                 </button>
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20">
                   <Wallet
@@ -960,6 +962,23 @@ const MyBids = () => {
           </div>
         )}
       </div>
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showCancelConfirmDialog}
+        onClose={() => {
+          setShowCancelConfirmDialog(false);
+          setPendingCancelData(null);
+        }}
+        onConfirm={confirmCancelBid}
+        title="Cancel Bid"
+        message={`Are you sure you want to cancel your bid for "${
+          pendingCancelData?.shipmentTitle || "this shipment"
+        }"? This action cannot be undone.`}
+        confirmText="Cancel Bid"
+        cancelText="Keep Bid"
+        type="warning"
+      />
     </div>
   );
 };

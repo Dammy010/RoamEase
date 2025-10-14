@@ -5,6 +5,7 @@ import { sendMessage, addMessage } from "../../redux/slices/chatSlice";
 import { getSocket } from "../../services/socket";
 import { Smile, Paperclip, Image, FileText, Send, X } from "lucide-react";
 import EmojiPicker from "./EmojiPicker";
+import { toast } from "react-toastify";
 
 const NewMessageInput = ({ conversationId }) => {
   const [text, setText] = useState("");
@@ -22,22 +23,24 @@ const NewMessageInput = ({ conversationId }) => {
 
     try {
       // Send via API only - the API will handle database storage
-      const resultAction = await dispatch(sendMessage({ 
-        conversationId, 
-        text: text.trim(),
-        attachments: attachments
-      }));
+      const resultAction = await dispatch(
+        sendMessage({
+          conversationId,
+          text: text.trim(),
+          attachments: attachments,
+        })
+      );
 
       if (sendMessage.fulfilled.match(resultAction)) {
         // Emit via socket for real-time delivery to other users (without creating duplicate in DB)
         const socket = getSocket();
         if (socket) {
-          socket.emit("broadcast-message", { 
+          socket.emit("broadcast-message", {
             message: resultAction.payload, // Send the created message object
-            conversationId
+            conversationId,
           });
         }
-        
+
         // Clear form after successful send
         setText("");
         setAttachments([]);
@@ -49,39 +52,45 @@ const NewMessageInput = ({ conversationId }) => {
   };
 
   const addEmoji = (emoji) => {
-    setText(prev => prev + emoji);
+    setText((prev) => prev + emoji);
     setShowEmojiPicker(false);
   };
 
   const handleFileUpload = async (event, type) => {
     const files = Array.from(event.target.files);
-    
+
     for (const file of files) {
       try {
         setIsUploading(true);
         // Create FormData for file upload
         const formData = new FormData();
-        formData.append('file', file);
-        
+        formData.append("file", file);
+
         // Get auth token
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error("No authentication token found");
         }
         // Upload file to backend
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "https://roamease-3wg1.onrender.com"}/api/chat/upload`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
-        });
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_BASE_URL ||
+            "https://roamease-3wg1.onrender.com"
+          }/api/chat/upload`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Upload failed:', errorText);
+          console.error("Upload failed:", errorText);
           throw new Error(`Upload failed: ${response.status} - ${errorText}`);
         }
-        
+
         const result = await response.json();
         // Add uploaded file to attachments
         const newAttachment = {
@@ -89,13 +98,13 @@ const NewMessageInput = ({ conversationId }) => {
           name: result.file.name,
           type: result.file.type,
           size: result.file.size,
-          url: result.file.url
+          url: result.file.url,
         };
-        
-        setAttachments(prev => [...prev, newAttachment]);
+
+        setAttachments((prev) => [...prev, newAttachment]);
       } catch (error) {
-        console.error('File upload error:', error);
-        alert(`Failed to upload file: ${error.message}`);
+        console.error("File upload error:", error);
+        toast.error(`Failed to upload file: ${error.message}`);
       } finally {
         setIsUploading(false);
       }
@@ -103,15 +112,15 @@ const NewMessageInput = ({ conversationId }) => {
   };
 
   const removeAttachment = (id) => {
-    setAttachments(prev => prev.filter(att => att.id !== id));
+    setAttachments((prev) => prev.filter((att) => att.id !== id));
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
@@ -121,15 +130,26 @@ const NewMessageInput = ({ conversationId }) => {
         <div className="p-3 bg-blue-50 border-b border-gray-200/30">
           <div className="flex flex-wrap gap-2">
             {attachments.map((attachment) => (
-              <div key={attachment.id} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-200">
-                {attachment.type.startsWith('image/') ? (
-                  <img src={attachment.url} alt={attachment.name} className="w-8 h-8 object-cover rounded-lg" />
+              <div
+                key={attachment.id}
+                className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                {attachment.type.startsWith("image/") ? (
+                  <img
+                    src={attachment.url}
+                    alt={attachment.name}
+                    className="w-8 h-8 object-cover rounded-lg"
+                  />
                 ) : (
                   <FileText className="w-8 h-8 text-blue-500" />
                 )}
                 <div className="text-xs min-w-0">
-                  <p className="font-medium truncate max-w-24">{attachment.name}</p>
-                  <p className="text-gray-500">{formatFileSize(attachment.size)}</p>
+                  <p className="font-medium truncate max-w-24">
+                    {attachment.name}
+                  </p>
+                  <p className="text-gray-500">
+                    {formatFileSize(attachment.size)}
+                  </p>
                 </div>
                 <button
                   onClick={() => removeAttachment(attachment.id)}
@@ -146,7 +166,7 @@ const NewMessageInput = ({ conversationId }) => {
       {/* Emoji Picker */}
       {showEmojiPicker && (
         <div className="relative">
-          <EmojiPicker 
+          <EmojiPicker
             onEmojiSelect={addEmoji}
             onClose={() => setShowEmojiPicker(false)}
           />
@@ -162,7 +182,10 @@ const NewMessageInput = ({ conversationId }) => {
           className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
           title="Add emoji"
         >
-          <Smile size={20} className="group-hover:scale-110 transition-transform duration-200" />
+          <Smile
+            size={20}
+            className="group-hover:scale-110 transition-transform duration-200"
+          />
         </button>
 
         {/* File Upload Button */}
@@ -172,7 +195,10 @@ const NewMessageInput = ({ conversationId }) => {
           className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
           title="Attach file"
         >
-          <Paperclip size={20} className="group-hover:scale-110 transition-transform duration-200" />
+          <Paperclip
+            size={20}
+            className="group-hover:scale-110 transition-transform duration-200"
+          />
         </button>
 
         {/* Image Upload Button */}
@@ -182,7 +208,10 @@ const NewMessageInput = ({ conversationId }) => {
           className="p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
           title="Attach image"
         >
-          <Image size={20} className="group-hover:scale-110 transition-transform duration-200" />
+          <Image
+            size={20}
+            className="group-hover:scale-110 transition-transform duration-200"
+          />
         </button>
 
         {/* Hidden File Inputs */}
@@ -191,7 +220,7 @@ const NewMessageInput = ({ conversationId }) => {
           type="file"
           multiple
           accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-          onChange={(e) => handleFileUpload(e, 'document')}
+          onChange={(e) => handleFileUpload(e, "document")}
           className="hidden"
         />
         <input
@@ -199,7 +228,7 @@ const NewMessageInput = ({ conversationId }) => {
           type="file"
           multiple
           accept="image/*"
-          onChange={(e) => handleFileUpload(e, 'image')}
+          onChange={(e) => handleFileUpload(e, "image")}
           className="hidden"
         />
 
@@ -223,7 +252,14 @@ const NewMessageInput = ({ conversationId }) => {
           }`}
           title={isUploading ? "Uploading..." : "Send message"}
         >
-          <Send size={18} className={`transition-transform duration-200 ${(text.trim() || attachments.length > 0) && !isUploading ? 'group-hover:translate-x-0.5' : ''}`} />
+          <Send
+            size={18}
+            className={`transition-transform duration-200 ${
+              (text.trim() || attachments.length > 0) && !isUploading
+                ? "group-hover:translate-x-0.5"
+                : ""
+            }`}
+          />
         </button>
       </form>
     </div>
@@ -231,4 +267,3 @@ const NewMessageInput = ({ conversationId }) => {
 };
 
 export default NewMessageInput;
-

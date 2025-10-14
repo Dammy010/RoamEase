@@ -11,6 +11,7 @@ import {
   upgradeSubscription,
   clearError,
 } from "../../redux/slices/subscriptionSlice";
+import ConfirmationDialog from "../../components/shared/ConfirmationDialog";
 import {
   CreditCard,
   CheckCircle,
@@ -62,7 +63,9 @@ const Subscriptions = () => {
   } = useSelector((state) => state.subscription);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [forceHideActive, setForceHideActive] = useState(false);
+  // Confirmation dialog states
+  const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
+  const [pendingCancelId, setPendingCancelId] = useState(null);
   const [loadingPlans, setLoadingPlans] = useState({});
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
@@ -421,29 +424,30 @@ const Subscriptions = () => {
   };
 
   const handleCancel = async (subscriptionId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to cancel this subscription? You will lose access to premium features at the end of your billing period."
-      )
-    ) {
-      try {
-        await dispatch(cancelSubscription(subscriptionId)).unwrap();
-        toast.success("Subscription cancelled successfully");
-        setForceHideActive(true); // Force hide the active section immediately
-        fetchSubscriptions();
-      } catch (error) {
-        console.error("Cancel subscription error:", error);
+    setPendingCancelId(subscriptionId);
+    setShowCancelConfirmDialog(true);
+  };
 
-        // If subscription is already cancelled, just hide the active section
-        if (error.includes("already cancelled")) {
-          toast.info("Subscription was already cancelled. Refreshing data...");
-          setForceHideActive(true);
-          fetchSubscriptions();
-        } else {
-          toast.error(error || "Failed to cancel subscription");
-        }
+  const confirmCancel = async () => {
+    try {
+      await dispatch(cancelSubscription(pendingCancelId)).unwrap();
+      toast.success("Subscription cancelled successfully");
+      setForceHideActive(true); // Force hide the active section immediately
+      fetchSubscriptions();
+    } catch (error) {
+      console.error("Cancel subscription error:", error);
+
+      // If subscription is already cancelled, just hide the active section
+      if (error.includes("already cancelled")) {
+        toast.info("Subscription was already cancelled. Refreshing data...");
+        setForceHideActive(true);
+        fetchSubscriptions();
+      } else {
+        toast.error(error || "Failed to cancel subscription");
       }
     }
+    setShowCancelConfirmDialog(false);
+    setPendingCancelId(null);
   };
 
   return (
@@ -1642,6 +1646,21 @@ const UpgradeModal = ({
           })}
         </div>
       </div>
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showCancelConfirmDialog}
+        onClose={() => {
+          setShowCancelConfirmDialog(false);
+          setPendingCancelId(null);
+        }}
+        onConfirm={confirmCancel}
+        title="Cancel Subscription"
+        message="Are you sure you want to cancel this subscription? You will lose access to premium features at the end of your billing period."
+        confirmText="Cancel Subscription"
+        cancelText="Keep Subscription"
+        type="warning"
+      />
     </div>
   );
 };

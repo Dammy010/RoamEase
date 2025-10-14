@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import Footer from "../components/shared/Footer";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useAnimation } from "framer-motion";
 import { useRef } from "react";
 import {
   FaBox,
@@ -21,37 +21,108 @@ const LandingPage = () => {
   const { isDark } = useTheme();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+  const controls = useAnimation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    if (isInView) {
+      controls.start("visible");
+    }
+  }, [isInView, controls]);
+
+  // Enhanced animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const slideInVariants = {
+    hidden: { x: -100, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const scaleVariants = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 py-6">
       {/* Hero Section */}
       <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-blue-600 text-white px-4 sm:px-6 lg:px-16 gap-8 lg:gap-10"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="relative flex flex-col-reverse lg:flex-row items-center justify-center min-h-[90vh] bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white px-4 sm:px-6 lg:px-16 gap-8 lg:gap-10 overflow-hidden"
       >
+        {/* Background Animation Elements */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 0.1, scale: 1 }}
+          transition={{ duration: 2, delay: 1 }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent transform -skew-y-12"
+        />
+
         {/* Left Content */}
         <motion.div
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex-1 text-center lg:text-left"
+          variants={slideInVariants}
+          className="flex-1 text-center lg:text-left z-10"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
+          <motion.h1
+            variants={itemVariants}
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-6 leading-tight drop-shadow-lg"
+          >
             Connect With Global Logistics Providers Instantly
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-200 max-w-2xl mb-6 sm:mb-8">
+          </motion.h1>
+          <motion.p
+            variants={itemVariants}
+            className="text-base sm:text-lg md:text-xl text-gray-200 max-w-2xl mb-6 sm:mb-8"
+          >
             RoamEase is the online marketplace where shippers post requests and
             licensed providers bid to fulfill them no middlemen.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+          </motion.p>
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
+          >
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow:
+                  "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/browse-shipments")}
               className="bg-white dark:bg-gray-800 text-blue-700 font-semibold py-3 px-6 sm:px-8 rounded-lg shadow-lg hover:bg-gray-100 transition duration-300 text-sm sm:text-base"
@@ -59,24 +130,28 @@ const LandingPage = () => {
               Browse Open Shipments
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{
+                scale: 1.05,
+                backgroundColor: "white",
+                color: "#1E40AF",
+              }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/signup")}
               className="bg-transparent border-2 border-white text-white font-semibold py-3 px-6 sm:px-8 rounded-lg hover:bg-white hover:text-blue-700 transition duration-300 text-sm sm:text-base"
             >
               Get Started Now
             </motion.button>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Right Image */}
         <motion.div
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex-1 flex justify-center"
+          variants={scaleVariants}
+          className="flex-1 flex justify-center z-10"
         >
-          <img
+          <motion.img
+            whileHover={{ scale: 1.05, rotate: 2 }}
+            transition={{ duration: 0.3 }}
             src="https://intradefairs.com/sites/default/files/news/0Digitalize%20Logistics.jpg"
             alt="Global Logistics"
             className="w-full max-w-sm sm:max-w-md lg:max-w-lg rounded-2xl shadow-2xl"
@@ -87,18 +162,20 @@ const LandingPage = () => {
       {/* Why Choose RoamEase */}
       <motion.section
         ref={ref}
-        initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.8 }}
-        className="py-12 sm:py-16 text-center bg-blue-50 dark:bg-gray-900"
+        initial="hidden"
+        animate={controls}
+        variants={containerVariants}
+        className="py-12 sm:py-16 text-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800"
       >
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-white px-4">
-          Why Choose RoamEase?
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto px-4 text-sm sm:text-base">
-          Our platform offers comprehensive features designed to make logistics
-          management efficient, secure, and hassle-free.
-        </p>
+        <motion.div variants={itemVariants}>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 dark:text-white px-4">
+            Why Choose RoamEase?
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto px-4 text-sm sm:text-base">
+            Our platform offers comprehensive features designed to make
+            logistics management efficient, secure, and hassle-free.
+          </p>
+        </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto px-4 sm:px-6">
           {[
             {
@@ -134,15 +211,21 @@ const LandingPage = () => {
           ].map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ y: 50, opacity: 0 }}
-              animate={isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              className="bg-white dark:bg-gray-800 backdrop-blur-sm shadow-lg rounded-xl p-4 sm:p-6 text-left flex items-start gap-3 sm:gap-4 hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 dark:border-gray-700/50"
+              variants={itemVariants}
+              whileHover={{
+                scale: 1.05,
+                y: -5,
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              }}
+              className="bg-white dark:bg-gray-800 backdrop-blur-sm shadow-lg rounded-xl p-4 sm:p-6 text-left flex items-start gap-3 sm:gap-4 hover:shadow-2xl transition-all duration-300 border border-white/20 dark:border-gray-700/50"
             >
-              <div className="text-blue-600 dark:text-blue-400 text-2xl">
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+                className="text-blue-600 dark:text-blue-400 text-2xl"
+              >
                 {feature.icon}
-              </div>
+              </motion.div>
               <div>
                 <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">
                   {feature.title}
@@ -158,53 +241,73 @@ const LandingPage = () => {
 
       {/* How It Works */}
       <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
+        initial="hidden"
+        whileInView="visible"
         viewport={{ once: true }}
-        className="py-12 sm:py-16 text-center bg-blue-600"
+        variants={containerVariants}
+        className="py-12 sm:py-16 text-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden"
       >
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white px-4">
-          How It Works
-        </h2>
-        <p className="text-blue-100 mb-8 sm:mb-12 max-w-2xl mx-auto px-4 text-sm sm:text-base">
-          Get started with RoamEase in four simple steps
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Background Animation */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          whileInView={{ opacity: 0.1, scale: 1 }}
+          transition={{ duration: 2 }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent transform rotate-12"
+        />
+
+        <motion.div variants={itemVariants}>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white px-4 relative z-10">
+            How It Works
+          </h2>
+          <p className="text-blue-100 mb-8 sm:mb-12 max-w-2xl mx-auto px-4 text-sm sm:text-base relative z-10">
+            Get started with RoamEase in four simple steps
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           {[
             {
               icon: <FaUserPlus />,
               title: "Sign Up",
               desc: "Create your account as a shipper or logistics company.",
+              color: "from-blue-500 to-blue-600",
             },
             {
               icon: <FaBox />,
               title: "Post Shipment",
               desc: "Shippers post cargo details and requirements.",
+              color: "from-green-500 to-green-600",
             },
             {
               icon: <FaHandshake />,
               title: "Receive Bids",
               desc: "Verified logistics companies submit competitive bids.",
+              color: "from-purple-500 to-purple-600",
             },
             {
               icon: <FaTruck />,
               title: "Ship & Track",
               desc: "Accept the best bid and track your shipment in real-time.",
+              color: "from-orange-500 to-orange-600",
             },
           ].map((step, index) => (
             <motion.div
               key={index}
-              initial={{ y: 50, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05 }}
+              variants={itemVariants}
+              whileHover={{
+                scale: 1.05,
+                y: -10,
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              }}
               className="flex flex-col items-center text-center transition-transform bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl border border-white/50 dark:border-gray-700/50"
             >
-              <div className="bg-blue-500 text-white rounded-full p-3 sm:p-4 text-2xl sm:text-3xl mb-3 sm:mb-4 shadow-lg">
+              <motion.div
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.6 }}
+                className={`bg-gradient-to-r ${step.color} text-white rounded-full p-3 sm:p-4 text-2xl sm:text-3xl mb-3 sm:mb-4 shadow-lg`}
+              >
                 {step.icon}
-              </div>
+              </motion.div>
               <h3 className="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white">
                 {step.title}
               </h3>
