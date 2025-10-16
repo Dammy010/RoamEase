@@ -106,7 +106,10 @@ export const fetchUserShipments = createAsyncThunk(
     try {
       // Check if we already have valid cached data
       if (isCacheValid("userShipments")) {
-        console.log("📦 Using cached user shipments data");
+        console.log(
+          "📦 Using cached user shipments data:",
+          cache.userShipments.data
+        );
         return cache.userShipments.data;
       }
 
@@ -133,17 +136,24 @@ export const fetchUserShipments = createAsyncThunk(
       console.log("🌐 Fetching fresh user shipments data from API");
 
       const res = await api.get("/shipments");
+      console.log("🌐 API Response:", res.data);
+
+      // Handle 304 responses (cached data)
+      const responseData = res.data || { success: true, shipments: [] };
+      console.log("🌐 Processed response data:", responseData);
 
       // Cache the result
-      setCache("userShipments", res.data);
+      setCache("userShipments", responseData);
 
-      return res.data; // { success, shipments }
+      return responseData; // { success, shipments }
     } catch (err) {
       // Reset fetching flag on error
       cache.userShipments.isFetching = false;
+      console.log("❌ fetchUserShipments error:", err);
 
       const message =
         err.response?.data?.message || "Failed to fetch shipments";
+      console.log("❌ Error message:", message);
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -155,11 +165,20 @@ export const fetchShipmentHistory = createAsyncThunk(
   "shipment/fetchHistory",
   async (_, thunkAPI) => {
     try {
+      console.log("🌐 Fetching shipment history from API");
       const res = await api.get("/shipments/history");
-      return res.data; // { success, history }
+      console.log("🌐 History API Response:", res.data);
+
+      // Handle 304 responses (cached data)
+      const responseData = res.data || { success: true, history: [] };
+      console.log("🌐 Processed history response data:", responseData);
+
+      return responseData; // { success, history }
     } catch (err) {
+      console.log("❌ fetchShipmentHistory error:", err);
       const message =
         err.response?.data?.message || "Failed to fetch shipment history";
+      console.log("❌ History error message:", message);
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -590,6 +609,7 @@ const shipmentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserShipments.fulfilled, (state, { payload }) => {
+        console.log("✅ fetchUserShipments.fulfilled:", payload);
         state.loading = false;
         state.shipments = payload.shipments || [];
         state.error = null;
@@ -599,6 +619,7 @@ const shipmentSlice = createSlice({
           cache.userShipments.timestamp;
       })
       .addCase(fetchUserShipments.rejected, (state, action) => {
+        console.log("❌ fetchUserShipments.rejected:", action.payload);
         state.loading = false;
         state.error = action.payload;
         // Update cache status
@@ -612,11 +633,13 @@ const shipmentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchShipmentHistory.fulfilled, (state, { payload }) => {
+        console.log("✅ fetchShipmentHistory.fulfilled:", payload);
         state.loading = false;
         state.history = payload.history || [];
         state.error = null;
       })
       .addCase(fetchShipmentHistory.rejected, (state, action) => {
+        console.log("❌ fetchShipmentHistory.rejected:", action.payload);
         state.loading = false;
         state.error = action.payload;
       })

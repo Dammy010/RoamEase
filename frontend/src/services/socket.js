@@ -48,6 +48,17 @@ export const initSocket = () => {
     // Socket.IO v4 specific options
     upgrade: true,
     rememberUpgrade: true,
+    // Mobile-specific optimizations
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    maxReconnectionAttempts: 5,
+    // Reduce polling interval for mobile to save battery
+    polling: {
+      extraHeaders: {
+        "Cache-Control": "no-cache",
+      },
+    },
   });
 
   socket.on("connect", () => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { motion, useAnimation } from "framer-motion";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   ClipboardCheck,
@@ -73,9 +74,96 @@ const AdminDashboardHome = () => {
     normalUsersCount
   );
 
+  // Framer Motion animations
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const [isInView, setIsInView] = useState(false);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    },
+    hover: {
+      scale: 1.02,
+      transition: {
+        duration: 0.2,
+        ease: "easeInOut",
+      },
+    },
+  };
+
+  const statsVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut",
+      },
+    },
+  };
+
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // Intersection Observer for animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+
+  // Trigger animations when component comes into view
+  useEffect(() => {
+    if (isInView) {
+      controls.start("visible");
+    }
+  }, [isInView, controls]);
 
   const fetchAndUpdate = async () => {
     await dispatch(fetchDashboardData());
@@ -171,10 +259,21 @@ const AdminDashboardHome = () => {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
+    <motion.div
+      ref={ref}
+      className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900"
+      variants={containerVariants}
+      initial="hidden"
+      animate={controls}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6">
+        <motion.section
+          className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6"
+          variants={itemVariants}
+          whileHover={{ scale: 1.01 }}
+          transition={{ duration: 0.3 }}
+        >
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
@@ -296,13 +395,17 @@ const AdminDashboardHome = () => {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Stats Section */}
-        <section className="mb-6 sm:mb-8">
+        <motion.section className="mb-6 sm:mb-8" variants={itemVariants}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Total Users Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <motion.div
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100"
+              variants={cardVariants}
+              whileHover="hover"
+            >
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -323,10 +426,14 @@ const AdminDashboardHome = () => {
                   All registered users
                 </p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Verified Logistics Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <motion.div
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100"
+              variants={cardVariants}
+              whileHover="hover"
+            >
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -347,10 +454,14 @@ const AdminDashboardHome = () => {
                   Approved companies
                 </p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Pending Logistics Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <motion.div
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100"
+              variants={cardVariants}
+              whileHover="hover"
+            >
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -371,10 +482,14 @@ const AdminDashboardHome = () => {
                   Awaiting verification
                 </p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Disputes Card */}
-            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100">
+            <motion.div
+              className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden border border-gray-100"
+              variants={cardVariants}
+              whileHover="hover"
+            >
               <div className="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
               <div className="relative p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -395,12 +510,12 @@ const AdminDashboardHome = () => {
                   Requiring attention
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Admin Modules Section */}
-        <section className="mb-6 sm:mb-8">
+        <motion.section className="mb-6 sm:mb-8" variants={itemVariants}>
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
             <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
@@ -469,7 +584,7 @@ const AdminDashboardHome = () => {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Status Bar */}
         <div className="mt-6 sm:mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-3 sm:p-4">
@@ -510,7 +625,7 @@ const AdminDashboardHome = () => {
           alt="Profile Picture"
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 

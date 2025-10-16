@@ -270,8 +270,9 @@ const FloatingDrawer = ({ role }) => {
       {/* Floating Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700"
+        className="fixed top-4 left-4 z-50 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700 touch-manipulation"
         aria-label="Toggle navigation menu"
+        style={{ minWidth: "44px", minHeight: "44px" }}
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>

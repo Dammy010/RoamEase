@@ -1,5 +1,42 @@
 import React from "react";
 
+// Add CSS animations for LOGISTICS text movement
+const addLogisticsAnimation = () => {
+  if (typeof document !== "undefined") {
+    const styleId = "logistics-animation-styles";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        @keyframes logistics-move-in-out {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          20% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          80% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+        
+        .logistics-moving-text {
+          animation: logistics-move-in-out 4s ease-in-out infinite;
+          display: inline-block;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+};
+
 const Logo = ({
   variant = "default", // 'default', 'icon', 'monochrome', 'text'
   size = "md", // 'sm', 'md', 'lg', 'xl'
@@ -8,6 +45,12 @@ const Logo = ({
   textColor = "currentColor",
   animated = true, // New prop for animations
 }) => {
+  // Inject CSS animations
+  React.useEffect(() => {
+    if (animated) {
+      addLogisticsAnimation();
+    }
+  }, [animated]);
   const sizeClasses = {
     sm: { icon: "w-6 h-6", text: "text-sm", tagline: "text-xs" },
     md: { icon: "w-8 h-8", text: "text-lg", tagline: "text-xs" },
@@ -113,7 +156,9 @@ const Logo = ({
           className={`${
             sizeClasses[size].tagline
           } font-medium leading-tight ${taglineColorClass} ${
-            animated ? "transition-all duration-300 hover:opacity-100" : ""
+            animated
+              ? "logistics-moving-text transition-all duration-300 hover:opacity-100"
+              : ""
           }`}
         >
           LOGISTICS
@@ -144,7 +189,9 @@ const Logo = ({
             className={`${
               sizeClasses[size].tagline
             } font-medium leading-tight ${taglineColorClass} ${
-              animated ? "transition-all duration-300 hover:opacity-100" : ""
+              animated
+                ? "logistics-moving-text transition-all duration-300 hover:opacity-100"
+                : ""
             }`}
           >
             LOGISTICS

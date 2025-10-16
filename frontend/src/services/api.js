@@ -17,6 +17,10 @@ const getApiBaseURL = () => {
 const api = axios.create({
   baseURL: getApiBaseURL(),
   withCredentials: true, // only if cookies are used
+  timeout: 30000, // Increased timeout for mobile networks
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 let isRefreshing = false;

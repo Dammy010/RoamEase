@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react"; // New: Import useState, useCallback
+import React, { useEffect, useState, useCallback, useRef } from "react"; // New: Import useState, useCallback
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { motion, useAnimation } from "framer-motion";
 // Removed: import Sidebar from "../../components/shared/Sidebar";
 import {
   FaTruck,
@@ -25,9 +26,11 @@ import {
   fetchLogisticsDashboardData,
   fetchLogisticsHistory,
 } from "../../redux/slices/logisticsSlice";
+import { getUserSubscriptions } from "../../redux/slices/subscriptionSlice";
 import { getProfilePictureUrl } from "../../utils/imageUtils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import SubscriptionPromptModal from "../../components/shared/SubscriptionPromptModal";
 
 const LogisticsDashboardHome = () => {
   const navigate = useNavigate();
@@ -42,6 +45,68 @@ const LogisticsDashboardHome = () => {
     historyLoading,
     historyError,
   } = useSelector((state) => state.logistics);
+  const { subscriptions } = useSelector((state) => state.subscription);
+
+  // Framer Motion animations
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const [isInView, setIsInView] = useState(false);
+  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    },
+    hover: {
+      scale: 1.02,
+      transition: {
+        duration: 0.2,
+        ease: "easeInOut",
+      },
+    },
+  };
+
+  const statsVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut",
+      },
+    },
+  };
 
   // Fallback data to ensure counts are always shown
   const safeDashboardData = {
@@ -53,9 +118,64 @@ const LogisticsDashboardHome = () => {
 
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
 
+  // Intersection Observer for animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+
+  // Trigger animations when component comes into view
+  useEffect(() => {
+    if (isInView) {
+      controls.start("visible");
+    }
+  }, [isInView, controls]);
+
+  // Check for active subscription and show prompt if needed
+  useEffect(() => {
+    if (user && subscriptions) {
+      const hasActiveSubscription = subscriptions.some(
+        (sub) => sub && sub.status === "active"
+      );
+
+      if (!hasActiveSubscription) {
+        // Show the subscription prompt after a short delay
+        const timer = setTimeout(() => {
+          setShowSubscriptionPrompt(true);
+        }, 2000); // 2 second delay
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user, subscriptions]);
+
   // Function to refresh user profile data
   const handleRefreshProfile = () => {
     dispatch(fetchProfile());
+  };
+
+  // Subscription prompt handlers
+  const handleSubscribeClick = () => {
+    setShowSubscriptionPrompt(false);
+    navigate("/logistics/subscriptions");
+  };
+
+  const handleCloseSubscriptionPrompt = () => {
+    setShowSubscriptionPrompt(false);
   };
 
   // Function to refresh dashboard data
@@ -72,6 +192,7 @@ const LogisticsDashboardHome = () => {
       // Always fetch fresh data on mount
       dispatch(fetchLogisticsDashboardData());
       dispatch(fetchLogisticsHistory());
+      dispatch(getUserSubscriptions());
     }
   }, [user, dispatch]);
 
@@ -158,10 +279,21 @@ const LogisticsDashboardHome = () => {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
+    <motion.div
+      ref={ref}
+      className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900"
+      variants={containerVariants}
+      initial="hidden"
+      animate={controls}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6">
+        <motion.section
+          className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6"
+          variants={itemVariants}
+          whileHover={{ scale: 1.01 }}
+          transition={{ duration: 0.3 }}
+        >
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
@@ -280,10 +412,10 @@ const LogisticsDashboardHome = () => {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Modules Section */}
-        <section className="mt-6 sm:mt-8">
+        <motion.section className="mt-6 sm:mt-8" variants={itemVariants}>
           <div className="mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
               Quick Actions
@@ -295,10 +427,12 @@ const LogisticsDashboardHome = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {modules.map((mod, idx) => (
-              <div
+              <motion.div
                 key={idx}
                 onClick={() => navigate(mod.path)}
                 className="group relative cursor-pointer p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                variants={cardVariants}
+                whileHover="hover"
               >
                 {/* Count Badge */}
                 {mod.notification > 0 && (
@@ -327,13 +461,13 @@ const LogisticsDashboardHome = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* Delivery History Section */}
-        <section className="mt-8 sm:mt-12">
+        <motion.section className="mt-8 sm:mt-12" variants={itemVariants}>
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
             <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
@@ -421,7 +555,7 @@ const LogisticsDashboardHome = () => {
                 </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
-                  {history.slice(0, 5).map((shipment, index) => (
+                  {history.slice(0, 3).map((shipment, index) => (
                     <div
                       key={shipment._id}
                       className="group relative bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
@@ -505,7 +639,7 @@ const LogisticsDashboardHome = () => {
               )}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Full Screen Image Viewer */}
         {showProfilePicModal && (
@@ -516,8 +650,15 @@ const LogisticsDashboardHome = () => {
             alt="Profile Picture"
           />
         )}
+
+        {/* Subscription Prompt Modal */}
+        <SubscriptionPromptModal
+          isOpen={showSubscriptionPrompt}
+          onClose={handleCloseSubscriptionPrompt}
+          onSubscribe={handleSubscribeClick}
+        />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

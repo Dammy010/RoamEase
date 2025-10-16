@@ -380,7 +380,9 @@ const ActiveShipments = () => {
                           <div className="flex items-center gap-2">
                             <Globe className="text-gray-400" size={16} />
                             <span className="text-gray-600">
-                              {shipment.user?.country}
+                              {shipment.user?.country ||
+                                shipment.user?.address ||
+                                "N/A"}
                             </span>
                           </div>
                         </div>

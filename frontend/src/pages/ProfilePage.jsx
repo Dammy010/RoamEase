@@ -556,7 +556,7 @@ const ProfilePage = () => {
                         Country
                       </label>
                       <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white">
-                        {user?.country || "N/A"}
+                        {user?.country || user?.address || "N/A"}
                       </div>
                     </div>
                   </>

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { motion, useAnimation } from "framer-motion";
 // Removed: import Sidebar from "../../components/shared/Sidebar";
 import {
   PlusCircle,
@@ -33,6 +34,10 @@ const UserDashboardHome = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
 
+  // State declarations
+  const [showProfilePicModal, setShowProfilePicModal] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
   const { user } = useSelector((state) => state.auth);
   const { shipments, history, loading, error } = useSelector(
     (state) => state.shipment
@@ -41,7 +46,65 @@ const UserDashboardHome = () => {
     (state) => state.chat || { unreadCount: 0 }
   );
 
-  const [showProfilePicModal, setShowProfilePicModal] = useState(false);
+  // Framer Motion animations
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const [isInView, setIsInView] = useState(false);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    },
+    hover: {
+      scale: 1.02,
+      transition: {
+        duration: 0.2,
+        ease: "easeInOut",
+      },
+    },
+  };
+
+  const statsVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut",
+      },
+    },
+  };
 
   // Function to refresh dashboard data
   const handleRefresh = useCallback(() => {
@@ -51,17 +114,50 @@ const UserDashboardHome = () => {
     }
   }, [dispatch, user]);
 
+  // Intersection Observer for animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+
+  // Trigger animations when component comes into view
+  useEffect(() => {
+    if (isInView) {
+      controls.start("visible");
+    }
+  }, [isInView, controls]);
+
   useEffect(() => {
     if (user) {
-      // Only fetch data if we don't have it yet
-      if (shipments.length === 0) {
-        dispatch(fetchUserShipments());
-      }
-      if (history.length === 0) {
-        dispatch(fetchShipmentHistory());
-      }
+      // Always fetch fresh data when component mounts
+      const shipmentsPromise = dispatch(fetchUserShipments());
+      const historyPromise = dispatch(fetchShipmentHistory());
+
+      // Set a timeout to prevent infinite loading
+      const timeout = setTimeout(() => {
+        // Only set timeout if we still have no data
+        if (shipments.length === 0 && history.length === 0) {
+          setLoadingTimeout(true);
+        }
+      }, 5000); // 5 seconds timeout
+
+      return () => clearTimeout(timeout);
     }
-  }, [dispatch, user, shipments.length, history.length]);
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (user) {
@@ -116,6 +212,12 @@ const UserDashboardHome = () => {
           <p className="text-gray-500 dark:text-gray-500 text-xs sm:text-sm mt-2">
             Please wait while we prepare your dashboard
           </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -153,8 +255,15 @@ const UserDashboardHome = () => {
     }
   };
 
-  // Only show loading if we have no data and are loading
-  if (loading && shipments.length === 0 && history.length === 0) {
+  // Skip loading screen for now - let's see what data we have
+  if (
+    false &&
+    loading &&
+    !error &&
+    !loadingTimeout &&
+    shipments.length === 0 &&
+    history.length === 0
+  ) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 p-4">
         <div className="text-center max-w-sm mx-auto">
@@ -176,7 +285,12 @@ const UserDashboardHome = () => {
     );
   }
 
-  if (error) {
+  // Force show dashboard if we have data, regardless of loading state
+  if (shipments.length > 0 || history.length > 0) {
+    // Continue to render the dashboard
+  } else if (error) {
+    // Only show error screen for actual errors, not timeouts
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 p-4">
         <div className="text-center max-w-sm mx-auto">
@@ -184,11 +298,18 @@ const UserDashboardHome = () => {
             <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Error Loading Dashboard
+            {loadingTimeout ? "Loading Timeout" : "Error Loading Dashboard"}
           </h3>
-          <p className="text-red-600 dark:text-red-400 text-sm mb-4">{error}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm mb-4">
+            {loadingTimeout
+              ? "Data is taking too long to load. Please try again."
+              : error}
+          </p>
           <button
-            onClick={handleRefresh}
+            onClick={() => {
+              setLoadingTimeout(false);
+              handleRefresh();
+            }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
             Try Again
@@ -198,11 +319,24 @@ const UserDashboardHome = () => {
     );
   }
 
+  // Always show dashboard content - no more loading screens
+
   return (
-    <div className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900">
+    <motion.div
+      ref={ref}
+      className="min-h-screen p-3 sm:p-6 bg-white dark:bg-gray-900"
+      variants={containerVariants}
+      initial="hidden"
+      animate={controls}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <section className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6">
+        <motion.section
+          className="relative overflow-hidden bg-blue-600 rounded-2xl shadow-lg mb-4 sm:mb-6"
+          variants={itemVariants}
+          whileHover={{ scale: 1.01 }}
+          transition={{ duration: 0.3 }}
+        >
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
@@ -319,14 +453,16 @@ const UserDashboardHome = () => {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
         {/* Stats Section */}
-        <section className="mb-6 sm:mb-8">
+        <motion.section className="mb-6 sm:mb-8" variants={itemVariants}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Total Shipments Card */}
-            <div
+            <motion.div
               onClick={() => navigate("/user/all-shipments")}
               className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              variants={cardVariants}
+              whileHover="hover"
             >
               {/* Count Badge */}
               {shipments.length + history.length > 0 && (
@@ -355,12 +491,14 @@ const UserDashboardHome = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Active Shipments Card */}
-            <div
+            <motion.div
               onClick={() => navigate("/user/my-shipments")}
               className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              variants={cardVariants}
+              whileHover="hover"
             >
               {/* Count Badge */}
               {shipments.length > 0 && (
@@ -389,12 +527,14 @@ const UserDashboardHome = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* History Card */}
-            <div
+            <motion.div
               onClick={() => navigate("/user/shipment-history")}
               className="group relative cursor-pointer p-4 sm:p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              variants={cardVariants}
+              whileHover="hover"
             >
               {/* Count Badge */}
               {history.length > 0 && (
@@ -423,11 +563,11 @@ const UserDashboardHome = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
         {/* Shipments Section */}
-        <section className="mb-6 sm:mb-8">
+        <motion.section className="mb-6 sm:mb-8" variants={itemVariants}>
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Header */}
             <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
@@ -783,7 +923,7 @@ const UserDashboardHome = () => {
               )}
             </div>
           </div>
-        </section>
+        </motion.section>
       </div>
       {/* Full Screen Image Viewer */}
       {showProfilePicModal && (
@@ -794,7 +934,7 @@ const UserDashboardHome = () => {
           alt="Profile Picture"
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 

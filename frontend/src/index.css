@@ -2,6 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-specific optimizations */
+@layer base {
+  html {
+    /* Prevent zoom on input focus on iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Improve touch scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body {
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior: none;
+    /* Improve touch performance */
+    touch-action: manipulation;
+  }
+  
+  /* Prevent text selection on buttons and interactive elements */
+  button, 
+  [role="button"], 
+  input[type="button"], 
+  input[type="submit"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Improve tap targets for mobile */
+  @media (max-width: 768px) {
+    button, 
+    [role="button"], 
+    a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+}
+
 /* Dark mode support */
 .dark {
   --tw-bg-opacity: 1;

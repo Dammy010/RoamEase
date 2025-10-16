@@ -43,7 +43,8 @@ export const updateSettings = createAsyncThunk(
   "settings/updateSettings",
   async (settingsData, { rejectWithValue }) => {
     try {
-      const response = await api.put("/settings/settings", settingsData);
+      // For profile updates (name, phone, country), use the auth profile endpoint
+      const response = await api.put("/auth/profile", settingsData);
       // Clear cache after update
       clearSettingsCache("settings");
       return response.data;

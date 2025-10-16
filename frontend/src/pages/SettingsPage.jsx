@@ -48,272 +48,156 @@ import {
   updateSettings,
   updateNotifications,
   updatePrivacy,
-  getSettings,
-  clearSettingsError,
-  setCurrency,
   updateNotificationPreference,
   updatePrivacyPreference,
-  initializeSettings,
-  uploadProfilePicture,
-  removeProfilePicture,
-  changePassword,
   testNotificationPreferences,
 } from "../redux/slices/settingsSlice";
-import {
-  logout,
-  updateProfilePicture,
-  updateProfile,
-  fetchProfile,
-} from "../redux/slices/authSlice";
+import { logout, fetchProfile } from "../redux/slices/authSlice";
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const { currency, setCurrency } = useCurrency();
+
+  // Redux state
   const { user } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    console.log("🔍 SettingsPage Debug - User data:", {
-      profilePictureUrl: user?.profilePictureUrl,
-      profilePictureId: user?.profilePictureId,
-      profilePicture: user?.profilePicture,
-      hasProfilePictureUrl: !!user?.profilePictureUrl,
-      hasProfilePicture: !!user?.profilePicture,
-    });
-  }, [user?.profilePictureUrl, user?.profilePicture]);
-  const { theme, toggleTheme, isDark } = useTheme();
-  const {
-    currency,
-    setCurrency: setCurrencyContext,
-    currencies,
-    formatCurrency,
-  } = useCurrency();
-
   const {
     settings,
     notifications: notificationSettings,
     privacy: privacySettings,
-    error,
-    updateLoading,
   } = useSelector((state) => state.settings);
 
-  // Profile picture modal state
-  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
-
-  // Profile editing state
+  // Local state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Profile form data
   const [profileData, setProfileData] = useState({
     name:
       user?.role === "logistics" ? user?.companyName || "" : user?.name || "",
     email: user?.email || "",
-    phone:
-      user?.role === "logistics"
-        ? user?.contactPhone || ""
-        : user?.phoneNumber || "",
-    companyName: user?.companyName || "",
-    country: user?.country || "",
+    phone: user?.phoneNumber || user?.phone || "", // Map phoneNumber to phone
+    country: user?.address || "", // Map address to country
   });
 
-  // Password change state
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  // Password form data
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
 
-  // Form validation states
-  const [passwordErrors, setPasswordErrors] = useState({});
+  // Form errors
   const [profileErrors, setProfileErrors] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState({});
 
-  // Initialize settings on mount with optimized API calls
+  // Initialize form data when user changes
   useEffect(() => {
-    console.log("🔄 Initializing settings page...");
-
-    const initializeSettingsPage = async () => {
-      try {
-        // Initialize settings first (synchronous action)
-        dispatch(initializeSettings());
-
-        // Use safe dispatch with delays to prevent rate limiting
-        const actionConfigs = [
-          { action: getSettings(), delay: 500 },
-          { action: fetchProfile(), delay: 1000 },
-        ];
-
-        await safeDispatchWithDelays(dispatch, actionConfigs, {
-          logPrefix: "Settings page initialization",
-          onError: (errors) => {
-            console.error(
-              "❌ Some actions failed during initialization:",
-              errors
-            );
-          },
-          onSuccess: (results) => {
-            console.log(
-              "✅ Settings page initialization completed successfully"
-            );
-          },
-        });
-
-        // Initialize currency from user settings
-        if (user?.preferences?.currency) {
-          setCurrencyContext(user.preferences.currency);
-          dispatch(setCurrency(user.preferences.currency));
-        }
-      } catch (error) {
-        console.error("❌ Error initializing settings page:", error.message);
-      }
-    };
-
-    initializeSettingsPage();
-  }, [dispatch, user?._id, setCurrencyContext]); // Only depend on user ID
-
-  // Sync currency when settings are loaded
-  useEffect(() => {
-    if (settings?.currency && settings.currency !== currency) {
-      setCurrencyContext(settings.currency);
-      dispatch(setCurrency(settings.currency));
-    }
-  }, [settings?.currency, currency, setCurrencyContext, dispatch]);
-
-  // Clear errors when component unmounts
-  useEffect(() => {
-    return () => {
-      dispatch(clearSettingsError());
-    };
-  }, [dispatch]);
-
-  // Handle currency change
-  const handleCurrencyChange = async (newCurrency) => {
-    if (newCurrency === currency) return; // Don't update if same currency
-
-    try {
-      // Update Redux state immediately for UI responsiveness
-      dispatch(setCurrency(newCurrency));
-
-      // Update CurrencyContext
-      setCurrencyContext(newCurrency);
-
-      // Update backend settings
-      const result = await dispatch(updateSettings({ currency: newCurrency }));
-
-      if (updateSettings.fulfilled.match(result)) {
-        toast.success(`Currency changed to ${newCurrency}`);
-      } else {
-        // Revert on error
-        dispatch(setCurrency(currency));
-        setCurrencyContext(currency);
-        toast.error("Failed to update currency");
-      }
-    } catch (error) {
-      console.error("Error changing currency:", error);
-      // Revert on error
-      dispatch(setCurrency(currency));
-      setCurrencyContext(currency);
-      toast.error("Failed to update currency");
-    }
-  };
-
-  // Handle profile save
-  const handleProfileSave = async () => {
-    setProfileErrors({});
-
-    // Basic validation
-    if (!profileData.name.trim()) {
-      setProfileErrors({ name: "Name is required" });
-      return;
-    }
-
-    if (!profileData.email.trim()) {
-      setProfileErrors({ email: "Email is required" });
-      return;
-    }
-
-    try {
-      // Format data based on user role
-      const profileDataToSend = { ...profileData };
-
-      if (user?.role === "logistics") {
-        // For logistics users, map name to companyName and phone to contactPhone
-        profileDataToSend.companyName = profileData.name;
-        profileDataToSend.contactPhone = profileData.phone;
-        delete profileDataToSend.name;
-        delete profileDataToSend.phone;
-      } else {
-        // For regular users, map phone to phoneNumber
-        profileDataToSend.phoneNumber = profileData.phone;
-        delete profileDataToSend.phone;
-      }
-
-      const result = await dispatch(updateProfile(profileDataToSend));
-      if (updateProfile.fulfilled.match(result)) {
-        toast.success("Profile updated successfully");
-        setIsEditingProfile(false);
-        // Refresh the page to show updated data
-        window.location.reload();
-      } else {
-        toast.error(result.payload || "Failed to update profile");
-      }
-    } catch (error) {
-      toast.error("Failed to update profile");
-    }
-  };
-
-  // Handle password change
-  const handlePasswordChange = async () => {
-    setPasswordErrors({});
-
-    // Validation
-    if (!passwordData.currentPassword) {
-      setPasswordErrors({ currentPassword: "Current password is required" });
-      return;
-    }
-
-    if (!passwordData.newPassword) {
-      setPasswordErrors({ newPassword: "New password is required" });
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      setPasswordErrors({
-        newPassword: "Password must be at least 6 characters",
+    if (user) {
+      setProfileData({
+        name:
+          user?.role === "logistics"
+            ? user?.companyName || ""
+            : user?.name || "",
+        email: user?.email || "",
+        phone: user?.phoneNumber || user?.phone || "", // Map phoneNumber to phone
+        country: user?.address || "", // Map address to country
       });
+    }
+  }, [user]);
+
+  // Handle profile update
+  const handleProfileUpdate = async () => {
+    // Validate form
+    const errors = {};
+    if (!profileData.name.trim()) {
+      errors.name = "Name is required";
+    }
+    if (!profileData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
+      errors.email = "Email is invalid";
+    }
+
+    setProfileErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
       return;
     }
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordErrors({ confirmPassword: "Passwords do not match" });
-      return;
-    }
+    setIsLoading(true);
 
     try {
-      const { currentPassword, newPassword } = passwordData;
-      const result = await dispatch(
-        changePassword({ currentPassword, newPassword })
-      );
-      if (changePassword.fulfilled.match(result)) {
-        toast.success("Password changed successfully");
-        setShowPasswordForm(false);
-        setPasswordData({
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
-      } else {
-        toast.error(result.payload || "Failed to change password");
-      }
+      // Map frontend field names to backend field names
+      const backendData = {
+        name: profileData.name,
+        email: profileData.email,
+        phoneNumber: profileData.phone, // Map phone to phoneNumber
+        address: profileData.country, // Map country to address
+      };
+
+      await dispatch(updateSettings(backendData)).unwrap();
+      // Refresh user profile data to get updated values
+      await dispatch(fetchProfile()).unwrap();
+      toast.success("Profile updated successfully!");
+      setIsEditingProfile(false);
     } catch (error) {
-      toast.error("Failed to change password");
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle password update
+  const handlePasswordUpdate = async () => {
+    // Validate form
+    const errors = {};
+    if (!passwordData.currentPassword) {
+      errors.currentPassword = "Current password is required";
+    }
+    if (!passwordData.newPassword) {
+      errors.newPassword = "New password is required";
+    } else if (passwordData.newPassword.length < 6) {
+      errors.newPassword = "Password must be at least 6 characters";
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    setPasswordErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await dispatch(updateSettings({ password: passwordData })).unwrap();
+      toast.success("Password updated successfully!");
+      setIsEditingPassword(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast.error("Failed to update password");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle notification toggle
   const handleNotificationToggle = async (key) => {
+    if (!notificationSettings) return;
+
     const newValue = !notificationSettings[key];
 
     try {
@@ -336,6 +220,8 @@ const SettingsPage = () => {
 
   // Handle privacy toggle
   const handlePrivacyToggle = (key) => {
+    if (!privacySettings) return;
+
     const newValue = !privacySettings[key];
     dispatch(updatePrivacyPreference({ key, value: newValue }));
     dispatch(updatePrivacy({ [key]: newValue }));
@@ -378,99 +264,83 @@ const SettingsPage = () => {
 
       if (!file.type.startsWith("image/")) {
         console.error("❌ Invalid file type:", file.type);
-        toast.error("Please select an image file");
+        toast.error("Please select a valid image file");
         return;
       }
 
-      if (file.size > 50 * 1024 * 1024) {
-        // 50MB limit
+      if (file.size > 5 * 1024 * 1024) {
         console.error("❌ File too large:", file.size);
-        toast.error("File size must be less than 50MB");
+        toast.error("File size must be less than 5MB");
         return;
       }
-      const result = await dispatch(uploadProfilePicture(file));
-      if (uploadProfilePicture.fulfilled.match(result)) {
-        // Handle both old and new response formats
-        const profilePictureUrl = result.payload.profilePictureUrl || null;
-        const profilePictureId = result.payload.profilePictureId || null;
-        const oldProfilePicture = result.payload.profilePicture || null;
 
-        // Update user data in Redux with new format
-        if (profilePictureUrl && profilePictureId) {
-          // New format with Cloudinary URLs
-          dispatch({
-            type: "auth/updateProfilePicture",
-            payload: {
-              profilePictureUrl: profilePictureUrl,
-              profilePictureId: profilePictureId,
-            },
-          });
-        } else if (oldProfilePicture) {
-          // Handle old format for backward compatibility
-          dispatch({
-            type: "auth/updateProfilePicture",
-            payload: {
-              profilePictureUrl: null, // Will use fallback
-              profilePictureId: null,
-              profilePicture: oldProfilePicture, // Keep for backward compatibility
-            },
-          });
-        }
+      console.log("✅ File validation passed:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
 
-        toast.success("Profile picture updated successfully");
-        setShowProfilePictureModal(false);
-      } else {
-        console.error("❌ Upload failed:", result.payload);
-        console.error("❌ Upload error details:", result.error);
-        toast.error(result.payload || "Failed to upload profile picture");
+      // Create FormData
+      const formData = new FormData();
+      formData.append("profilePicture", file);
+
+      console.log("📤 Uploading profile picture...");
+
+      // Upload to backend
+      const response = await fetch("/api/users/profile-picture", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ Upload failed:", errorData);
+        throw new Error(errorData.message || "Upload failed");
       }
+
+      const result = await response.json();
+      console.log("✅ Upload successful:", result);
+
+      // Update user state
+      dispatch({
+        type: "auth/updateUser",
+        payload: { profilePictureUrl: result.profilePictureUrl },
+      });
+
+      toast.success("Profile picture updated successfully!");
+      setShowProfilePictureModal(false);
     } catch (error) {
-      console.error("💥 Upload error:", error);
-      toast.error("Failed to upload profile picture");
+      console.error("❌ Profile picture upload error:", error);
+      toast.error(`Failed to upload profile picture: ${error.message}`);
     }
   };
 
-  const handleProfilePictureRemove = async () => {
+  // Handle account deletion
+  const handleDeleteAccount = () => {
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteAccount = async () => {
     try {
-      const result = await dispatch(removeProfilePicture());
-      if (removeProfilePicture.fulfilled.match(result)) {
-        // Update user data in Redux with the updated user object from backend
-        if (result.payload.user) {
-          dispatch({
-            type: "auth/updateProfilePicture",
-            payload: {
-              profilePictureUrl: "",
-              profilePictureId: "",
-              profilePicture: "",
-            },
-          });
-        } else {
-          // Fallback: clear profile picture fields
-          dispatch(updateProfilePicture(null));
-        }
-        toast.success("Profile picture removed successfully");
-        setShowProfilePictureModal(false);
-      } else {
-        toast.error(result.payload || "Failed to remove profile picture");
-      }
+      await dispatch(updateSettings({ deleteAccount: true })).unwrap();
+      toast.success("Account deleted successfully");
+      dispatch(logout());
+      navigate("/");
     } catch (error) {
-      toast.error("Failed to remove profile picture");
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account");
+    } finally {
+      setShowDeleteConfirmDialog(false);
     }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
-    toast.success("Logged out successfully");
-  };
-
-  // Toggle password visibility
-  const togglePasswordVisibility = (field) => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
+  // Handle currency change with toast
+  const handleCurrencyChange = (newCurrency) => {
+    setCurrency(newCurrency);
+    toast.success(`Currency changed to ${newCurrency}`);
   };
 
   // Settings sections
@@ -504,12 +374,6 @@ const SettingsPage = () => {
       title: "Preferences",
       icon: SettingsIcon,
       description: "Theme, currency, and app preferences",
-    },
-    {
-      id: "notification-preferences",
-      title: "Notification Preferences",
-      icon: Bell,
-      description: "Control how you receive notifications",
     },
     {
       id: "support",
@@ -598,101 +462,88 @@ const SettingsPage = () => {
             )}
           </div>
 
-          {privacySettings?.showEmail !== false && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={profileData.email}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, email: e.target.value })
-                }
-                disabled={!isEditingProfile}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
-                  profileErrors.email
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                }`}
-              />
-              {profileErrors.email && (
-                <p className="mt-1 text-sm text-red-600">
-                  {profileErrors.email}
-                </p>
-              )}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              value={profileData.email}
+              onChange={(e) =>
+                setProfileData({ ...profileData, email: e.target.value })
+              }
+              disabled={!isEditingProfile}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${
+                profileErrors.email
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+              }`}
+            />
+            {profileErrors.email && (
+              <p className="mt-1 text-sm text-red-600">{profileErrors.email}</p>
+            )}
+          </div>
 
-          {privacySettings?.showPhone !== false && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={profileData.phone}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, phone: e.target.value })
-                }
-                disabled={!isEditingProfile}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-              />
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Phone
+            </label>
+            <input
+              type="tel"
+              value={profileData.phone}
+              onChange={(e) =>
+                setProfileData({ ...profileData, phone: e.target.value })
+              }
+              disabled={!isEditingProfile}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+            />
+          </div>
 
-          {privacySettings?.showLocation !== false && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Country
-                </label>
-                <input
-                  type="text"
-                  value={profileData.country}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, country: e.target.value })
-                  }
-                  disabled={!isEditingProfile}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                />
-              </div>
-            </>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Country
+            </label>
+            <input
+              type="text"
+              value={profileData.country}
+              onChange={(e) =>
+                setProfileData({ ...profileData, country: e.target.value })
+              }
+              disabled={!isEditingProfile}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+            />
+          </div>
         </div>
 
-        {/* Profile Actions */}
+        {/* Action Buttons */}
         <div className="flex justify-end space-x-4">
           {isEditingProfile ? (
             <>
               <button
                 onClick={() => {
                   setIsEditingProfile(false);
+                  setProfileErrors({});
+                  // Reset form data
                   setProfileData({
                     name:
                       user?.role === "logistics"
                         ? user?.companyName || ""
                         : user?.name || "",
                     email: user?.email || "",
-                    phone:
-                      user?.role === "logistics"
-                        ? user?.contactPhone || ""
-                        : user?.phoneNumber || "",
-                    companyName: user?.companyName || "",
-                    country: user?.country || "",
+                    phone: user?.phoneNumber || user?.phone || "", // Map phoneNumber to phone
+                    country: user?.address || "", // Map address to country
                   });
-                  setProfileErrors({});
                 }}
-                className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handleProfileSave}
-                disabled={updateLoading}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                onClick={handleProfileUpdate}
+                disabled={isLoading}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {updateLoading ? (
+                {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
@@ -716,142 +567,158 @@ const SettingsPage = () => {
 
   const renderNotificationsSection = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(notificationSettings).map(([key, value]) => (
-          <div
-            key={key}
-            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-          >
-            <div className="flex items-center space-x-3">
-              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white capitalize">
-                  {key.replace(/([A-Z])/g, " $1").trim()}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {key === "email" && "Receive email notifications"}
-                  {key === "push" && "Receive push notifications"}
-                  {key === "sms" && "Receive SMS notifications"}
-                  {key === "marketing" && "Receive marketing emails"}
-                  {key === "security" && "Receive security alerts"}
-                  {key === "updates" && "Receive app updates"}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => handleNotificationToggle(key)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                value ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
-              }`}
+      {Object.keys(notificationSettings || {}).length === 0 ? (
+        <div className="text-center py-8">
+          <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No Notification Settings Available
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Notification settings will appear here once they are loaded.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(notificationSettings || {}).map(([key, value]) => (
+            <div
+              key={key}
+              className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  value ? "translate-x-6" : "translate-x-1"
+              <div className="flex items-center space-x-3">
+                <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white capitalize">
+                    {key.replace(/([A-Z])/g, " $1").trim()}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {key === "email" && "Receive email notifications"}
+                    {key === "push" && "Receive push notifications"}
+                    {key === "sms" && "Receive SMS notifications"}
+                    {key === "marketing" && "Receive marketing emails"}
+                    {key === "security" && "Receive security alerts"}
+                    {key === "updates" && "Receive app updates"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleNotificationToggle(key)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  value ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
                 }`}
-              />
-            </button>
-          </div>
-        ))}
-      </div>
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    value ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
   const renderPrivacySection = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(privacySettings).map(([key, value]) => (
-          <div
-            key={key}
-            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-          >
-            <div className="flex items-center space-x-3">
-              <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white capitalize">
-                  {key.replace(/([A-Z])/g, " $1").trim()}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {key === "profileVisibility" &&
-                    "Make your profile visible to others"}
-                  {key === "showEmail" && "Show email address on profile"}
-                  {key === "showPhone" && "Show phone number on profile"}
-                  {key === "showLocation" && "Show location on profile"}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => handlePrivacyToggle(key)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                value ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
-              }`}
+      {Object.keys(privacySettings || {}).length === 0 ? (
+        <div className="text-center py-8">
+          <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            No Privacy Settings Available
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Privacy settings will appear here once they are loaded.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(privacySettings || {}).map(([key, value]) => (
+            <div
+              key={key}
+              className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  value ? "translate-x-6" : "translate-x-1"
+              <div className="flex items-center space-x-3">
+                <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white capitalize">
+                    {key.replace(/([A-Z])/g, " $1").trim()}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {key === "profileVisibility" &&
+                      "Make your profile visible to others"}
+                    {key === "activityStatus" && "Show when you're online"}
+                    {key === "dataSharing" &&
+                      "Allow data sharing for analytics"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handlePrivacyToggle(key)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  value ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
                 }`}
-              />
-            </button>
-          </div>
-        ))}
-      </div>
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    value ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
   const renderSecuritySection = () => (
     <div className="space-y-6">
-      {/* Change Password */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Password
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Change your password to keep your account secure
-            </p>
+      {/* Password Change */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+              <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Change Password
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Update your password for better security
+              </p>
+            </div>
           </div>
           <button
-            onClick={() => setShowPasswordForm(!showPasswordForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => setIsEditingPassword(!isEditingPassword)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
-            {showPasswordForm ? "Cancel" : "Change Password"}
+            {isEditingPassword ? "Cancel" : "Change Password"}
           </button>
         </div>
 
-        {showPasswordForm && (
+        {isEditingPassword && (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Current Password
               </label>
-              <div className="relative">
-                <input
-                  type={showPasswords.current ? "text" : "password"}
-                  value={passwordData.currentPassword}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      currentPassword: e.target.value,
-                    })
-                  }
-                  className={`w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    passwordErrors.currentPassword
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("current")}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPasswords.current ? (
-                    <EyeOff className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <Eye className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    currentPassword: e.target.value,
+                  })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                  passwordErrors.currentPassword
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+              />
               {passwordErrors.currentPassword && (
                 <p className="mt-1 text-sm text-red-600">
                   {passwordErrors.currentPassword}
@@ -863,34 +730,21 @@ const SettingsPage = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 New Password
               </label>
-              <div className="relative">
-                <input
-                  type={showPasswords.new ? "text" : "password"}
-                  value={passwordData.newPassword}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      newPassword: e.target.value,
-                    })
-                  }
-                  className={`w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    passwordErrors.newPassword
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("new")}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPasswords.new ? (
-                    <EyeOff className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <Eye className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    newPassword: e.target.value,
+                  })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                  passwordErrors.newPassword
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+              />
               {passwordErrors.newPassword && (
                 <p className="mt-1 text-sm text-red-600">
                   {passwordErrors.newPassword}
@@ -902,34 +756,21 @@ const SettingsPage = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm New Password
               </label>
-              <div className="relative">
-                <input
-                  type={showPasswords.confirm ? "text" : "password"}
-                  value={passwordData.confirmPassword}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                  className={`w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    passwordErrors.confirmPassword
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("confirm")}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPasswords.confirm ? (
-                    <EyeOff className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <Eye className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    confirmPassword: e.target.value,
+                  })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                  passwordErrors.confirmPassword
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+              />
               {passwordErrors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">
                   {passwordErrors.confirmPassword}
@@ -940,24 +781,24 @@ const SettingsPage = () => {
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => {
-                  setShowPasswordForm(false);
+                  setIsEditingPassword(false);
+                  setPasswordErrors({});
                   setPasswordData({
                     currentPassword: "",
                     newPassword: "",
                     confirmPassword: "",
                   });
-                  setPasswordErrors({});
                 }}
-                className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handlePasswordChange}
-                disabled={updateLoading}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                onClick={handlePasswordUpdate}
+                disabled={isLoading}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {updateLoading ? (
+                {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Key className="w-4 h-4" />
@@ -969,23 +810,25 @@ const SettingsPage = () => {
         )}
       </div>
 
-      {/* Logout */}
-      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">
-              Sign Out
-            </h3>
-            <p className="text-sm text-red-700 dark:text-red-400">
-              Sign out of your account on this device
-            </p>
-          </div>
+      {/* Account Actions */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Account Actions
+        </h3>
+        <div className="space-y-4">
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-5 h-5" />
             <span>Sign Out</span>
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+            <span>Delete Account</span>
           </button>
         </div>
       </div>
@@ -994,102 +837,57 @@ const SettingsPage = () => {
 
   const renderPreferencesSection = () => (
     <div className="space-y-6">
-      {/* Theme */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-        <div className="flex items-center justify-between">
+      {/* Theme Settings */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <Palette className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Theme
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400">
                 Choose your preferred theme
               </p>
             </div>
           </div>
-          <ThemeToggle showLabel={true} />
+          <ThemeToggle />
         </div>
       </div>
 
-      {/* Currency - Only for Logistics Companies */}
+      {/* Currency Settings - Only for Logistics Users */}
       {user?.role === "logistics" && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Currency
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Select your preferred currency for displaying prices
+                <p className="text-gray-600 dark:text-gray-400">
+                  Select your preferred currency
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Current: {currency}
-              </div>
-              {updateLoading && (
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-              )}
-            </div>
           </div>
 
-          {/* Current Currency Display */}
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="text-2xl">
-                  {currencies.find((c) => c.code === currency)?.flag || "💱"}
-                </div>
-                <div>
-                  <div className="font-medium text-blue-900 dark:text-blue-300">
-                    {currencies.find((c) => c.code === currency)?.name ||
-                      "Unknown Currency"}
-                  </div>
-                  <div className="text-sm text-blue-700 dark:text-blue-400">
-                    {currency} -{" "}
-                    {currencies.find((c) => c.code === currency)?.symbol || "$"}
-                  </div>
-                </div>
-              </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400">
-                Example: {formatCurrency(100)}
-              </div>
-            </div>
-          </div>
-
-          {/* Currency Selection Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {currencies.map((curr) => (
+            {["USD", "EUR", "GBP", "NGN"].map((curr) => (
               <button
-                key={curr.code}
-                onClick={() => handleCurrencyChange(curr.code)}
-                disabled={updateLoading}
-                className={`p-3 rounded-lg border transition-all duration-200 ${
-                  currency === curr.code
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 ring-2 ring-blue-200 dark:ring-blue-800"
-                    : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-                } ${
-                  updateLoading
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
+                key={curr}
+                onClick={() => handleCurrencyChange(curr)}
+                className={`px-4 py-3 rounded-lg border transition-colors ${
+                  currency === curr
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                 }`}
               >
-                <div className="text-center">
-                  <div className="text-lg mb-1">{curr.flag}</div>
-                  <div className="text-sm font-medium">{curr.code}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {curr.symbol}
-                  </div>
-                  {currency === curr.code && (
-                    <div className="mt-1">
-                      <CheckCircle className="w-4 h-4 text-blue-600 mx-auto" />
-                    </div>
-                  )}
-                </div>
+                {curr}
               </button>
             ))}
           </div>
@@ -1104,232 +902,6 @@ const SettingsPage = () => {
           </div>
         </div>
       )}
-    </div>
-  );
-
-  const renderNotificationPreferencesSection = () => (
-    <div className="space-y-6">
-      {/* Email Notifications */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-              <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Email Notifications
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Receive notifications via email
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" defaultChecked />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-          </label>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Shipment Updates
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Bid Notifications
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              System Alerts
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* SMS Notifications */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-              <PhoneIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                SMS Notifications
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Receive notifications via SMS
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-          </label>
-        </div>
-
-        <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Phone number: {user?.phoneNumber || "Not provided"}
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Urgent Notifications
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Payment Alerts
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Push Notifications */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Push Notifications
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Receive notifications on your device
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" defaultChecked />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-          </label>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              All Notifications
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Quiet Hours */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-              <Moon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Quiet Hours
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Suppress notifications during specific hours
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-          </label>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Start Time
-            </label>
-            <input
-              type="time"
-              defaultValue="22:00"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End Time
-            </label>
-            <input
-              type="time"
-              defaultValue="08:00"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Test Notifications */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Test Notifications
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Send test notifications to verify your preferences are working
-        </p>
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => handleTestNotification("bid_received", "email")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!notificationSettings.email}
-          >
-            Test Email
-          </button>
-          <button
-            onClick={() => handleTestNotification("bid_accepted", "sms")}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!notificationSettings.sms || !user?.phoneNumber}
-          >
-            Test SMS
-          </button>
-          <button
-            onClick={() => handleTestNotification("shipment_delivered", "push")}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!notificationSettings.push}
-          >
-            Test Push
-          </button>
-        </div>
-        {!user?.phoneNumber && notificationSettings.sms && (
-          <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-            ⚠️ SMS notifications require a phone number. Please add one in your
-            profile.
-          </p>
-        )}
-      </div>
     </div>
   );
 
@@ -1387,59 +959,55 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      {/* Legal Links */}
+      {/* Terms of Service */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Legal Information
-        </h3>
-        <div className="space-y-4">
-          {/* Terms of Service */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  Terms of Service
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Read our terms and conditions
-                </p>
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <button
-              onClick={() => navigate("/terms")}
-              className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-            >
-              <span>View</span>
-              <ExternalLink className="w-4 h-4" />
-            </button>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Terms of Service
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Read our terms and conditions
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => navigate("/terms")}
+            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <span>View Terms</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
-          {/* Privacy Policy */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-                <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  Privacy Policy
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Learn how we protect your data
-                </p>
-              </div>
+      {/* Privacy Policy */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <button
-              onClick={() => navigate("/privacy")}
-              className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-            >
-              <span>View</span>
-              <ExternalLink className="w-4 h-4" />
-            </button>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Privacy Policy
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Learn how we protect your data
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => navigate("/privacy")}
+            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <span>View Privacy Policy</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -1457,8 +1025,6 @@ const SettingsPage = () => {
         return renderSecuritySection();
       case "preferences":
         return renderPreferencesSection();
-      case "notification-preferences":
-        return renderNotificationPreferencesSection();
       case "support":
         return renderSupportSection();
       default:
@@ -1468,13 +1034,13 @@ const SettingsPage = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Settings
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             Manage your account settings and preferences
           </p>
         </div>
@@ -1482,7 +1048,7 @@ const SettingsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sticky top-8">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
               <nav className="space-y-2">
                 {settingsSections.map((section) => {
                   const Icon = section.icon;
@@ -1490,19 +1056,20 @@ const SettingsPage = () => {
                     <button
                       key={section.id}
                       onClick={() => setActiveSection(section.id)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                         activeSection === section.id
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                     >
                       <Icon className="w-5 h-5" />
-                      <div>
+                      <div className="text-left">
                         <div className="font-medium">{section.title}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="text-sm opacity-75">
                           {section.description}
                         </div>
                       </div>
+                      <ChevronRight className="w-4 h-4 ml-auto" />
                     </button>
                   );
                 })}
@@ -1525,10 +1092,47 @@ const SettingsPage = () => {
           isOpen={showProfilePictureModal}
           onClose={() => setShowProfilePictureModal(false)}
           onUpload={handleProfilePictureUpload}
-          onRemove={handleProfilePictureRemove}
-          profilePicture={user?.profilePictureUrl || "/default-avatar.svg"}
-          uploadLoading={updateLoading}
+          currentImage={user?.profilePictureUrl}
         />
+      )}
+
+      {/* Delete Account Confirmation Dialog */}
+      {showDeleteConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Delete Account
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              Are you sure you want to delete your account? This will
+              permanently remove all your data and cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDeleteConfirmDialog(false)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAccount}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

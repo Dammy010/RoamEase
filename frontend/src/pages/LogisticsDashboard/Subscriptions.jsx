@@ -69,6 +69,7 @@ const Subscriptions = () => {
   const [loadingPlans, setLoadingPlans] = useState({});
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [forceHideActive, setForceHideActive] = useState(false);
 
   const [billingCycle, setBillingCycle] = useState("monthly");
 
