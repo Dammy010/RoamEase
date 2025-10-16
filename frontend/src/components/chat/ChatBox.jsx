@@ -5,7 +5,7 @@ import {
   fetchMessages,
   addMessage,
   markConversationAsRead,
-} from "../../redux/slices/chatSlice"; // New: Import markConversationAsRead
+} from "../../redux/slices/chatSlice"; // New: Import markConversationAsReads
 import api from "../../services/api";
 import { getSocket } from "../../services/socket";
 import MessageBubble from "./MessageBubble";
