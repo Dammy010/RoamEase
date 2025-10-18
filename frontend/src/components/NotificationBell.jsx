@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { getUnreadCount, addNotification } from '../redux/slices/notificationSlice';
-import { getSocket } from '../services/socket';
-import { Bell } from 'lucide-react';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  getUnreadCount,
+  addNotification,
+} from "../redux/slices/notificationSlice";
+import { getSocket } from "../services/socket";
+import { Bell } from "lucide-react";
 
 const NotificationBell = () => {
   const dispatch = useDispatch();
@@ -16,40 +19,49 @@ const NotificationBell = () => {
     if (token) {
       // Load initial unread count
       dispatch(getUnreadCount()).catch((error) => {
-        console.log('🔔 Failed to load unread count (user may not be authenticated):', error);
+        console.log(
+          "🔔 Failed to load unread count (user may not be authenticated):",
+          error
+        );
       });
-      
+
       // Set up real-time notifications via Socket.io
       const setupSocket = () => {
         const socket = getSocket();
         if (socket) {
           // Handle new notifications
-          socket.on('new-notification', (notification) => {
+          socket.on("new-notification", (notification) => {
             dispatch(addNotification(notification));
-            
-            // Show browser notification if permission granted
-            if (Notification.permission === 'granted') {
-              new Notification(notification.title, {
-                body: notification.message,
-                icon: '/favicon.ico',
-                tag: notification._id
-              });
+
+            // Show browser notification if permission granted and Notification API is available
+            if (
+              typeof Notification !== "undefined" &&
+              Notification.permission === "granted"
+            ) {
+              try {
+                new Notification(notification.title, {
+                  body: notification.message,
+                  icon: "/favicon.ico",
+                  tag: notification._id,
+                });
+              } catch (error) {
+                console.warn("Failed to show browser notification:", error);
+              }
             }
           });
-          
+
           // Handle socket connection events
-          socket.on('connect', () => {
+          socket.on("connect", () => {
             // Refresh unread count when reconnected
             dispatch(getUnreadCount());
           });
-          
-          socket.on('disconnect', (reason) => {
+
+          socket.on("disconnect", (reason) => {});
+
+          socket.on("connect_error", (error) => {
+            console.error("🔔 Socket connection error:", error);
           });
-          
-          socket.on('connect_error', (error) => {
-            console.error('🔔 Socket connection error:', error);
-          });
-          
+
           return socket;
         } else {
           return null;
@@ -60,36 +72,47 @@ const NotificationBell = () => {
     } else {
     }
 
-    // Request notification permission
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
+    // Request notification permission (only if Notification API is available)
+    if (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "default"
+    ) {
+      try {
+        Notification.requestPermission();
+      } catch (error) {
+        console.warn("Failed to request notification permission:", error);
+      }
     }
 
     return () => {
       const socket = getSocket();
       if (socket) {
-        socket.off('new-notification');
-        socket.off('connect');
-        socket.off('disconnect');
-        socket.off('connect_error');
+        socket.off("new-notification");
+        socket.off("connect");
+        socket.off("disconnect");
+        socket.off("connect_error");
       }
     };
   }, [dispatch]);
 
   const handleBellClick = () => {
-    navigate('/notifications');
+    navigate("/notifications");
   };
 
   return (
     <button
       onClick={handleBellClick}
-      className={`relative p-3 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg border border-white/20 hover:shadow-xl group ${unreadCount > 0 ? 'notification-bell' : ''}`}
+      className={`relative p-3 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg border border-white/20 hover:shadow-xl group ${
+        unreadCount > 0 ? "notification-bell" : ""
+      }`}
       title="View Notifications"
     >
       <Bell className="w-6 h-6 group-hover:animate-pulse" />
       {unreadCount > 0 && (
-        <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white notification-badge`}>
-          {unreadCount > 99 ? '99+' : unreadCount}
+        <span
+          className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white notification-badge`}
+        >
+          {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
       {unreadCount === 0 && (

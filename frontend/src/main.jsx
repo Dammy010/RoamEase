@@ -16,6 +16,17 @@ const isMobile =
     navigator.userAgent
   );
 
+// Safe Notification API polyfill for mobile
+if (typeof Notification === "undefined") {
+  window.Notification = {
+    permission: "denied",
+    requestPermission: () => Promise.resolve("denied"),
+    constructor: function () {
+      throw new Error("Notification API not supported");
+    },
+  };
+}
+
 // Safe localStorage wrapper for mobile
 const safeLocalStorage = {
   getItem: (key) => {
