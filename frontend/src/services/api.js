@@ -14,10 +14,42 @@ const getApiBaseURL = () => {
   }
 };
 
+// Mobile detection
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
+// Safe localStorage wrapper for mobile
+const safeLocalStorage = {
+  getItem: (key) => {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn(`Failed to get localStorage item ${key}:`, error);
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn(`Failed to set localStorage item ${key}:`, error);
+    }
+  },
+  removeItem: (key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn(`Failed to remove localStorage item ${key}:`, error);
+    }
+  },
+};
+
 const api = axios.create({
   baseURL: getApiBaseURL(),
   withCredentials: true, // only if cookies are used
-  timeout: 30000, // Increased timeout for mobile networks
+  timeout: isMobile ? 45000 : 30000, // Longer timeout for mobile networks
   headers: {
     "Content-Type": "application/json",
   },
@@ -63,7 +95,7 @@ const retryWithExponentialBackoff = async (
 // Attach access token to every request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = safeLocalStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -112,7 +144,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = safeLocalStorage.getItem("refreshToken");
         if (!refreshToken) {
           throw new Error("No refresh token found");
         }
@@ -123,7 +155,7 @@ api.interceptors.response.use(
         const newAccessToken = res.data.accessToken;
 
         // Save new access token
-        localStorage.setItem("token", newAccessToken);
+        safeLocalStorage.setItem("token", newAccessToken);
         api.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${newAccessToken}`;
@@ -155,9 +187,9 @@ api.interceptors.response.use(
         processQueue(err, null);
 
         // Clear all auth data
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+        safeLocalStorage.removeItem("token");
+        safeLocalStorage.removeItem("refreshToken");
+        safeLocalStorage.removeItem("user");
 
         // Dispatch logout action instead of direct redirect
         try {

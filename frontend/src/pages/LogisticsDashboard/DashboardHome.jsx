@@ -45,7 +45,9 @@ const LogisticsDashboardHome = () => {
     historyLoading,
     historyError,
   } = useSelector((state) => state.logistics);
-  const { subscriptions } = useSelector((state) => state.subscription);
+  const { subscriptions, loading: subscriptionsLoading } = useSelector(
+    (state) => state.subscription
+  );
 
   // Framer Motion animations
   const controls = useAnimation();
@@ -147,7 +149,14 @@ const LogisticsDashboardHome = () => {
 
   // Check for active subscription and show prompt if needed
   useEffect(() => {
-    if (user && subscriptions) {
+    // Only check for logistics users and ensure subscriptions are loaded
+    if (
+      user &&
+      user.role === "logistics" &&
+      !subscriptionsLoading &&
+      subscriptions &&
+      subscriptions.length >= 0
+    ) {
       const hasActiveSubscription = subscriptions.some(
         (sub) => sub && sub.status === "active"
       );
@@ -159,9 +168,13 @@ const LogisticsDashboardHome = () => {
         }, 2000); // 2 second delay
 
         return () => clearTimeout(timer);
+      } else {
+        setShowSubscriptionPrompt(false); // Ensure prompt is hidden
       }
+    } else if (user && user.role !== "logistics") {
+      setShowSubscriptionPrompt(false);
     }
-  }, [user, subscriptions]);
+  }, [user, subscriptions, subscriptionsLoading]);
 
   // Function to refresh user profile data
   const handleRefreshProfile = () => {

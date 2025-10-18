@@ -12,6 +12,7 @@ export default defineConfig({
           vendor: ["react", "react-dom"],
           ui: ["framer-motion", "lucide-react"],
           charts: ["chart.js", "react-chartjs-2", "recharts"],
+          socket: ["socket.io-client"],
         },
       },
     },
@@ -22,8 +23,12 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        pure_funcs: ["console.log", "console.info", "console.debug"],
       },
     },
+    // Mobile-specific build optimizations
+    chunkSizeWarningLimit: 1000,
+    sourcemap: false, // Disable sourcemaps for production
   },
   // Mobile-specific optimizations
   server: {
@@ -33,5 +38,9 @@ export default defineConfig({
   preview: {
     host: true,
     port: 4173,
+  },
+  // Mobile-specific optimizations
+  optimizeDeps: {
+    include: ["react", "react-dom", "socket.io-client"],
   },
 });

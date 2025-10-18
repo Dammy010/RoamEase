@@ -2,12 +2,44 @@ import { io } from "socket.io-client";
 
 let socket;
 
+// Mobile detection
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
+// Safe localStorage wrapper for mobile
+const safeLocalStorage = {
+  getItem: (key) => {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn(`Failed to get localStorage item ${key}:`, error);
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn(`Failed to set localStorage item ${key}:`, error);
+    }
+  },
+  removeItem: (key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn(`Failed to remove localStorage item ${key}:`, error);
+    }
+  },
+};
+
 export const initSocket = () => {
   if (socket) {
     return socket;
   }
 
-  const token = localStorage.getItem("token");
+  const token = safeLocalStorage.getItem("token");
 
   // Only initialize socket if we have a valid token
   if (!token) {
@@ -37,10 +69,10 @@ export const initSocket = () => {
   });
 
   socket = io(socketURL, {
-    transports: ["websocket", "polling"], // Try websocket first, fallback to polling
+    transports: isMobile ? ["polling", "websocket"] : ["websocket", "polling"], // Mobile prefers polling first
     autoConnect: true,
     withCredentials: true,
-    timeout: 20000,
+    timeout: isMobile ? 30000 : 20000, // Longer timeout for mobile
     forceNew: true,
     auth: {
       token: token, // ✅ Pass token in auth object
@@ -50,10 +82,10 @@ export const initSocket = () => {
     rememberUpgrade: true,
     // Mobile-specific optimizations
     reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 5,
-    maxReconnectionAttempts: 5,
-    // Reduce polling interval for mobile to save battery
+    reconnectionDelay: isMobile ? 2000 : 1000, // Slower reconnection for mobile
+    reconnectionAttempts: isMobile ? 3 : 5, // Fewer attempts on mobile
+    maxReconnectionAttempts: isMobile ? 3 : 5,
+    // Mobile-optimized polling
     polling: {
       extraHeaders: {
         "Cache-Control": "no-cache",
@@ -75,7 +107,7 @@ export const initSocket = () => {
     });
 
     // Send user-online event to join the user to their specific room
-    const userStr = localStorage.getItem("user");
+    const userStr = safeLocalStorage.getItem("user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -104,10 +136,10 @@ export const initSocket = () => {
       data: error.data,
     });
     console.error("🔍 Socket URL:", socketURL);
-    console.error("🔍 Token present:", !!localStorage.getItem("token"));
+    console.error("🔍 Token present:", !!safeLocalStorage.getItem("token"));
     console.error(
       "🔍 Token value:",
-      localStorage.getItem("token")?.substring(0, 20) + "..."
+      safeLocalStorage.getItem("token")?.substring(0, 20) + "..."
     );
     console.error("🔍 Auth object:", socket.auth);
 
@@ -117,7 +149,7 @@ export const initSocket = () => {
 
       // Try to decode the token to see if it's valid
       try {
-        const token = localStorage.getItem("token");
+        const token = safeLocalStorage.getItem("token");
         if (token) {
           // Split the token to see its structure
           const parts = token.split(".");
@@ -146,7 +178,7 @@ export const initSocket = () => {
       }
 
       // Try to refresh the token
-      const refreshToken = localStorage.getItem("refreshToken");
+      const refreshToken = safeLocalStorage.getItem("refreshToken");
       if (refreshToken) {
         console.log("🔄 Attempting to refresh token...");
         // The API interceptor will handle token refresh
@@ -187,7 +219,7 @@ export const initSocket = () => {
 
 export const getSocket = () => {
   if (!socket) {
-    const token = localStorage.getItem("token");
+    const token = safeLocalStorage.getItem("token");
     if (!token) {
       console.log("⚠️ No token available for socket connection");
       return null;
@@ -209,7 +241,7 @@ export const disconnectSocket = () => {
 export const reconnectSocket = () => {
   console.log("🔄 Reconnecting socket...");
   disconnectSocket();
-  const token = localStorage.getItem("token");
+  const token = safeLocalStorage.getItem("token");
   if (token) {
     return initSocket();
   } else {
@@ -220,7 +252,7 @@ export const reconnectSocket = () => {
 
 // Initialize socket only after successful login
 export const initializeSocketAfterLogin = () => {
-  const token = localStorage.getItem("token");
+  const token = safeLocalStorage.getItem("token");
   console.log("🔐 Initializing socket after login:", {
     hasToken: !!token,
     tokenPreview: token ? token.substring(0, 20) + "..." : "none",
@@ -240,7 +272,7 @@ export const reconnectSocketAfterTokenRefresh = () => {
     socket = null;
   }
 
-  const token = localStorage.getItem("token");
+  const token = safeLocalStorage.getItem("token");
   console.log("🔐 Token after refresh:", {
     hasToken: !!token,
     tokenPreview: token ? token.substring(0, 20) + "..." : "none",
@@ -254,7 +286,7 @@ export const reconnectSocketAfterTokenRefresh = () => {
 
 // Debug function to check token validity
 export const debugToken = () => {
-  const token = localStorage.getItem("token");
+  const token = safeLocalStorage.getItem("token");
   if (!token) {
     console.log("❌ No token found in localStorage");
     return;

@@ -37,12 +37,9 @@ export const getUserSubscriptions = createAsyncThunk(
   "subscription/getUserSubscriptions",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("🔍 API: Fetching subscriptions...");
       const response = await api.get("/subscriptions/my-subscriptions");
-      console.log("🔍 API: Response received:", response.data);
       return response.data;
     } catch (error) {
-      console.log("🔍 API: Error fetching subscriptions:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch subscriptions"
       );
@@ -176,22 +173,15 @@ const subscriptionSlice = createSlice({
       })
       .addCase(getUserSubscriptions.fulfilled, (state, action) => {
         state.loading = false;
-        console.log("🔍 Redux: getUserSubscriptions fulfilled");
-        console.log("Payload:", action.payload);
-        console.log("Data:", action.payload.data);
-
         state.subscriptions = action.payload.data;
         // Set current active subscription
         const activeSubscription = action.payload.data.find(
           (sub) => sub.status === "active"
         );
-        console.log("Active subscription found in Redux:", activeSubscription);
         state.currentSubscription = activeSubscription || null;
       })
       .addCase(getUserSubscriptions.rejected, (state, action) => {
         state.loading = false;
-        console.log("🔍 Redux: getUserSubscriptions rejected");
-        console.log("Error:", action.payload);
         state.error = action.payload;
       })
 
