@@ -46,6 +46,13 @@ const uploadMultipleFilesToCloudinary = async (
 // Create a new shipment
 const createShipment = async (req, res) => {
   try {
+    console.log("🔍 createShipment - Request body:", req.body);
+    console.log("🔍 createShipment - Request files:", req.files);
+    console.log(
+      "🔍 createShipment - Content-Type:",
+      req.headers["content-type"]
+    );
+
     // Validate required fields
     const requiredFields = [
       "shipmentTitle",
@@ -55,6 +62,7 @@ const createShipment = async (req, res) => {
     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length > 0) {
+      console.log("❌ Missing required fields:", missingFields);
       return res.status(400).json({
         success: false,
         message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -131,8 +139,12 @@ const createShipment = async (req, res) => {
     // Create shipment with error handling
     let shipment;
     try {
+      console.log("🔍 Creating shipment with data:", data);
       shipment = await Shipment.create(data);
+      console.log("✅ Shipment created successfully:", shipment._id);
     } catch (createError) {
+      console.error("❌ Shipment creation error:", createError);
+
       // Handle specific validation errors
       if (createError.name === "ValidationError") {
         const validationErrors = Object.values(createError.errors).map(
@@ -142,6 +154,7 @@ const createShipment = async (req, res) => {
           })
         );
 
+        console.log("❌ Validation errors:", validationErrors);
         return res.status(400).json({
           success: false,
           message: "Validation error. Please check your input.",
@@ -149,6 +162,7 @@ const createShipment = async (req, res) => {
         });
       }
 
+      console.log("❌ General creation error:", createError.message);
       return res.status(500).json({
         success: false,
         message: "Failed to create shipment. Please try again.",

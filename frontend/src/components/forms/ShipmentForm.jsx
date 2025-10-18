@@ -769,8 +769,9 @@ const ShipmentForm = () => {
       }
 
       // Check if there are any files to upload
-      const hasFiles = (formData.photos && formData.photos.length > 0) || 
-                      (formData.documents && formData.documents.length > 0);
+      const hasFiles =
+        (formData.photos && formData.photos.length > 0) ||
+        (formData.documents && formData.documents.length > 0);
 
       let data;
       let contentType;
@@ -794,7 +795,7 @@ const ShipmentForm = () => {
         if (formData.documents && formData.documents.length > 0) {
           formData.documents.forEach((file) => data.append("documents", file));
         }
-        contentType = 'multipart/form-data';
+        contentType = "multipart/form-data";
       } else {
         // Use regular JSON for no files
         data = {};
@@ -807,13 +808,22 @@ const ShipmentForm = () => {
             return;
           if (value !== undefined && value !== null) data[key] = value;
         });
-        contentType = 'application/json';
+        contentType = "application/json";
       }
 
       console.log("🔍 Form submission:", { hasFiles, contentType, data });
+      console.log("🔍 Form data details:", {
+        shipmentTitle: formData.shipmentTitle,
+        descriptionOfGoods: formData.descriptionOfGoods,
+        typeOfGoods: formData.typeOfGoods,
+        pickupAddress: formData.pickupAddress,
+        deliveryAddress: formData.deliveryAddress,
+      });
 
       setLoading(true);
-      dispatch(postShipment({ data, contentType })).finally(() => setLoading(false));
+      dispatch(postShipment({ data, contentType })).finally(() =>
+        setLoading(false)
+      );
     },
     [dispatch, formData]
   );
