@@ -52,7 +52,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      // Custom error UI
+      // Custom error UI with detailed error information
       return (
         <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-4">
           <div className="max-w-md w-full text-center">
@@ -69,6 +69,45 @@ class ErrorBoundary extends React.Component {
               issue.
             </p>
 
+            {/* Show actual error details on screen for debugging */}
+            {this.state.error && (
+              <div className="mb-6 text-left bg-red-50 dark:bg-red-900 p-4 rounded-lg">
+                <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">
+                  🚨 Error Details:
+                </h3>
+                <div className="text-sm text-red-700 dark:text-red-300 space-y-2">
+                  <div>
+                    <strong>Error:</strong> {this.state.error.toString()}
+                  </div>
+                  {this.state.error.message && (
+                    <div>
+                      <strong>Message:</strong> {this.state.error.message}
+                    </div>
+                  )}
+                  {this.state.error.stack && (
+                    <div>
+                      <strong>Stack:</strong>
+                      <pre className="text-xs mt-1 overflow-auto max-h-32">
+                        {this.state.error.stack}
+                      </pre>
+                    </div>
+                  )}
+                  <div>
+                    <strong>URL:</strong> {window.location.href}
+                  </div>
+                  <div>
+                    <strong>User Agent:</strong> {navigator.userAgent}
+                  </div>
+                  <div>
+                    <strong>Local Storage:</strong>{" "}
+                    {localStorage.getItem("token")
+                      ? "Token exists"
+                      : "No token"}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Mobile-specific help */}
             {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
               navigator.userAgent
@@ -84,19 +123,6 @@ class ErrorBoundary extends React.Component {
                   <li>• Try using a different browser</li>
                 </ul>
               </div>
-            )}
-
-            {/* Error details for development */}
-            {process.env.NODE_ENV === "development" && this.state.error && (
-              <details className="mb-6 text-left bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Error Details (Development)
-                </summary>
-                <pre className="text-xs text-red-600 dark:text-red-400 overflow-auto">
-                  {this.state.error.toString()}
-                  {this.state.errorInfo.componentStack}
-                </pre>
-              </details>
             )}
 
             <div className="space-y-3">
