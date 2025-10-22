@@ -340,41 +340,48 @@ const BrowseShipmentsPage = () => {
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300"
               >
                 {/* Shipment Header */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <div className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
                           {shipment.shipmentTitle}
                         </h3>
-                        <span className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 bg-green-100 text-green-800">
-                          <CheckCircle className="w-4 h-4" />
-                          Open for Bidding
+                        <span className="px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 bg-green-100 text-green-800 w-fit">
+                          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">
+                            Open for Bidding
+                          </span>
+                          <span className="sm:hidden">Open</span>
                         </span>
                       </div>
-                      <div className="flex items-center gap-6 text-gray-600 dark:text-gray-300">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm sm:text-base text-gray-600 dark:text-gray-300">
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          <span className="font-medium">
+                          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                          <span className="font-medium truncate">
                             {shipment.pickupCity}
                           </span>
-                          <span>→</span>
-                          <span className="font-medium">
+                          <span className="text-gray-400">→</span>
+                          <span className="font-medium truncate">
                             {shipment.deliveryCity}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>{formatDate(shipment.createdAt)}</span>
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                          <span className="truncate">
+                            {formatDate(shipment.createdAt)}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-3">
                       {shipment.budget && (
                         <div className="text-right">
-                          <p className="text-sm text-gray-600">Budget</p>
-                          <p className="text-2xl font-bold text-green-600">
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            Budget
+                          </p>
+                          <p className="text-lg sm:text-2xl font-bold text-green-600">
                             {formatCurrency(shipment.budget)}
                           </p>
                         </div>
@@ -382,37 +389,39 @@ const BrowseShipmentsPage = () => {
 
                       <button
                         onClick={() => toggleShipmentDetails(shipment._id)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                       >
                         {expandedShipments.has(shipment._id) ? (
-                          <ChevronUp className="w-5 h-5" />
+                          <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                          <ChevronDown className="w-5 h-5" />
+                          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                       </button>
                     </div>
                   </div>
 
                   {/* Quick Info */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                     {shipment.weightSummary && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Weight className="w-4 h-4" />
-                        <span className="text-sm">
+                        <Weight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">
                           {shipment.weightSummary}
                         </span>
                       </div>
                     )}
                     {shipment.dimensions && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Ruler className="w-4 h-4" />
-                        <span className="text-sm">{shipment.dimensions}</span>
+                        <Ruler className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">
+                          {shipment.dimensions}
+                        </span>
                       </div>
                     )}
                     {shipment.pickupDate && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="w-4 h-4" />
-                        <span className="text-sm">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">
                           Pickup:{" "}
                           {new Date(shipment.pickupDate).toLocaleDateString()}
                         </span>
@@ -420,8 +429,8 @@ const BrowseShipmentsPage = () => {
                     )}
                     {shipment.deliveryDate && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">
                           Delivery:{" "}
                           {new Date(shipment.deliveryDate).toLocaleDateString()}
                         </span>
@@ -430,52 +439,62 @@ const BrowseShipmentsPage = () => {
                   </div>
 
                   {/* Shipper Info */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-indigo-600" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 truncate">
                           {getLogisticsDisplayName(shipment.user)}
                         </p>
-                        <p className="text-sm text-gray-600">Shipper</p>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          Shipper
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {!user ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                           <Link
                             to="/login"
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl"
+                            className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl text-sm sm:text-base"
                           >
-                            <LogIn className="w-4 h-4" />
-                            Login to Bid
+                            <LogIn className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">
+                              Login to Bid
+                            </span>
+                            <span className="sm:hidden">Login</span>
                           </Link>
                           <Link
                             to="/signup"
-                            className="px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2 font-semibold"
+                            className="px-4 py-2 sm:px-6 sm:py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center justify-center gap-2 font-semibold text-sm sm:text-base"
                           >
-                            <Truck className="w-4 h-4" />
-                            Join as Provider
+                            <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">
+                              Join as Provider
+                            </span>
+                            <span className="sm:hidden">Join</span>
                           </Link>
                         </div>
                       ) : user.role === "logistics" ? (
                         <Link
                           to="/logistics-dashboard/available-shipments"
-                          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
                         >
-                          <Wallet className="w-4 h-4" />
-                          BID NOW
+                          <Wallet className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">BID NOW</span>
+                          <span className="sm:hidden">BID</span>
                         </Link>
                       ) : user.role === "user" ? (
                         <Link
                           to="/dashboard"
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                          View Details
+                          <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">View</span>
                         </Link>
                       ) : null}
                     </div>
@@ -484,8 +503,8 @@ const BrowseShipmentsPage = () => {
 
                 {/* Expanded Details */}
                 {expandedShipments.has(shipment._id) && (
-                  <div className="border-t border-gray-100 bg-gray-50 p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="border-t border-gray-100 bg-gray-50 dark:bg-gray-700 p-4 sm:p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                       {/* Description */}
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">

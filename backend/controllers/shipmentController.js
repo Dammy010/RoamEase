@@ -46,8 +46,8 @@ const uploadMultipleFilesToCloudinary = async (
 // Create a new shipment
 const createShipment = async (req, res) => {
   try {
-    console.log("🔍 createShipment - Request body:", req.body);
-    console.log("🔍 createShipment - Request files:", req.files);
+
+
     console.log(
       "🔍 createShipment - Content-Type:",
       req.headers["content-type"]
@@ -62,7 +62,7 @@ const createShipment = async (req, res) => {
     const missingFields = requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length > 0) {
-      console.log("❌ Missing required fields:", missingFields);
+
       return res.status(400).json({
         success: false,
         message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -139,9 +139,9 @@ const createShipment = async (req, res) => {
     // Create shipment with error handling
     let shipment;
     try {
-      console.log("🔍 Creating shipment with data:", data);
+
       shipment = await Shipment.create(data);
-      console.log("✅ Shipment created successfully:", shipment._id);
+
     } catch (createError) {
       console.error("❌ Shipment creation error:", createError);
 
@@ -154,7 +154,7 @@ const createShipment = async (req, res) => {
           })
         );
 
-        console.log("❌ Validation errors:", validationErrors);
+
         return res.status(400).json({
           success: false,
           message: "Validation error. Please check your input.",
@@ -162,7 +162,7 @@ const createShipment = async (req, res) => {
         });
       }
 
-      console.log("❌ General creation error:", createError.message);
+
       return res.status(500).json({
         success: false,
         message: "Failed to create shipment. Please try again.",
@@ -314,7 +314,7 @@ const createShipment = async (req, res) => {
         const adminUsers = await User.find({ role: "admin" }).select(
           "_id name"
         );
-        console.log(`📋 Found ${adminUsers.length} admin users`);
+
 
         if (adminUsers.length > 0) {
           const adminNotifications = adminUsers.map((adminUser) => ({
@@ -587,7 +587,7 @@ const updateShipmentStatus = async (req, res) => {
         };
 
         await NotificationService.createNotification(userNotificationData);
-        console.log("✅ User notification created for shipment status update");
+
 
         // 2. Notification for admin users
         const adminUsers = await User.find({ role: "admin" }).select(
@@ -969,7 +969,7 @@ const rateCompletedShipment = async (req, res) => {
         };
 
         await NotificationService.createNotification(notificationData);
-        console.log("✅ Rating notification created for logistics company");
+
       }
     } catch (notificationError) {
       console.error(
@@ -1115,7 +1115,7 @@ const markAsDeliveredByLogistics = async (req, res) => {
         };
 
         await NotificationService.createNotification(userNotificationData);
-        console.log("✅ User notification created for shipment delivery");
+
 
         // 2. Notification for admin users
         const adminUsers = await User.find({ role: "admin" }).select(
@@ -1180,8 +1180,8 @@ const markAsDeliveredByLogistics = async (req, res) => {
 // New: Get delivered shipments awaiting user confirmation
 const getDeliveredShipments = async (req, res) => {
   try {
-    console.log("DEBUG: getDeliveredShipments - User ID:", req.user._id);
-    console.log("DEBUG: getDeliveredShipments - User role:", req.user.role);
+
+
 
     let query;
 
@@ -1201,7 +1201,7 @@ const getDeliveredShipments = async (req, res) => {
       };
     }
 
-    console.log("DEBUG: getDeliveredShipments - Query:", query);
+
 
     const shipments = await Shipment.find(query)
       .populate("deliveredByLogistics", "name email companyName phone")
@@ -1432,10 +1432,10 @@ const markAsDeliveredByUser = async (req, res) => {
 // New: Get active shipments for logistics company (accepted bids)
 const getActiveShipmentsForLogistics = async (req, res) => {
   try {
-    console.log("DEBUG: getActiveShipmentsForLogistics - Request received");
-    console.log("DEBUG: req.user:", req.user);
-    console.log("DEBUG: req.user.role:", req.user?.role);
-    console.log("DEBUG: req.user._id:", req.user?._id);
+
+
+
+
 
     const logisticsCompanyId = req.user._id;
 
@@ -1446,11 +1446,11 @@ const getActiveShipmentsForLogistics = async (req, res) => {
       status: "accepted",
     }).populate("shipment");
 
-    console.log("DEBUG: Found accepted bids:", acceptedBids.length);
+
 
     // Extract shipment IDs from accepted bids
     const shipmentIds = acceptedBids.map((bid) => bid.shipment._id);
-    console.log("DEBUG: Shipment IDs from bids:", shipmentIds);
+
 
     // Find shipments that this logistics company is handling
     // Only include 'accepted' status - completed shipments should not appear in active shipments
@@ -1462,7 +1462,7 @@ const getActiveShipmentsForLogistics = async (req, res) => {
       "name email companyName country phoneNumber firstName lastName phone contactPhone"
     );
 
-    console.log("DEBUG: Found active shipments:", activeShipments.length);
+
 
     // Format the response with actual bid information
     const formattedShipments = activeShipments.map((shipment) => {
@@ -1637,7 +1637,7 @@ const deleteShipment = async (req, res) => {
 
     // Create notifications for shipment deletion
     try {
-      console.log("📦 Creating notifications for shipment deletion:", id);
+
 
       // 1. Notification for admin users
       const adminUsers = await User.find({ role: "admin" }).select("_id name");
@@ -1675,7 +1675,7 @@ const deleteShipment = async (req, res) => {
         }));
 
         await NotificationService.createBulkNotifications(adminNotifications);
-        console.log("✅ Admin notifications created for shipment deletion");
+
       }
 
       // 2. Notifications for logistics providers who had bids on this shipment
@@ -1813,7 +1813,7 @@ const getLogisticsRatings = async (req, res) => {
       deliveredByLogistics: logisticsCompanyId,
       rating: { $exists: true, $ne: null },
     });
-    console.log(`⭐ Shipments with ratings: ${shipmentsWithRatings.length}`);
+
 
     // Find all shipments delivered by this logistics company that have been rated
     const ratedShipments = await Shipment.find({
@@ -1850,7 +1850,7 @@ const getLogisticsRatings = async (req, res) => {
       deliveredAt: shipment.deliveredAt,
     }));
 
-    console.log(`✅ Successfully formatted ${formattedRatings.length} ratings`);
+
 
     res.json({
       success: true,
@@ -2169,7 +2169,7 @@ const updateShipmentLocation = async (req, res) => {
       }
     }
 
-    console.log(`📍 Location updated for shipment ${id}: ${lat}, ${lng}`);
+
 
     return res.json({
       success: true,
@@ -2210,16 +2210,16 @@ const getShipmentTracking = async (req, res) => {
       status: "accepted",
     });
 
-    console.log("🔍 User ID:", userId);
-    console.log("🔍 Shipment owner:", shipment.user);
-    console.log("🔍 Accepted bid:", acceptedBid);
+
+
+
 
     const isOwner = shipment.user.toString() === userId.toString();
     const isLogisticsHandler =
       acceptedBid && acceptedBid.carrier.toString() === userId.toString();
 
-    console.log("🔍 Is owner:", isOwner);
-    console.log("🔍 Is logistics handler:", isLogisticsHandler);
+
+
 
     if (!isOwner && !isLogisticsHandler && req.user.role !== "admin") {
       return res.status(403).json({
@@ -2234,7 +2234,7 @@ const getShipmentTracking = async (req, res) => {
       logisticsCompany = await User.findById(acceptedBid.carrier).select(
         "name companyName phone email address bio country profilePicture isOnline lastSeen"
       );
-      console.log("🔍 Logistics company data:", logisticsCompany);
+
     }
 
     const responseData = {
@@ -2257,7 +2257,7 @@ const getShipmentTracking = async (req, res) => {
 
     // Debug: Check if there are any bids for this shipment
     const allBids = await Bid.find({ shipment: id });
-    console.log("🔍 All bids for shipment:", allBids);
+
 
     return res.json(responseData);
   } catch (error) {

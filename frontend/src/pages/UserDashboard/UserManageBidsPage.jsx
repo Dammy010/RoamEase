@@ -230,55 +230,62 @@ const UserManageBidsPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="bg-blue-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
-          <div className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+        <div className="bg-blue-600 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden mb-6 sm:mb-8">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={() => navigate("/user/dashboard")}
-                  className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 border border-white/20 flex-shrink-0"
                 >
-                  <ArrowRight className="rotate-180 text-white" size={20} />
+                  <ArrowRight className="rotate-180 text-white" size={18} />
                 </button>
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                  <TrendingUp className="text-white" size={24} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20 flex-shrink-0">
+                  <TrendingUp className="text-white" size={20} />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Manage Bids</h1>
-                  <p className="text-indigo-100 text-lg">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg sm:text-xl font-bold text-white truncate">
+                    Manage Bids
+                  </h1>
+                  <p className="text-indigo-100 text-sm sm:text-lg truncate">
                     Review and manage bids on your shipments
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
-                  <span className="text-white font-semibold text-lg">
+              <div className="flex items-center justify-between sm:justify-end gap-3">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 sm:py-2 border border-white/20">
+                  <span className="text-white font-semibold text-sm sm:text-lg">
                     {bids?.length || 0} bids
                   </span>
                 </div>
                 <button
                   onClick={() => dispatch(fetchBidsOnMyShipments())}
-                  className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                  className="px-3 py-2 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 text-sm sm:text-base"
                 >
-                  <RefreshCw size={16} className="text-white" />
-                  <span className="text-white font-medium">Refresh</span>
+                  <RefreshCw size={14} className="text-white" />
+                  <span className="text-white font-medium hidden sm:inline">
+                    Refresh
+                  </span>
+                  <span className="text-white font-medium sm:hidden">Ref</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
-          <div className="p-8">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-white dark:bg-gray-800/20 rounded-xl flex items-center justify-center">
-                <TrendingUp className="text-white" size={24} />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6 sm:mb-8">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 dark:bg-gray-800/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="text-white" size={20} />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Manage Bids</h1>
-                <p className="text-black text-lg font-bold">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white truncate">
+                  Manage Bids
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-lg font-medium truncate">
                   Review, evaluate, and manage all logistics bids submitted for
                   your shipments
                 </p>
@@ -286,362 +293,368 @@ const UserManageBidsPage = () => {
             </div>
           </div>
 
-          <div className="p-8">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <div className="text-2xl font-bold text-blue-600 mb-1">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+              <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-xl">
+                <div className="text-xl sm:text-2xl font-bold text-blue-600 mb-1">
                   {bids.length}
                 </div>
-                <div className="text-sm text-gray-600">Total Bids</div>
+                <div className="text-xs sm:text-sm text-gray-600">
+                  Total Bids
+                </div>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <div className="text-2xl font-bold text-yellow-600 mb-1">
+              <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-xl">
+                <div className="text-xl sm:text-2xl font-bold text-yellow-600 mb-1">
                   {bids.filter((bid) => bid.status === "pending").length}
                 </div>
-                <div className="text-sm text-gray-600">Pending</div>
+                <div className="text-xs sm:text-sm text-gray-600">Pending</div>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <div className="text-2xl font-bold text-green-600 mb-1">
+              <div className="text-center p-3 sm:p-4 bg-green-50 rounded-xl">
+                <div className="text-xl sm:text-2xl font-bold text-green-600 mb-1">
                   {bids.filter((bid) => bid.status === "accepted").length}
                 </div>
-                <div className="text-sm text-gray-600">Accepted</div>
+                <div className="text-xs sm:text-sm text-gray-600">Accepted</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Selected Bid Details */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-blue-500 p-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Star size={20} />
-                Selected Bid Details
-              </h2>
-            </div>
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          {/* Selected Bid Details */}
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-blue-500 p-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Star size={20} />
+                  Selected Bid Details
+                </h2>
+              </div>
 
-            <div className="p-6">
-              {selectedBid ? (
-                <div className="space-y-6">
-                  {/* Bid Price */}
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                      {getCurrencySymbol(selectedBid.currency || "USD")}
-                      {selectedBid.price?.toFixed(2) || "N/A"}
+              <div className="p-6">
+                {selectedBid ? (
+                  <div className="space-y-6">
+                    {/* Bid Price */}
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                        {getCurrencySymbol(selectedBid.currency || "USD")}
+                        {selectedBid.price?.toFixed(2) || "N/A"}
+                      </div>
+                      <div className="text-lg text-gray-600">
+                        Bid Amount{" "}
+                        {selectedBid.currency && `(${selectedBid.currency})`}
+                      </div>
                     </div>
-                    <div className="text-lg text-gray-600">
-                      Bid Amount{" "}
-                      {selectedBid.currency && `(${selectedBid.currency})`}
-                    </div>
-                  </div>
 
-                  {/* Shipment Info */}
-                  <div className="p-4 bg-blue-50 rounded-xl">
-                    <div className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                      <Package size={16} />
-                      Shipment Information
-                    </div>
-                    <div className="space-y-2">
-                      <div className="font-semibold text-gray-800 dark:text-gray-200">
-                        {selectedBid.shipment?.shipmentTitle || "N/A"}
+                    {/* Shipment Info */}
+                    <div className="p-4 bg-blue-50 rounded-xl">
+                      <div className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                        <Package size={16} />
+                        Shipment Information
                       </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-2">
-                        <MapPin size={14} />
-                        {selectedBid.shipment?.pickupCity ||
-                          selectedBid.shipment?.pickupAddress ||
-                          "N/A"}{" "}
-                        →{" "}
-                        {selectedBid.shipment?.deliveryCity ||
-                          selectedBid.shipment?.deliveryAddress ||
-                          "N/A"}
-                      </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-2">
-                        <Truck size={14} />
-                        {selectedBid.shipment?.typeOfGoods ||
-                          selectedBid.shipment?.modeOfTransport ||
-                          "N/A"}
-                      </div>
-                      {selectedBid.shipment?.weight && (
+                      <div className="space-y-2">
+                        <div className="font-semibold text-gray-800 dark:text-gray-200">
+                          {selectedBid.shipment?.shipmentTitle || "N/A"}
+                        </div>
                         <div className="text-sm text-gray-600 flex items-center gap-2">
-                          <Package size={14} />
-                          Weight: {selectedBid.shipment.weight} kg
+                          <MapPin size={14} />
+                          {selectedBid.shipment?.pickupCity ||
+                            selectedBid.shipment?.pickupAddress ||
+                            "N/A"}{" "}
+                          →{" "}
+                          {selectedBid.shipment?.deliveryCity ||
+                            selectedBid.shipment?.deliveryAddress ||
+                            "N/A"}
+                        </div>
+                        <div className="text-sm text-gray-600 flex items-center gap-2">
+                          <Truck size={14} />
+                          {selectedBid.shipment?.typeOfGoods ||
+                            selectedBid.shipment?.modeOfTransport ||
+                            "N/A"}
+                        </div>
+                        {selectedBid.shipment?.weight && (
+                          <div className="text-sm text-gray-600 flex items-center gap-2">
+                            <Package size={14} />
+                            Weight: {selectedBid.shipment.weight} kg
+                          </div>
+                        )}
+                        {selectedBid.shipment?.budget && (
+                          <div className="text-sm text-gray-600 flex items-center gap-2">
+                            <Wallet size={14} />
+                            Budget:{" "}
+                            {getCurrencySymbol(
+                              selectedBid.shipment.budgetCurrency || "USD"
+                            )}
+                            {selectedBid.shipment.budget}
+                            {selectedBid.shipment.budgetCurrency &&
+                              ` (${selectedBid.shipment.budgetCurrency})`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bid Details */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                        <Clock className="text-blue-500" size={20} />
+                        <div>
+                          <div className="font-medium text-gray-800 dark:text-gray-200">
+                            Estimated Delivery
+                          </div>
+                          <div className="text-gray-600">
+                            {selectedBid.eta || "N/A"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedBid.message && (
+                        <div className="p-4 bg-blue-50 rounded-xl">
+                          <div className="font-medium text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                            <MessageSquare size={16} />
+                            Message
+                          </div>
+                          <div className="text-gray-600">
+                            {selectedBid.message}
+                          </div>
                         </div>
                       )}
-                      {selectedBid.shipment?.budget && (
-                        <div className="text-sm text-gray-600 flex items-center gap-2">
-                          <Wallet size={14} />
-                          Budget:{" "}
-                          {getCurrencySymbol(
-                            selectedBid.shipment.budgetCurrency || "USD"
-                          )}
-                          {selectedBid.shipment.budget}
-                          {selectedBid.shipment.budgetCurrency &&
-                            ` (${selectedBid.shipment.budgetCurrency})`}
-                        </div>
-                      )}
                     </div>
-                  </div>
 
-                  {/* Bid Details */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                      <Clock className="text-blue-500" size={20} />
-                      <div>
-                        <div className="font-medium text-gray-800 dark:text-gray-200">
-                          Estimated Delivery
+                    {/* Carrier Info */}
+                    <div className="p-4 bg-blue-50 rounded-xl">
+                      <div className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                        <Building2 size={16} />
+                        Carrier Information
+                      </div>
+                      <div className="space-y-2">
+                        <div className="font-semibold text-gray-800 dark:text-gray-200">
+                          {selectedBid.carrier?.companyName ||
+                            selectedBid.carrier?.name ||
+                            "Unknown Carrier"}
                         </div>
-                        <div className="text-gray-600">
-                          {selectedBid.eta || "N/A"}
+                        <div className="text-sm text-gray-600 flex items-center gap-2">
+                          <Mail size={14} />
+                          {selectedBid.carrier?.email || "N/A"}
                         </div>
+                        {selectedBid.carrier?.phone && (
+                          <div className="text-sm text-gray-600 flex items-center gap-2">
+                            <Phone size={14} />
+                            {selectedBid.carrier.phone}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {selectedBid.message && (
-                      <div className="p-4 bg-blue-50 rounded-xl">
-                        <div className="font-medium text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-                          <MessageSquare size={16} />
-                          Message
-                        </div>
-                        <div className="text-gray-600">
-                          {selectedBid.message}
-                        </div>
+                    {/* Status */}
+                    <div className="flex items-center justify-center">
+                      <div
+                        className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(
+                          selectedBid.status
+                        )}`}
+                      >
+                        {getStatusIcon(selectedBid.status)}
+                        <span className="font-medium capitalize">
+                          {selectedBid.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    {selectedBid.status === "pending" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => handleAcceptBid(selectedBid._id)}
+                          className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle size={18} />
+                          Accept Bid
+                        </button>
+                        <button
+                          onClick={() => handleRejectBid(selectedBid._id)}
+                          className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        >
+                          <XCircle size={18} />
+                          Reject Bid
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Chat Button */}
+                    {selectedBid.status !== "rejected" && (
+                      <button
+                        onClick={() => handleStartChat(selectedBid)}
+                        className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle size={18} />
+                        {selectedBid.status === "accepted"
+                          ? "Continue Chat"
+                          : "Start Chat"}
+                      </button>
+                    )}
+
+                    {selectedBid.status === "rejected" && (
+                      <div className="w-full px-6 py-3 bg-gray-100 text-gray-500 rounded-xl text-center">
+                        Chat not available for rejected bids
                       </div>
                     )}
                   </div>
-
-                  {/* Carrier Info */}
-                  <div className="p-4 bg-blue-50 rounded-xl">
-                    <div className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                      <Building2 size={16} />
-                      Carrier Information
-                    </div>
-                    <div className="space-y-2">
-                      <div className="font-semibold text-gray-800 dark:text-gray-200">
-                        {selectedBid.carrier?.companyName ||
-                          selectedBid.carrier?.name ||
-                          "Unknown Carrier"}
-                      </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-2">
-                        <Mail size={14} />
-                        {selectedBid.carrier?.email || "N/A"}
-                      </div>
-                      {selectedBid.carrier?.phone && (
-                        <div className="text-sm text-gray-600 flex items-center gap-2">
-                          <Phone size={14} />
-                          {selectedBid.carrier.phone}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div className="flex items-center justify-center">
-                    <div
-                      className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(
-                        selectedBid.status
-                      )}`}
-                    >
-                      {getStatusIcon(selectedBid.status)}
-                      <span className="font-medium capitalize">
-                        {selectedBid.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  {selectedBid.status === "pending" && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => handleAcceptBid(selectedBid._id)}
-                        className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle size={18} />
-                        Accept Bid
-                      </button>
-                      <button
-                        onClick={() => handleRejectBid(selectedBid._id)}
-                        className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                      >
-                        <XCircle size={18} />
-                        Reject Bid
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Chat Button */}
-                  {selectedBid.status !== "rejected" && (
-                    <button
-                      onClick={() => handleStartChat(selectedBid)}
-                      className="w-full px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle size={18} />
-                      {selectedBid.status === "accepted"
-                        ? "Continue Chat"
-                        : "Start Chat"}
-                    </button>
-                  )}
-
-                  {selectedBid.status === "rejected" && (
-                    <div className="w-full px-6 py-3 bg-gray-100 text-gray-500 rounded-xl text-center">
-                      Chat not available for rejected bids
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="text-gray-400 text-2xl" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                    No Bid Selected
-                  </h3>
-                  <p className="text-gray-500">
-                    Click on a bid from the list to view its details
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Bids List */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-blue-500 p-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <TrendingUp size={20} />
-                All Bids ({filteredAndSortedBids.length})
-              </h2>
-            </div>
-
-            <div className="p-6">
-              {/* Search and Filter */}
-              <div className="space-y-4 mb-6">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search by carrier, shipment, or message..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {["all", "pending", "accepted", "rejected"].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterStatus(status)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                        filterStatus === status
-                          ? "bg-indigo-500 text-white shadow-lg"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {status === "all"
-                        ? `All (${bids.length})`
-                        : status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Filter size={16} className="text-gray-500" />
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="eta">ETA</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Bids List */}
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {filteredAndSortedBids.length > 0 ? (
-                  filteredAndSortedBids.map((bid) => (
-                    <div
-                      key={bid._id}
-                      onClick={() => setSelectedBid(bid)}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 ${
-                        selectedBid?._id === bid._id
-                          ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-md"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                          {getCurrencySymbol(bid.currency || "USD")}
-                          {bid.price?.toFixed(2) || "N/A"}
-                          {bid.currency && (
-                            <span className="text-sm text-gray-500 ml-1">
-                              ({bid.currency})
-                            </span>
-                          )}
-                        </div>
-                        <div
-                          className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(
-                            bid.status
-                          )}`}
-                        >
-                          {getStatusIcon(bid.status)}
-                          {bid.status?.charAt(0).toUpperCase() +
-                            bid.status?.slice(1) || "N/A"}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                          {bid.shipment?.shipmentTitle || "N/A"}
-                        </div>
-                        <div className="text-xs text-gray-500 mb-2">
-                          {bid.shipment?.pickupCity ||
-                            bid.shipment?.pickupAddress ||
-                            "N/A"}{" "}
-                          →{" "}
-                          {bid.shipment?.deliveryCity ||
-                            bid.shipment?.deliveryAddress ||
-                            "N/A"}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Clock size={14} />
-                          <span>ETA: {bid.eta || "N/A"}</span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          By:{" "}
-                          {bid.carrier?.companyName ||
-                            bid.carrier?.name ||
-                            "Unknown Carrier"}
-                        </div>
-                      </div>
-                    </div>
-                  ))
                 ) : (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Package className="text-gray-400 text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                      No Bids Found
+                      No Bid Selected
                     </h3>
                     <p className="text-gray-500">
-                      {searchTerm || filterStatus !== "all"
-                        ? "Try adjusting your search or filter criteria"
-                        : "No bids have been placed on your shipments yet"}
+                      Click on a bid from the list to view its details
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bids List */}
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-blue-500 p-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <TrendingUp size={20} />
+                  All Bids ({filteredAndSortedBids.length})
+                </h2>
+              </div>
+
+              <div className="p-6">
+                {/* Search and Filter */}
+                <div className="space-y-4 mb-6">
+                  <div className="relative">
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search by carrier, shipment, or message..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {["all", "pending", "accepted", "rejected"].map(
+                      (status) => (
+                        <button
+                          key={status}
+                          onClick={() => setFilterStatus(status)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                            filterStatus === status
+                              ? "bg-indigo-500 text-white shadow-lg"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                        >
+                          {status === "all"
+                            ? `All (${bids.length})`
+                            : status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Filter size={16} className="text-gray-500" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="price-high">Price: High to Low</option>
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="eta">ETA</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Bids List */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {filteredAndSortedBids.length > 0 ? (
+                    filteredAndSortedBids.map((bid) => (
+                      <div
+                        key={bid._id}
+                        onClick={() => setSelectedBid(bid)}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 ${
+                          selectedBid?._id === bid._id
+                            ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
+                            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-md"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                            {getCurrencySymbol(bid.currency || "USD")}
+                            {bid.price?.toFixed(2) || "N/A"}
+                            {bid.currency && (
+                              <span className="text-sm text-gray-500 ml-1">
+                                ({bid.currency})
+                              </span>
+                            )}
+                          </div>
+                          <div
+                            className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(
+                              bid.status
+                            )}`}
+                          >
+                            {getStatusIcon(bid.status)}
+                            {bid.status?.charAt(0).toUpperCase() +
+                              bid.status?.slice(1) || "N/A"}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                            {bid.shipment?.shipmentTitle || "N/A"}
+                          </div>
+                          <div className="text-xs text-gray-500 mb-2">
+                            {bid.shipment?.pickupCity ||
+                              bid.shipment?.pickupAddress ||
+                              "N/A"}{" "}
+                            →{" "}
+                            {bid.shipment?.deliveryCity ||
+                              bid.shipment?.deliveryAddress ||
+                              "N/A"}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Clock size={14} />
+                            <span>ETA: {bid.eta || "N/A"}</span>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            By:{" "}
+                            {bid.carrier?.companyName ||
+                              bid.carrier?.name ||
+                              "Unknown Carrier"}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Package className="text-gray-400 text-2xl" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                        No Bids Found
+                      </h3>
+                      <p className="text-gray-500">
+                        {searchTerm || filterStatus !== "all"
+                          ? "Try adjusting your search or filter criteria"
+                          : "No bids have been placed on your shipments yet"}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

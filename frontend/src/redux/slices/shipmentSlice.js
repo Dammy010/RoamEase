@@ -73,8 +73,6 @@ export const postShipment = createAsyncThunk(
   "shipment/post",
   async ({ data, contentType }, thunkAPI) => {
     try {
-      console.log("🔍 postShipment - Sending data:", { contentType, data });
-
       const headers = {};
       if (contentType === "multipart/form-data") {
         // Don't set Content-Type for FormData, let browser set it with boundary
@@ -106,16 +104,11 @@ export const fetchUserShipments = createAsyncThunk(
     try {
       // Check if we already have valid cached data
       if (isCacheValid("userShipments")) {
-        console.log(
-          "📦 Using cached user shipments data:",
-          cache.userShipments.data
-        );
         return cache.userShipments.data;
       }
 
       // Check if we're already fetching
       if (cache.userShipments.isFetching) {
-        console.log("⏳ User shipments fetch already in progress, waiting...");
         // Wait for the current fetch to complete
         return new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
@@ -133,14 +126,11 @@ export const fetchUserShipments = createAsyncThunk(
 
       // Mark as fetching
       cache.userShipments.isFetching = true;
-      console.log("🌐 Fetching fresh user shipments data from API");
 
       const res = await api.get("/shipments");
-      console.log("🌐 API Response:", res.data);
 
       // Handle 304 responses (cached data)
       const responseData = res.data || { success: true, shipments: [] };
-      console.log("🌐 Processed response data:", responseData);
 
       // Cache the result
       setCache("userShipments", responseData);
@@ -149,11 +139,10 @@ export const fetchUserShipments = createAsyncThunk(
     } catch (err) {
       // Reset fetching flag on error
       cache.userShipments.isFetching = false;
-      console.log("❌ fetchUserShipments error:", err);
 
       const message =
         err.response?.data?.message || "Failed to fetch shipments";
-      console.log("❌ Error message:", message);
+
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -165,20 +154,16 @@ export const fetchShipmentHistory = createAsyncThunk(
   "shipment/fetchHistory",
   async (_, thunkAPI) => {
     try {
-      console.log("🌐 Fetching shipment history from API");
       const res = await api.get("/shipments/history");
-      console.log("🌐 History API Response:", res.data);
 
       // Handle 304 responses (cached data)
       const responseData = res.data || { success: true, history: [] };
-      console.log("🌐 Processed history response data:", responseData);
 
       return responseData; // { success, history }
     } catch (err) {
-      console.log("❌ fetchShipmentHistory error:", err);
       const message =
         err.response?.data?.message || "Failed to fetch shipment history";
-      console.log("❌ History error message:", message);
+
       toast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -192,13 +177,11 @@ export const fetchShipmentById = createAsyncThunk(
     try {
       // Check if we already have valid cached data for this specific shipment
       if (isCacheValid("shipmentById", id)) {
-        console.log(`📦 Using cached shipment data for ID: ${id}`);
         return cache.shipmentById[id].data;
       }
 
       // Check if we're already fetching this specific shipment
       if (cache.shipmentById[id] && cache.shipmentById[id].isFetching) {
-        console.log(`⏳ Shipment ${id} fetch already in progress, waiting...`);
         // Wait for the current fetch to complete
         return new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
@@ -221,7 +204,6 @@ export const fetchShipmentById = createAsyncThunk(
 
       // Mark as fetching
       cache.shipmentById[id].isFetching = true;
-      console.log(`🌐 Fetching fresh shipment data for ID: ${id}`);
 
       const res = await api.get(`/shipments/${id}`);
 
@@ -271,15 +253,11 @@ export const fetchAvailableShipments = createAsyncThunk(
     try {
       // Check if we already have valid cached data
       if (isCacheValid("availableShipments")) {
-        console.log("📦 Using cached available shipments data");
         return cache.availableShipments.data;
       }
 
       // Check if we're already fetching
       if (cache.availableShipments.isFetching) {
-        console.log(
-          "⏳ Available shipments fetch already in progress, waiting..."
-        );
         // Wait for the current fetch to complete
         return new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
@@ -297,7 +275,6 @@ export const fetchAvailableShipments = createAsyncThunk(
 
       // Mark as fetching
       cache.availableShipments.isFetching = true;
-      console.log("🌐 Fetching fresh available shipments data from API");
 
       const response = await api.get("/shipments/available-for-bidding");
 
@@ -456,15 +433,11 @@ export const fetchDeliveredShipments = createAsyncThunk(
     try {
       // Check if we already have valid cached data
       if (isCacheValid("deliveredShipments")) {
-        console.log("📦 Using cached delivered shipments data");
         return cache.deliveredShipments.data;
       }
 
       // Check if we're already fetching
       if (cache.deliveredShipments.isFetching) {
-        console.log(
-          "⏳ Delivered shipments fetch already in progress, waiting..."
-        );
         // Wait for the current fetch to complete
         return new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
@@ -482,7 +455,6 @@ export const fetchDeliveredShipments = createAsyncThunk(
 
       // Mark as fetching
       cache.deliveredShipments.isFetching = true;
-      console.log("🌐 Fetching fresh delivered shipments data from API");
 
       const res = await api.get("/shipments/delivered");
 
@@ -609,7 +581,6 @@ const shipmentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserShipments.fulfilled, (state, { payload }) => {
-        console.log("✅ fetchUserShipments.fulfilled:", payload);
         state.loading = false;
         state.shipments = payload.shipments || [];
         state.error = null;
@@ -619,7 +590,6 @@ const shipmentSlice = createSlice({
           cache.userShipments.timestamp;
       })
       .addCase(fetchUserShipments.rejected, (state, action) => {
-        console.log("❌ fetchUserShipments.rejected:", action.payload);
         state.loading = false;
         state.error = action.payload;
         // Update cache status
@@ -633,13 +603,11 @@ const shipmentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchShipmentHistory.fulfilled, (state, { payload }) => {
-        console.log("✅ fetchShipmentHistory.fulfilled:", payload);
         state.loading = false;
         state.history = payload.history || [];
         state.error = null;
       })
       .addCase(fetchShipmentHistory.rejected, (state, action) => {
-        console.log("❌ fetchShipmentHistory.rejected:", action.payload);
         state.loading = false;
         state.error = action.payload;
       })

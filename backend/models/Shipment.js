@@ -38,7 +38,10 @@ const shipmentSchema = new mongoose.Schema(
     deliveryPhoneNumber: String,
 
     // Shipment Preferences
-    modeOfTransport: { type: String, enum: ["Air", "Sea", "Road", "Rail"] },
+    modeOfTransport: {
+      type: String,
+      enum: ["Air", "Sea", "Road", "Rail", "Express"],
+    },
     insuranceRequired: { type: String, enum: ["Yes", "No"], default: "No" },
     handlingInstructions: String,
 

@@ -269,13 +269,13 @@ const PricingPage = () => {
         </div>
       </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Pricing Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-16"
         >
           {plans.map((plan, index) => {
             const IconComponent = plan.icon;
@@ -296,19 +296,19 @@ const PricingPage = () => {
                 }`}
               >
                 {isPopular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
-                      <Star className="w-4 h-4" />
+                  <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-blue-600 text-white px-4 sm:px-6 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center space-x-1 sm:space-x-2">
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>Most Popular</span>
                     </span>
                   </div>
                 )}
 
-                <div className="p-8">
+                <div className="p-6 sm:p-8">
                   {/* Plan Header */}
-                  <div className="text-center mb-8">
+                  <div className="text-center mb-6 sm:mb-8">
                     <div
-                      className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
+                      className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-2xl flex items-center justify-center ${
                         plan.color === "blue"
                           ? "bg-blue-100 dark:bg-blue-900/30"
                           : plan.color === "purple"
@@ -317,7 +317,7 @@ const PricingPage = () => {
                       }`}
                     >
                       <IconComponent
-                        className={`w-8 h-8 ${
+                        className={`w-6 h-6 sm:w-8 sm:h-8 ${
                           plan.color === "blue"
                             ? "text-blue-600 dark:text-blue-400"
                             : plan.color === "purple"
@@ -327,20 +327,20 @@ const PricingPage = () => {
                       />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
                       {plan.name}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
                       {plan.description}
                     </p>
 
                     {/* Pricing */}
-                    <div className="mb-6">
-                      <div className="flex items-baseline justify-center space-x-2">
-                        <span className="text-5xl font-bold text-gray-900 dark:text-white">
+                    <div className="mb-4 sm:mb-6">
+                      <div className="flex items-baseline justify-center space-x-1 sm:space-x-2">
+                        <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
                           {formatCurrency(currentPricing.price, "NGN", "NGN")}
                         </span>
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                           /{periodText}
                         </span>
                       </div>
@@ -369,22 +369,28 @@ const PricingPage = () => {
                   </div>
 
                   {/* Features */}
-                  <div className="space-y-4 mb-8">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
+                  <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 text-sm sm:text-base">
                       What's included:
                     </h4>
                     {plan.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300 text-sm">
+                      <div
+                        key={idx}
+                        className="flex items-start space-x-2 sm:space-x-3"
+                      >
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm">
                           {feature}
                         </span>
                       </div>
                     ))}
                     {plan.limitations.map((limitation, idx) => (
-                      <div key={idx} className="flex items-start space-x-3">
-                        <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">
+                      <div
+                        key={idx}
+                        className="flex items-start space-x-2 sm:space-x-3"
+                      >
+                        <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                           {limitation}
                         </span>
                       </div>
@@ -396,7 +402,7 @@ const PricingPage = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handlePlanSelect(plan)}
-                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
+                    className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
                       isPopular
                         ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
                         : plan.color === "blue"
@@ -405,7 +411,7 @@ const PricingPage = () => {
                     }`}
                   >
                     <span>Choose {plan.name}</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </motion.button>
                 </div>
               </motion.div>

@@ -607,7 +607,13 @@ const ShipmentDetail = () => {
             </div>
 
             {/* Photos Section */}
-            {console.log("🔍 Photos data:", currentShipment.photos)}
+            {console.log("🔍 Shipment photos data:", {
+              photos: currentShipment.photos,
+              photosLength: currentShipment.photos?.length,
+              firstPhoto: currentShipment.photos?.[0],
+              photosType: typeof currentShipment.photos,
+              photosArray: Array.isArray(currentShipment.photos),
+            })}
             {currentShipment.photos && currentShipment.photos.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="bg-blue-500 p-6">
@@ -626,11 +632,15 @@ const ShipmentDetail = () => {
                             src={getStaticAssetUrl(photo)}
                             alt={`Shipment photo ${index + 1}`}
                             onError={(e) => {
-                              console.error(
-                                "❌ Image failed to load:",
-                                getStaticAssetUrl(photo)
-                              );
-                              console.error("❌ Original photo path:", photo);
+                              console.error("❌ Image failed to load:", {
+                                photoUrl: getStaticAssetUrl(photo),
+                                originalPath: photo,
+                                error: e,
+                              });
+                              // Show a placeholder or fallback
+                              e.target.style.display = "none";
+                              e.target.nextSibling.classList.remove("hidden");
+                              e.target.nextSibling.classList.add("flex");
                             }}
                             onLoad={() => {
                               console.log(
@@ -645,6 +655,13 @@ const ShipmentDetail = () => {
                               handlePhotoClick(photo, index);
                             }}
                           />
+                          {/* Fallback for failed images */}
+                          <div className="w-full h-full bg-gray-200 items-center justify-center text-gray-500 hidden">
+                            <div className="text-center">
+                              <Image size={32} className="mx-auto mb-2" />
+                              <p className="text-sm">Image not available</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}

@@ -51,7 +51,9 @@ const api = axios.create({
   withCredentials: true, // only if cookies are used
   timeout: isMobile ? 45000 : 30000, // Longer timeout for mobile networks
   headers: {
-    "Content-Type": "application/json",
+    // Don't set Content-Type here - it will be set per request
+    // For FormData, browser will set multipart/form-data with boundary
+    // For JSON, we'll set application/json in the request
   },
 });
 

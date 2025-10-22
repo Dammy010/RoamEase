@@ -30,7 +30,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="group">
+          <Link to="/" className="group flex-shrink-0">
             <Logo
               size="md"
               animated={true}
@@ -39,7 +39,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
             <NavLink to="/" className={linkClass}>
               Home
             </NavLink>
@@ -58,7 +58,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Right-aligned Auth Links */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden lg:flex items-center space-x-3">
             {/* Theme Toggle */}
             <ThemeToggle />
 
@@ -75,6 +75,43 @@ const Navbar = () => {
             >
               <UserPlus className="w-4 h-4" />
               <span>Sign Up</span>
+            </NavLink>
+          </div>
+
+          {/* Tablet Navigation Links - Show on md screens, hide on lg+ */}
+          <div className="hidden md:flex lg:hidden items-center space-x-1">
+            <NavLink to="/" className={linkClass}>
+              Home
+            </NavLink>
+            <NavLink to="/services" className={linkClass}>
+              Services
+            </NavLink>
+            <NavLink to="/about" className={linkClass}>
+              About
+            </NavLink>
+            <NavLink to="/contact" className={linkClass}>
+              Contact
+            </NavLink>
+          </div>
+
+          {/* Tablet Right-aligned Auth Links - Show on md screens, hide on lg+ */}
+          <div className="hidden md:flex lg:hidden items-center space-x-2">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            <NavLink
+              to="/login"
+              className="flex items-center space-x-1 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 text-sm"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">Login</span>
+            </NavLink>
+            <NavLink
+              to="/signup"
+              className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg text-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Sign Up</span>
             </NavLink>
           </div>
 

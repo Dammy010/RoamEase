@@ -764,6 +764,23 @@ const ActiveShipments = () => {
                                 <img
                                   src={getStaticAssetUrl(photo)}
                                   alt={`Shipment photo ${index + 1}`}
+                                  onError={(e) => {
+                                    console.error("❌ Image failed to load:", {
+                                      photoUrl: getStaticAssetUrl(photo),
+                                      originalPath: photo,
+                                    });
+                                    e.target.style.display = "none";
+                                    e.target.nextSibling.classList.remove(
+                                      "hidden"
+                                    );
+                                    e.target.nextSibling.classList.add("flex");
+                                  }}
+                                  onLoad={() => {
+                                    console.log(
+                                      "✅ Image loaded successfully:",
+                                      getStaticAssetUrl(photo)
+                                    );
+                                  }}
                                   className="w-full h-24 object-cover rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group-hover:scale-105"
                                   onClick={() =>
                                     window.open(
@@ -772,6 +789,15 @@ const ActiveShipments = () => {
                                     )
                                   }
                                 />
+                                {/* Fallback for failed images */}
+                                <div className="w-full h-24 bg-gray-200 items-center justify-center text-gray-500 hidden rounded-xl">
+                                  <div className="text-center">
+                                    <Image size={20} className="mx-auto mb-1" />
+                                    <p className="text-xs">
+                                      Image not available
+                                    </p>
+                                  </div>
+                                </div>
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-xl flex items-center justify-center">
                                   <Eye
                                     className="text-white opacity-0 group-hover:opacity-100"

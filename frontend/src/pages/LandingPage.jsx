@@ -352,44 +352,44 @@ const LandingPage = () => {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12">
             {/* Basic Plan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               viewport={{ once: true }}
-              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
+              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
             >
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FaShieldAlt className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <FaShieldAlt className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Basic
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
                   Perfect for small businesses
                 </p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                <div className="mb-4 sm:mb-6">
+                  <span className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
                     ₦45,600
                   </span>
-                  <span className="text-gray-600 dark:text-gray-400">
+                  <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                     /month
                   </span>
                 </div>
-                <ul className="text-left space-y-3 mb-8">
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaBox className="w-4 h-4 text-green-500 mr-3" />
+                <ul className="text-left space-y-2 sm:space-y-3 mb-6 sm:mb-8">
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaBox className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Up to 50 shipments/month
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaComments className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaComments className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Email support
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaMapMarkerAlt className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaMapMarkerAlt className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Basic tracking
                   </li>
                 </ul>
@@ -402,46 +402,46 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
-              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border-2 border-blue-500/50 dark:border-blue-400/50 relative scale-105 hover:shadow-3xl transition-all duration-300"
+              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 border-2 border-blue-500/50 dark:border-blue-400/50 relative scale-105 hover:shadow-3xl transition-all duration-300"
             >
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+              <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold">
                   Most Popular
                 </span>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FaHandshake className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <FaHandshake className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Premium
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
                   Ideal for growing businesses
                 </p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                <div className="mb-4 sm:mb-6">
+                  <span className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
                     ₦65,600
                   </span>
-                  <span className="text-gray-600 dark:text-gray-400">
+                  <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                     /month
                   </span>
                 </div>
-                <ul className="text-left space-y-3 mb-8">
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaBox className="w-4 h-4 text-green-500 mr-3" />
+                <ul className="text-left space-y-2 sm:space-y-3 mb-6 sm:mb-8">
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaBox className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Unlimited shipments
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaComments className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaComments className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Priority support
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaMapMarkerAlt className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaMapMarkerAlt className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Advanced tracking
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaCreditCard className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaCreditCard className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Custom integrations
                   </li>
                 </ul>
@@ -454,41 +454,41 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               viewport={{ once: true }}
-              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
+              className="bg-white dark:bg-gray-900 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-300"
             >
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FaTruck className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <FaTruck className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Enterprise
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
                   For large-scale operations
                 </p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                <div className="mb-4 sm:mb-6">
+                  <span className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
                     ₦150,600
                   </span>
-                  <span className="text-gray-600 dark:text-gray-400">
+                  <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                     /month
                   </span>
                 </div>
-                <ul className="text-left space-y-3 mb-8">
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaBox className="w-4 h-4 text-green-500 mr-3" />
+                <ul className="text-left space-y-2 sm:space-y-3 mb-6 sm:mb-8">
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaBox className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Everything unlimited
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaComments className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaComments className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     24/7 dedicated support
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaMapMarkerAlt className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaMapMarkerAlt className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     White-label solutions
                   </li>
-                  <li className="flex items-center text-gray-600 dark:text-gray-400">
-                    <FaUserPlus className="w-4 h-4 text-green-500 mr-3" />
+                  <li className="flex items-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                    <FaUserPlus className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 sm:mr-3 flex-shrink-0" />
                     Dedicated manager
                   </li>
                 </ul>
@@ -508,7 +508,7 @@ const LandingPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/pricing")}
-              className="bg-blue-600 text-white font-semibold py-4 px-8 rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
+              className="bg-blue-600 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl text-base sm:text-lg"
             >
               View Full Pricing Details
             </motion.button>

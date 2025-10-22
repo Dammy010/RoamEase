@@ -725,44 +725,45 @@ const UserDashboardHome = () => {
 
                   {/* Shipment History */}
                   {history.length > 0 && (
-                    <div className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+                    <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
                       {/* Header */}
-                      <div className="bg-blue-600 p-8">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                              <Package className="text-white" size={24} />
+                      <div className="bg-blue-600 p-4 sm:p-6 md:p-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                              <Package className="text-white" size={20} />
                             </div>
                             <div>
-                              <h3 className="text-2xl font-bold text-white">
+                              <h3 className="text-xl sm:text-2xl font-bold text-white">
                                 Shipment History
                               </h3>
-                              <p className="text-indigo-100 text-lg">
+                              <p className="text-indigo-100 text-sm sm:text-lg">
                                 Your completed deliveries and shipments
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                              <span className="text-white font-semibold text-lg">
+                          <div className="flex items-center justify-between sm:justify-end gap-3">
+                            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 sm:py-2">
+                              <span className="text-white font-semibold text-sm sm:text-lg">
                                 {history.length} shipments
                               </span>
                             </div>
                             <button
                               onClick={() => navigate("/user/shipment-history")}
-                              className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 font-semibold"
+                              className="px-4 py-2 sm:px-6 sm:py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 flex items-center gap-2 border border-white/20 font-semibold text-sm sm:text-base"
                             >
-                              <Eye size={16} />
-                              View All
-                              <ArrowRight size={16} />
+                              <Eye size={14} />
+                              <span className="hidden sm:inline">View All</span>
+                              <span className="sm:hidden">All</span>
+                              <ArrowRight size={14} />
                             </button>
                           </div>
                         </div>
                       </div>
 
                       {/* Content */}
-                      <div className="p-8">
-                        <div className="space-y-6">
+                      <div className="p-4 sm:p-6 md:p-8">
+                        <div className="space-y-4 sm:space-y-6">
                           {history.slice(0, 3).map((shipment, index) => {
                             const getStatusIcon = (status) => {
                               switch (status) {
@@ -804,98 +805,122 @@ const UserDashboardHome = () => {
                             return (
                               <div
                                 key={shipment._id}
-                                className="group relative bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-indigo-300 transition-all duration-300 transform hover:-translate-y-1"
+                                className="group relative bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-xl hover:border-indigo-300 transition-all duration-300 transform hover:-translate-y-1"
                               >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-6">
-                                    <div className="relative">
-                                      <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                {/* Mobile-first responsive layout */}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                  {/* Icon and main content */}
+                                  <div className="flex items-start gap-3 sm:gap-6">
+                                    <div className="relative flex-shrink-0">
+                                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
                                         📦
                                       </div>
-                                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 text-white text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
+                                      <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-full flex items-center justify-center shadow-lg">
                                         {index + 1}
                                       </div>
                                     </div>
-                                    <div className="flex-1">
-                                      <h4 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300">
+
+                                    {/* Content area - responsive */}
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-300 truncate">
                                         {shipment.shipmentTitle}
                                       </h4>
-                                      <div className="flex items-center gap-2 mb-3">
-                                        <MapPin
-                                          className="text-gray-400"
-                                          size={16}
-                                        />
-                                        <span className="text-gray-600 font-medium">
-                                          {shipment.pickupCity},{" "}
-                                          {shipment.pickupCountry}
-                                        </span>
-                                        <ArrowRight
-                                          className="text-gray-400"
-                                          size={16}
-                                        />
-                                        <span className="text-gray-600 font-medium">
-                                          {shipment.deliveryCity},{" "}
-                                          {shipment.deliveryCountry}
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center gap-6 text-sm text-gray-500">
-                                        <span className="flex items-center gap-2">
-                                          <Calendar
-                                            className="text-indigo-500"
+
+                                      {/* Location - responsive layout */}
+                                      <div className="mb-3">
+                                        <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base mb-1">
+                                          <MapPin
+                                            className="text-gray-400 flex-shrink-0"
                                             size={14}
+                                          />
+                                          <span className="text-gray-600 font-medium truncate">
+                                            {shipment.pickupCity},{" "}
+                                            {shipment.pickupCountry}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                                          <ArrowRight
+                                            className="text-gray-400 flex-shrink-0"
+                                            size={14}
+                                          />
+                                          <span className="text-gray-600 font-medium truncate">
+                                            {shipment.deliveryCity},{" "}
+                                            {shipment.deliveryCountry}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* Dates - responsive layout */}
+                                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                                        <span className="flex items-center gap-1 sm:gap-2">
+                                          <Calendar
+                                            className="text-indigo-500 flex-shrink-0"
+                                            size={12}
                                           />
                                           <span className="font-medium">
                                             Pickup:
                                           </span>
-                                          {new Date(
-                                            shipment.preferredPickupDate
-                                          ).toLocaleDateString()}
+                                          <span className="truncate">
+                                            {new Date(
+                                              shipment.preferredPickupDate
+                                            ).toLocaleDateString()}
+                                          </span>
                                         </span>
-                                        <span className="flex items-center gap-2">
+                                        <span className="flex items-center gap-1 sm:gap-2">
                                           <Calendar
-                                            className="text-green-500"
-                                            size={14}
+                                            className="text-green-500 flex-shrink-0"
+                                            size={12}
                                           />
                                           <span className="font-medium">
                                             Delivery:
                                           </span>
-                                          {new Date(
-                                            shipment.preferredDeliveryDate
-                                          ).toLocaleDateString()}
+                                          <span className="truncate">
+                                            {new Date(
+                                              shipment.preferredDeliveryDate
+                                            ).toLocaleDateString()}
+                                          </span>
                                         </span>
-                                        <span className="flex items-center gap-2">
+                                        <span className="flex items-center gap-1 sm:gap-2">
                                           <Clock
-                                            className="text-gray-400"
-                                            size={14}
+                                            className="text-gray-400 flex-shrink-0"
+                                            size={12}
                                           />
                                           <span className="font-medium">
                                             Updated:
                                           </span>
-                                          {new Date(
-                                            shipment.updatedAt
-                                          ).toLocaleDateString()}
+                                          <span className="truncate">
+                                            {new Date(
+                                              shipment.updatedAt
+                                            ).toLocaleDateString()}
+                                          </span>
                                         </span>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-4">
+
+                                  {/* Status and action buttons - responsive */}
+                                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:flex-col sm:items-end">
                                     <div
-                                      className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border flex items-center gap-2 ${getStatusColor(
+                                      className={`px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm border flex items-center gap-1 sm:gap-2 ${getStatusColor(
                                         shipment.status
                                       )}`}
                                     >
                                       {getStatusIcon(shipment.status)}
-                                      {shipment.status.charAt(0).toUpperCase() +
-                                        shipment.status.slice(1)}
+                                      <span className="capitalize">
+                                        {shipment.status}
+                                      </span>
                                     </div>
                                     <button
                                       onClick={() =>
                                         navigateToShipmentDetail(shipment._id)
                                       }
-                                      className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                      className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
                                     >
-                                      <Eye size={16} />
-                                      View Details
+                                      <Eye size={14} />
+                                      <span className="hidden sm:inline">
+                                        View Details
+                                      </span>
+                                      <span className="sm:hidden">View</span>
                                     </button>
                                   </div>
                                 </div>
@@ -905,14 +930,19 @@ const UserDashboardHome = () => {
                         </div>
 
                         {history.length > 3 && (
-                          <div className="text-center pt-6">
+                          <div className="text-center pt-4 sm:pt-6">
                             <button
                               onClick={() => navigate("/user/shipment-history")}
-                              className="px-8 py-4 bg-blue-100 text-gray-700 rounded-xl hover:bg-blue-200 transition-all duration-300 font-semibold shadow-lg flex items-center gap-2 mx-auto"
+                              className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-100 text-gray-700 rounded-xl hover:bg-blue-200 transition-all duration-300 font-semibold shadow-lg flex items-center gap-2 mx-auto text-sm sm:text-base"
                             >
-                              <Package size={20} />
-                              View All {history.length} Shipments
-                              <ArrowRight size={20} />
+                              <Package size={16} />
+                              <span className="hidden sm:inline">
+                                View All {history.length} Shipments
+                              </span>
+                              <span className="sm:hidden">
+                                View All {history.length}
+                              </span>
+                              <ArrowRight size={16} />
                             </button>
                           </div>
                         )}

@@ -1131,6 +1131,28 @@ const AvailableShipments = () => {
                                   <img
                                     src={getStaticAssetUrl(photo)}
                                     alt={`Shipment photo ${index + 1}`}
+                                    onError={(e) => {
+                                      console.error(
+                                        "❌ Image failed to load:",
+                                        {
+                                          photoUrl: getStaticAssetUrl(photo),
+                                          originalPath: photo,
+                                        }
+                                      );
+                                      e.target.style.display = "none";
+                                      e.target.nextSibling.classList.remove(
+                                        "hidden"
+                                      );
+                                      e.target.nextSibling.classList.add(
+                                        "flex"
+                                      );
+                                    }}
+                                    onLoad={() => {
+                                      console.log(
+                                        "✅ Image loaded successfully:",
+                                        getStaticAssetUrl(photo)
+                                      );
+                                    }}
                                     className="w-full h-24 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -1142,6 +1164,18 @@ const AvailableShipments = () => {
                                       );
                                     }}
                                   />
+                                  {/* Fallback for failed images */}
+                                  <div className="w-full h-24 bg-gray-200 items-center justify-center text-gray-500 hidden rounded-lg">
+                                    <div className="text-center">
+                                      <Image
+                                        size={20}
+                                        className="mx-auto mb-1"
+                                      />
+                                      <p className="text-xs">
+                                        Image not available
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               ))}
                             </div>

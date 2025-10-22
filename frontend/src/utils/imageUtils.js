@@ -165,11 +165,16 @@ export const getProfilePictureUrl = (profilePicture) => {
  * @returns {string|null} - The full URL or null if no path
  */
 export const getStaticAssetUrl = (assetPath) => {
-  if (!assetPath) return null;
+  console.log("🔍 getStaticAssetUrl called with:", assetPath);
+
+  if (!assetPath) {
+    console.log("❌ getStaticAssetUrl: No asset path provided");
+    return null;
+  }
 
   // If it's already a full URL (Cloudinary or other), return as is
   if (assetPath.startsWith("http")) {
-    console.log("🔍 getStaticAssetUrl - Already full URL:", assetPath);
+    console.log("✅ getStaticAssetUrl - Already full URL:", assetPath);
     return assetPath;
   }
 

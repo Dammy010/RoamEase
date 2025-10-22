@@ -811,15 +811,6 @@ const ShipmentForm = () => {
         contentType = "application/json";
       }
 
-      console.log("🔍 Form submission:", { hasFiles, contentType, data });
-      console.log("🔍 Form data details:", {
-        shipmentTitle: formData.shipmentTitle,
-        descriptionOfGoods: formData.descriptionOfGoods,
-        typeOfGoods: formData.typeOfGoods,
-        pickupAddress: formData.pickupAddress,
-        deliveryAddress: formData.deliveryAddress,
-      });
-
       setLoading(true);
       dispatch(postShipment({ data, contentType })).finally(() =>
         setLoading(false)
