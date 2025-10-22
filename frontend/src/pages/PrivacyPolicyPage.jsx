@@ -10,7 +10,7 @@ import {
 
 const PrivacyPolicyPage = () => {
   const [expandedSections, setExpandedSections] = useState({});
-  const [lastUpdated, setLastUpdated] = useState('January 15, 2025');
+  const [lastUpdated, setLastUpdated] = useState('October 22, 2025');
 
   const toggleSection = (sectionId) => {
     setExpandedSections(prev => ({

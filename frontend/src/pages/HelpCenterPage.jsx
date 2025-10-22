@@ -1,143 +1,348 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  HelpCircle, Search, BookOpen, MessageSquare, 
-  Phone, Mail, Clock, CheckCircle, ArrowRight,
-  Users, Settings, Shield, Globe, FileText, ChevronDown,
-  ChevronUp, ExternalLink, Star, Zap, Truck, Package,
-  CreditCard, User, Lock, Bell, Smartphone, Monitor
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  HelpCircle,
+  Search,
+  BookOpen,
+  MessageSquare,
+  Phone,
+  Mail,
+  Clock,
+  CheckCircle,
+  ArrowRight,
+  Users,
+  Settings,
+  Shield,
+  Globe,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  Star,
+  Zap,
+  Truck,
+  Package,
+  CreditCard,
+  User,
+  Lock,
+  Bell,
+  Smartphone,
+  Monitor,
+  X,
+  History,
+  TrendingUp,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HelpCenterPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [expandedFAQ, setExpandedFAQ] = useState(null);
   const [filteredFAQs, setFilteredFAQs] = useState([]);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const categories = [
-    { id: 'all', name: 'All Topics', icon: HelpCircle, color: 'bg-blue-500' },
-    { id: 'getting-started', name: 'Getting Started', icon: BookOpen, color: 'bg-green-500' },
-    { id: 'shipments', name: 'Shipments', icon: Truck, color: 'bg-purple-500' },
-    { id: 'account', name: 'Account & Billing', icon: User, color: 'bg-orange-500' },
-    { id: 'technical', name: 'Technical Support', icon: Settings, color: 'bg-red-500' },
-    { id: 'safety', name: 'Safety & Security', icon: Shield, color: 'bg-indigo-500' }
+    { id: "all", name: "All Topics", icon: HelpCircle, color: "bg-blue-500" },
+    {
+      id: "getting-started",
+      name: "Getting Started",
+      icon: BookOpen,
+      color: "bg-green-500",
+    },
+    { id: "shipments", name: "Shipments", icon: Truck, color: "bg-purple-500" },
+    {
+      id: "account",
+      name: "Account & Billing",
+      icon: User,
+      color: "bg-orange-500",
+    },
+    {
+      id: "technical",
+      name: "Technical Support",
+      icon: Settings,
+      color: "bg-red-500",
+    },
+    {
+      id: "safety",
+      name: "Safety & Security",
+      icon: Shield,
+      color: "bg-indigo-500",
+    },
   ];
 
   const faqs = [
     {
       id: 1,
-      category: 'getting-started',
-      question: 'How do I create an account on RoamEase?',
-      answer: 'Creating an account is simple! Click the "Sign Up" button on our homepage, fill in your details, verify your email address, and you\'re ready to start shipping. You can choose between a Shipper account (to post shipments) or a Logistics Provider account (to bid on shipments).',
-      popular: true
+      category: "getting-started",
+      question: "How do I create an account on RoamEase?",
+      answer:
+        'Creating an account is simple! Click the "Sign Up" button on our homepage, fill in your details, verify your email address, and you\'re ready to start shipping. You can choose between a Shipper account (to post shipments) or a Logistics Provider account (to bid on shipments).',
+      popular: true,
     },
     {
       id: 2,
-      category: 'getting-started',
-      question: 'What\'s the difference between a Shipper and Logistics Provider account?',
-      answer: 'Shippers post their cargo shipments and receive bids from logistics companies. Logistics Providers browse available shipments and place competitive bids to win shipping contracts. You can switch between roles or maintain both types of accounts.',
-      popular: true
+      category: "getting-started",
+      question:
+        "What's the difference between a Shipper and Logistics Provider account?",
+      answer:
+        "Shippers post their cargo shipments and receive bids from logistics companies. Logistics Providers browse available shipments and place competitive bids to win shipping contracts. You can switch between roles or maintain both types of accounts.",
+      popular: true,
     },
     {
       id: 3,
-      category: 'shipments',
-      question: 'How do I post a shipment?',
-      answer: 'After logging in, go to your dashboard and click "Post New Shipment". Fill in the shipment details including pickup/delivery locations, cargo description, weight, dimensions, and preferred delivery date. Set your budget and publish the shipment to receive bids.',
-      popular: true
+      category: "shipments",
+      question: "How do I post a shipment?",
+      answer:
+        'After logging in, go to your dashboard and click "Post New Shipment". Fill in the shipment details including pickup/delivery locations, cargo description, weight, dimensions, and preferred delivery date. Set your budget and publish the shipment to receive bids.',
+      popular: true,
     },
     {
       id: 4,
-      category: 'shipments',
-      question: 'How does the bidding process work?',
-      answer: 'Logistics providers can view your shipment details and submit competitive bids. You\'ll receive notifications for new bids and can compare prices, delivery times, and provider ratings. Accept the best bid to start your shipment journey.',
-      popular: false
+      category: "shipments",
+      question: "How does the bidding process work?",
+      answer:
+        "Logistics providers can view your shipment details and submit competitive bids. You'll receive notifications for new bids and can compare prices, delivery times, and provider ratings. Accept the best bid to start your shipment journey.",
+      popular: false,
     },
     {
       id: 5,
-      category: 'shipments',
-      question: 'Can I track my shipment in real-time?',
-      answer: 'Yes! Once your shipment is accepted, you\'ll receive real-time updates on its location and status. Our tracking system provides GPS coordinates, estimated delivery times, and photo confirmations at key milestones.',
-      popular: true
+      category: "shipments",
+      question: "Can I track my shipment in real-time?",
+      answer:
+        "Yes! Once your shipment is accepted, you'll receive real-time updates on its location and status. Our tracking system provides GPS coordinates, estimated delivery times, and photo confirmations at key milestones.",
+      popular: true,
     },
     {
       id: 6,
-      category: 'account',
-      question: 'How do I update my profile information?',
-      answer: 'Go to your dashboard, click on "Profile" or "Settings", and update your personal information, contact details, or business information. Changes are saved automatically and take effect immediately.',
-      popular: false
+      category: "account",
+      question: "How do I update my profile information?",
+      answer:
+        'Go to your dashboard, click on "Profile" or "Settings", and update your personal information, contact details, or business information. Changes are saved automatically and take effect immediately.',
+      popular: false,
     },
     {
       id: 7,
-      category: 'account',
-      question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards (Visa, MasterCard, American Express), bank transfers, and digital wallets. All payments are processed securely through our encrypted payment system with fraud protection.',
-      popular: true
+      category: "account",
+      question: "What payment methods do you accept?",
+      answer:
+        "We accept all major credit cards (Visa, MasterCard, American Express), bank transfers, and digital wallets. All payments are processed securely through our encrypted payment system with fraud protection.",
+      popular: true,
     },
     {
       id: 8,
-      category: 'account',
-      question: 'How do subscription plans work?',
-      answer: 'We offer flexible subscription plans for frequent users. Basic plans provide essential features at an affordable rate, while Premium plans offer unlimited shipments, priority support, and advanced analytics. You can upgrade or downgrade anytime.',
-      popular: false
+      category: "account",
+      question: "How do subscription plans work?",
+      answer:
+        "We offer flexible subscription plans for frequent users. Basic plans provide essential features at an affordable rate, while Premium plans offer unlimited shipments, priority support, and advanced analytics. You can upgrade or downgrade anytime.",
+      popular: false,
     },
     {
       id: 9,
-      category: 'technical',
-      question: 'The app is running slowly. What should I do?',
-      answer: 'Try refreshing your browser or clearing your cache. If the issue persists, check your internet connection or try using a different browser. For mobile apps, ensure you have the latest version installed.',
-      popular: false
+      category: "technical",
+      question: "The app is running slowly. What should I do?",
+      answer:
+        "Try refreshing your browser or clearing your cache. If the issue persists, check your internet connection or try using a different browser. For mobile apps, ensure you have the latest version installed.",
+      popular: false,
     },
     {
       id: 10,
-      category: 'technical',
-      question: 'I\'m having trouble uploading documents. What can I do?',
-      answer: 'Ensure your files are in supported formats (PDF, JPG, PNG) and under 10MB. Check your internet connection and try again. If problems persist, contact our technical support team for assistance.',
-      popular: false
+      category: "technical",
+      question: "I'm having trouble uploading documents. What can I do?",
+      answer:
+        "Ensure your files are in supported formats (PDF, JPG, PNG) and under 10MB. Check your internet connection and try again. If problems persist, contact our technical support team for assistance.",
+      popular: false,
     },
     {
       id: 11,
-      category: 'safety',
-      question: 'How do you verify logistics providers?',
-      answer: 'All logistics providers undergo a thorough verification process including business license verification, insurance validation, background checks, and customer review analysis. Only verified providers can bid on shipments.',
-      popular: true
+      category: "safety",
+      question: "How do you verify logistics providers?",
+      answer:
+        "All logistics providers undergo a thorough verification process including business license verification, insurance validation, background checks, and customer review analysis. Only verified providers can bid on shipments.",
+      popular: true,
     },
     {
       id: 12,
-      category: 'safety',
-      question: 'What happens if my cargo is damaged during transit?',
-      answer: 'We have comprehensive insurance coverage for all shipments. In case of damage, report it immediately through our platform. We\'ll investigate the claim and ensure you receive appropriate compensation according to our terms.',
-      popular: true
-    }
+      category: "safety",
+      question: "What happens if my cargo is damaged during transit?",
+      answer:
+        "We have comprehensive insurance coverage for all shipments. In case of damage, report it immediately through our platform. We'll investigate the claim and ensure you receive appropriate compensation according to our terms.",
+      popular: true,
+    },
   ];
 
-  const popularFAQs = faqs.filter(faq => faq.popular);
+  const popularFAQs = faqs.filter((faq) => faq.popular);
 
+  // Debounce search query
   useEffect(() => {
-    let filtered = faqs;
-    
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(faq => faq.category === selectedCategory);
-    }
-    
-    if (searchQuery) {
-      filtered = filtered.filter(faq => 
-        faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Enhanced search function with fuzzy matching
+  const searchFAQs = useCallback((query, faqList) => {
+    if (!query.trim()) return faqList;
+
+    const searchTerms = query
+      .toLowerCase()
+      .split(" ")
+      .filter((term) => term.length > 0);
+
+    return faqList.filter((faq) => {
+      const question = faq.question.toLowerCase();
+      const answer = faq.answer.toLowerCase();
+      const category = faq.category.toLowerCase();
+
+      // Check for exact matches first
+      const exactMatch =
+        question.includes(query.toLowerCase()) ||
+        answer.includes(query.toLowerCase());
+
+      if (exactMatch) return true;
+
+      // Check for partial word matches
+      const partialMatch = searchTerms.some(
+        (term) =>
+          question.includes(term) ||
+          answer.includes(term) ||
+          category.includes(term)
       );
+
+      return partialMatch;
+    });
+  }, []);
+
+  // Generate search suggestions
+  const searchSuggestions = useMemo(() => {
+    if (!debouncedSearchQuery.trim() || debouncedSearchQuery.length < 2)
+      return [];
+
+    const suggestions = new Set();
+    const query = debouncedSearchQuery.toLowerCase();
+
+    faqs.forEach((faq) => {
+      const question = faq.question.toLowerCase();
+      const answer = faq.answer.toLowerCase();
+
+      // Extract relevant phrases from questions
+      const questionWords = question.split(" ");
+      questionWords.forEach((word, index) => {
+        if (word.includes(query) && word.length > 3) {
+          const phrase = questionWords
+            .slice(Math.max(0, index - 1), index + 2)
+            .join(" ");
+          suggestions.add(phrase);
+        }
+      });
+
+      // Extract relevant phrases from answers
+      const answerWords = answer.split(" ");
+      answerWords.forEach((word, index) => {
+        if (word.includes(query) && word.length > 3) {
+          const phrase = answerWords
+            .slice(Math.max(0, index - 1), index + 2)
+            .join(" ");
+          suggestions.add(phrase);
+        }
+      });
+    });
+
+    return Array.from(suggestions).slice(0, 5);
+  }, [debouncedSearchQuery]);
+
+  // Main search effect
+  useEffect(() => {
+    setIsSearching(true);
+
+    let filtered = faqs;
+
+    // Apply category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((faq) => faq.category === selectedCategory);
     }
-    
+
+    // Apply search filter
+    if (debouncedSearchQuery.trim()) {
+      filtered = searchFAQs(debouncedSearchQuery, filtered);
+
+      // Add to search history
+      if (
+        debouncedSearchQuery.trim() &&
+        !searchHistory.includes(debouncedSearchQuery.trim())
+      ) {
+        setSearchHistory((prev) => [
+          debouncedSearchQuery.trim(),
+          ...prev.slice(0, 4),
+        ]);
+      }
+    }
+
     setFilteredFAQs(filtered);
-  }, [searchQuery, selectedCategory]);
+    setIsSearching(false);
+  }, [debouncedSearchQuery, selectedCategory, searchFAQs, searchHistory]);
 
   const toggleFAQ = (id) => {
     setExpandedFAQ(expandedFAQ === id ? null : id);
   };
 
+  // Handle search input changes
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setShowSearchSuggestions(value.length > 0);
+  };
+
+  // Handle search suggestion click
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion);
+    setShowSearchSuggestions(false);
+  };
+
+  // Handle search history click
+  const handleHistoryClick = (historyItem) => {
+    setSearchQuery(historyItem);
+    setShowSearchSuggestions(false);
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchQuery("");
+    setShowSearchSuggestions(false);
+  };
+
+  // Highlight search terms in text
+  const highlightText = (text, query) => {
+    if (!query.trim()) return text;
+
+    const regex = new RegExp(
+      `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi"
+    );
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <mark
+          key={index}
+          className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded"
+        >
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
   return (
     <div className="min-h-screen bg-blue-50 dark:from-gray-900 dark:to-gray-800">
       {/* Hero Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -152,8 +357,8 @@ const HelpCenterPage = () => {
           >
             <HelpCircle className="w-10 h-10 text-white" />
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -161,8 +366,8 @@ const HelpCenterPage = () => {
           >
             Help Center
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
@@ -171,7 +376,7 @@ const HelpCenterPage = () => {
             Find answers to your questions and get the most out of RoamEase
           </motion.p>
 
-          {/* Search Bar */}
+          {/* Enhanced Search Bar */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -184,10 +389,89 @@ const HelpCenterPage = () => {
                 type="text"
                 placeholder="Search for help..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-2xl border-0 text-gray-900 placeholder-gray-500 focus:ring-4 focus:ring-white/30 focus:outline-none shadow-lg"
+                onChange={handleSearchChange}
+                onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
+                onBlur={() =>
+                  setTimeout(() => setShowSearchSuggestions(false), 200)
+                }
+                className="w-full pl-12 pr-12 py-4 rounded-2xl border-0 text-gray-900 placeholder-gray-500 focus:ring-4 focus:ring-white/30 focus:outline-none shadow-lg"
               />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600"></div>
+                </div>
+              )}
             </div>
+
+            {/* Search Suggestions Dropdown */}
+            <AnimatePresence>
+              {showSearchSuggestions && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-80 overflow-y-auto"
+                >
+                  {/* Search History */}
+                  {searchHistory.length > 0 && (
+                    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        <History className="w-4 h-4" />
+                        <span>Recent searches</span>
+                      </div>
+                      {searchHistory.map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleHistoryClick(item)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Search Suggestions */}
+                  {searchSuggestions.length > 0 && (
+                    <div className="p-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        <TrendingUp className="w-4 h-4" />
+                        <span>Suggestions</span>
+                      </div>
+                      {searchSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                          {highlightText(suggestion, debouncedSearchQuery)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* No suggestions */}
+                  {searchSuggestions.length === 0 &&
+                    searchHistory.length === 0 && (
+                      <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">
+                          Start typing to see suggestions
+                        </p>
+                      </div>
+                    )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </motion.div>
@@ -200,7 +484,9 @@ const HelpCenterPage = () => {
           transition={{ delay: 0.6, duration: 0.6 }}
           className="mb-12"
         >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Browse by Category</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            Browse by Category
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((category) => {
               const Icon = category.icon;
@@ -212,14 +498,18 @@ const HelpCenterPage = () => {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`p-4 rounded-2xl text-center transition-all duration-300 ${
                     selectedCategory === category.id
-                      ? 'bg-white shadow-lg border-2 border-blue-500'
-                      : 'bg-white/80 hover:bg-white hover:shadow-md border border-gray-200'
+                      ? "bg-white shadow-lg border-2 border-blue-500"
+                      : "bg-white/80 hover:bg-white hover:shadow-md border border-gray-200"
                   }`}
                 >
-                  <div className={`w-12 h-12 ${category.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                  <div
+                    className={`w-12 h-12 ${category.color} rounded-xl flex items-center justify-center mx-auto mb-3`}
+                  >
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{category.name}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {category.name}
+                  </p>
                 </motion.button>
               );
             })}
@@ -227,7 +517,7 @@ const HelpCenterPage = () => {
         </motion.div>
 
         {/* Popular FAQs */}
-        {selectedCategory === 'all' && (
+        {selectedCategory === "all" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -236,7 +526,9 @@ const HelpCenterPage = () => {
           >
             <div className="flex items-center gap-3 mb-6">
               <Star className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Popular Questions</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Popular Questions
+              </h2>
             </div>
             <div className="grid gap-4">
               {popularFAQs.map((faq) => (
@@ -251,7 +543,11 @@ const HelpCenterPage = () => {
                     onClick={() => toggleFAQ(faq.id)}
                     className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                   >
-                    <span className="font-semibold text-gray-900 dark:text-white pr-4">{faq.question}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white pr-4">
+                      {debouncedSearchQuery
+                        ? highlightText(faq.question, debouncedSearchQuery)
+                        : faq.question}
+                    </span>
                     {expandedFAQ === faq.id ? (
                       <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ) : (
@@ -262,13 +558,15 @@ const HelpCenterPage = () => {
                     {expandedFAQ === faq.id && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
+                        animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
                         <div className="px-6 pb-6 text-gray-600 dark:text-gray-300 leading-relaxed">
-                          {faq.answer}
+                          {debouncedSearchQuery
+                            ? highlightText(faq.answer, debouncedSearchQuery)
+                            : faq.answer}
                         </div>
                       </motion.div>
                     )}
@@ -287,14 +585,47 @@ const HelpCenterPage = () => {
           className="mb-12"
         >
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            {selectedCategory === 'all' ? 'All Questions' : categories.find(c => c.id === selectedCategory)?.name}
+            {selectedCategory === "all"
+              ? "All Questions"
+              : categories.find((c) => c.id === selectedCategory)?.name}
+            {debouncedSearchQuery && (
+              <span className="text-lg font-normal text-gray-500 dark:text-gray-400 ml-2">
+                ({filteredFAQs.length} result
+                {filteredFAQs.length !== 1 ? "s" : ""} for "
+                {debouncedSearchQuery}")
+              </span>
+            )}
           </h2>
-          
+
           {filteredFAQs.length === 0 ? (
             <div className="text-center py-12">
               <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-500 mb-2">No results found</h3>
-              <p className="text-gray-400">Try adjusting your search or browse different categories</p>
+              <h3 className="text-xl font-semibold text-gray-500 mb-2">
+                {debouncedSearchQuery
+                  ? `No results found for "${debouncedSearchQuery}"`
+                  : "No questions in this category"}
+              </h3>
+              <p className="text-gray-400 mb-6">
+                {debouncedSearchQuery
+                  ? "Try different keywords or browse different categories"
+                  : "Try selecting a different category or search for something else"}
+              </p>
+              {debouncedSearchQuery && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    onClick={() => setSelectedCategory("all")}
+                    className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                  >
+                    Browse All Categories
+                  </button>
+                  <button
+                    onClick={clearSearch}
+                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid gap-4">
@@ -310,7 +641,11 @@ const HelpCenterPage = () => {
                     onClick={() => toggleFAQ(faq.id)}
                     className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                   >
-                    <span className="font-semibold text-gray-900 dark:text-white pr-4">{faq.question}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white pr-4">
+                      {debouncedSearchQuery
+                        ? highlightText(faq.question, debouncedSearchQuery)
+                        : faq.question}
+                    </span>
                     {expandedFAQ === faq.id ? (
                       <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ) : (
@@ -321,13 +656,15 @@ const HelpCenterPage = () => {
                     {expandedFAQ === faq.id && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
+                        animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
                         <div className="px-6 pb-6 text-gray-600 dark:text-gray-300 leading-relaxed">
-                          {faq.answer}
+                          {debouncedSearchQuery
+                            ? highlightText(faq.answer, debouncedSearchQuery)
+                            : faq.answer}
                         </div>
                       </motion.div>
                     )}
@@ -353,9 +690,10 @@ const HelpCenterPage = () => {
           >
             <h2 className="text-3xl font-bold mb-4">Still need help?</h2>
             <p className="text-xl text-blue-100 mb-8">
-              Our support team is here to help you 24/7. Get in touch with us through any of these channels.
+              Our support team is here to help you 24/7. Get in touch with us
+              through any of these channels.
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -363,9 +701,11 @@ const HelpCenterPage = () => {
               >
                 <MessageSquare className="w-8 h-8 mx-auto mb-3" />
                 <h3 className="font-semibold mb-2">Live Chat</h3>
-                <p className="text-sm text-blue-100">Get instant help from our support team</p>
+                <p className="text-sm text-blue-100">
+                  Get instant help from our support team
+                </p>
               </motion.div>
-              
+
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/30 transition-colors duration-300"
@@ -374,7 +714,7 @@ const HelpCenterPage = () => {
                 <h3 className="font-semibold mb-2">Email Support</h3>
                 <p className="text-sm text-blue-100">da9783790@gmail.com</p>
               </motion.div>
-              
+
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/30 transition-colors duration-300"
@@ -384,11 +724,8 @@ const HelpCenterPage = () => {
                 <p className="text-sm text-blue-100">+2347042168616</p>
               </motion.div>
             </div>
-            
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 to="/contact"
                 className="inline-flex items-center gap-2 bg-white text-blue-600 font-semibold px-8 py-4 rounded-2xl hover:bg-blue-50 transition-colors duration-300 shadow-lg"

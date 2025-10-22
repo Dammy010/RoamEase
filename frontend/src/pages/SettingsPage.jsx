@@ -73,6 +73,7 @@ const SettingsPage = () => {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [showLogoutConfirmDialog, setShowLogoutConfirmDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Profile form data
@@ -178,7 +179,13 @@ const SettingsPage = () => {
     setIsLoading(true);
 
     try {
-      await dispatch(updateSettings({ password: passwordData })).unwrap();
+      // Send password fields at root level, not nested under password
+      const passwordUpdateData = {
+        currentPassword: passwordData.currentPassword,
+        password: passwordData.newPassword, // Backend expects 'password' for new password
+      };
+
+      await dispatch(updateSettings(passwordUpdateData)).unwrap();
       toast.success("Password updated successfully!");
       setIsEditingPassword(false);
       setPasswordData({
@@ -316,6 +323,16 @@ const SettingsPage = () => {
       console.error("❌ Profile picture upload error:", error);
       toast.error(`Failed to upload profile picture: ${error.message}`);
     }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setShowLogoutConfirmDialog(true);
+  };
+
+  const confirmLogout = () => {
+    dispatch(logout());
+    navigate("/");
   };
 
   // Handle account deletion
@@ -1129,6 +1146,37 @@ const SettingsPage = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Dialog */}
+      {showLogoutConfirmDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 backdrop-enter">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md text-center border border-gray-200 dark:border-gray-700 modal-enter">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogOut className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+              Are you sure?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Do you really want to log out of your account?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirmDialog(false)}
+                className="flex-1 px-6 py-3 rounded-2xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-all duration-300 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+              >
+                Yes, Logout
               </button>
             </div>
           </div>
